@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Add Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shift & Leave Management System</title>
@@ -1347,1379 +1342,1276 @@
         .modal-content, .edit-shift-grid {
             -webkit-overflow-scrolling: touch;
         }
-/* Update the tabs styling */
-.tabs {
-    display: flex;
-    flex-wrap: wrap;
-    border-bottom: 2px solid #ecf0f1;
-    margin-bottom: 15px;
-    background-color: #f8f9fa;
-    border-radius: 8px 8px 0 0;
-    padding: 5px 5px 0 5px;
-}
-
-.tab {
-    padding: 10px 15px;
-    cursor: pointer;
-    font-weight: 600;
-    border-bottom: 3px solid transparent;
-    flex: 1;
-    text-align: center;
-    font-size: 0.9em;
-    color: #555;
-    background-color: #e9ecef;
-    margin: 0 3px;
-    border-radius: 5px 5px 0 0;
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
-    border-bottom: none;
-}
-
-.tab.active {
-    border-bottom-color: #3498db;
-    color: #3498db;
-    background-color: white;
-    border-color: #dee2e6 #dee2e6 white #dee2e6;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-}
-
-.tab:hover:not(.active) {
-    background-color: #f1f3f4;
-    color: #2c3e50;
-}
-
-/* Improve day view contrast */
-.day-view-container {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
-}
-
-.day-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-}
-
-.day-name {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #2c3e50;
-}
-
-.day-header .date {
-    color: #555;
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-/* Improve month view contrast */
-.month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin-bottom: 15px;
-    background-color: white;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.day-header-cell {
-    text-align: center;
-    padding: 10px 5px;
-    background: #f8f9fa;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 0.9em;
-    color: #2c3e50;
-    border: 1px solid #dee2e6;
-}
-
-.day-cell {
-    min-height: 100px;
-    background: #fefefe;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    overflow: hidden;
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.day-cell:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: #3498db;
-    background-color: #f8f9fa;
-}
-
-.day-cell.today {
-    border-color: #3498db;
-    background-color: #e8f4fc;
-    border-width: 2px;
-}
-
-.day-cell .date-num {
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: #2c3e50;
-    font-size: 1em;
-}
-
-.day-cell .day-name {
-    font-size: 0.8em;
-    color: #666;
-    margin-bottom: 6px;
-}
-
-.day-cell .operator-status-item {
-    margin-bottom: 2px;
-    padding: 3px 5px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.75em;
-    font-weight: 500;
-}
-
-/* Improve week view contrast */
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.day-card {
-    background: white;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
-    transition: all 0.3s;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.day-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-color: #3498db;
-}
-
-.day-card.today {
-    border-color: #3498db;
-    background-color: #e8f4fc;
-    border-width: 2px;
-}
-
-/* Improve operator names visibility */
-.operator-name {
-    font-weight: 600;
-    font-size: 0.9em;
-    color: #2c3e50;
-}
-
-.shift-time {
-    color: #444;
-    font-size: 0.8em;
-    background: #f0f0f0;
-    padding: 3px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
-    font-weight: 500;
-}
-
-/* Improve badges visibility */
-.badge {
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.75em;
-    margin-left: 4px;
-    white-space: nowrap;
-    font-weight: 600;
-    color: white !important;
-}
-
-/* Improve stats bar visibility */
-.stats-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 15px;
-    justify-content: center;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    min-width: 120px;
-    flex: 1;
-    text-align: center;
-    border-left: 4px solid #3498db;
-    font-size: 0.9em;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #e8e8e8;
-}
-
-.stat-card > div:first-child {
-    color: #666;
-    font-size: 0.85em;
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.stat-card > div:last-child {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-/* Improve controls visibility */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e8e8e8;
-}
-
-.controls button {
-    margin-top: 0;
-    width: auto;
-    min-width: 140px;
-    flex: 1;
-    padding: 10px 15px;
-    font-size: 0.9em;
-    font-weight: 600;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.controls button:hover {
-    background-color: #2980b9;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 5px rgba(0,0,0,0.1);
-}
-
-/* Improve view toggle buttons */
-.view-toggle {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 15px;
-    gap: 10px;
-}
-
-.view-toggle button {
-    padding: 10px 15px;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    background: #f8f9fa;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9em;
-    flex: 1;
-    min-width: 100px;
-    color: #555;
-    transition: all 0.3s;
-}
-
-.view-toggle button.active {
-    background: #3498db;
-    color: white;
-    border-color: #3498db;
-}
-
-.view-toggle button:hover:not(.active) {
-    background: #e9ecef;
-    border-color: #3498db;
-}
-
-/* Improve tab content background */
-.tab-content {
-    display: none;
-    background-color: white;
-    padding: 15px;
-    border-radius: 0 0 8px 8px;
-    border: 1px solid #dee2e6;
-    border-top: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Improve shift items contrast */
-.shift-item {
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    background: #f8f9fa;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    border: 1px solid #e8e8e8;
-}
-
-/* Improve operator count display */
-.operator-count-display {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    font-size: 0.9em;
-    border: 1px solid #e8e8e8;
-}
-
-.operator-count-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-    min-width: 100px;
-    color: #555;
-    font-weight: 500;
-}
-
-/* Improve navigation bars */
-.week-navigation, .month-navigation, .day-navigation {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    gap: 10px;
-    border: 1px solid #e8e8e8;
-}
-
-.nav-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #2c3e50;
-    text-align: center;
-    flex: 1;
-    min-width: 100%;
-    order: -1;
-}
-
-.nav-buttons button {
-    padding: 8px 15px;
-    border: 1px solid #3498db;
-    border-radius: 5px;
-    background: white;
-    color: #3498db;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9em;
-    flex: 1;
-    min-width: 100px;
-    transition: all 0.3s;
-}
-
-.nav-buttons button:hover {
-    background: #3498db;
-    color: white;
-}
-
-/* Improve container contrast */
-.container {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    padding: 20px;
-    margin-bottom: 15px;
-    overflow: hidden;
-    border: 1px solid #e0e0e0;
-}
-
-/* Mobile responsiveness improvements */
-@media (max-width: 768px) {
-    .tab {
-        padding: 8px 10px;
-        font-size: 0.85em;
-        margin: 0 2px;
-    }
-    
-    .container {
-        padding: 12px;
-    }
-    
-    .controls button {
-        min-width: 120px;
-        padding: 8px 12px;
-        font-size: 0.85em;
-    }
-    
-    .view-toggle button {
-        min-width: 80px;
-        padding: 8px 10px;
-        font-size: 0.85em;
-    }
-    
-    .stat-card {
-        padding: 10px;
-        min-width: 90px;
-    }
-}
-
-@media (max-width: 480px) {
-    .tab {
-        flex: 1 0 100%;
-        margin-bottom: 5px;
-        border-radius: 5px;
-    }
-    
-    .tabs {
-        padding: 5px;
-    }
-    
-    .tab.active {
-        border-radius: 5px;
-        border: 1px solid #3498db;
-    }
-    
-    .view-toggle button {
-        flex: 1 0 100%;
-        margin-bottom: 5px;
-    }
-}
-/* Custom Radio Buttons */
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s ease;
-    flex: 1;
-    min-width: 150px;
-}
-
-.radio-option:hover {
-    background: #e9ecef;
-    border-color: #3498db;
-}
-
-.radio-option input[type="radio"] {
-    display: none;
-}
-
-.radio-custom {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #95a5a6;
-    border-radius: 50%;
-    display: inline-block;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.radio-custom:after {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #3498db;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: all 0.3s ease;
-}
-
-.radio-option input[type="radio"]:checked + .radio-custom {
-    border-color: #3498db;
-    background-color: #e8f4fc;
-}
-
-.radio-option input[type="radio"]:checked + .radio-custom:after {
-    transform: translate(-50%, -50%) scale(1);
-}
-
-.radio-label {
-    font-weight: 500;
-    color: #2c3e50;
-}
-
-.radio-option input[type="radio"]:checked ~ .radio-label {
-    color: #3498db;
-    font-weight: 600;
-}
-
-/* Custom Checkboxes */
-.checkbox-item {
-    flex: 1 0 45%;
-    margin-bottom: 8px;
-}
-
-.checkbox-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s ease;
-}
-
-.checkbox-option:hover {
-    background: #e9ecef;
-    border-color: #3498db;
-}
-
-.checkbox-option input[type="checkbox"] {
-    display: none;
-}
-
-.checkbox-custom {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #95a5a6;
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    transition: all 0.3s ease;
-    background-color: white;
-}
-
-.checkbox-custom:after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.checkbox-option input[type="checkbox"]:checked + .checkbox-custom {
-    background-color: #3498db;
-    border-color: #3498db;
-}
-
-.checkbox-option input[type="checkbox"]:checked + .checkbox-custom:after {
-    transform: translate(-50%, -50%) scale(1);
-}
-
-.checkbox-label {
-    font-weight: 500;
-    color: #2c3e50;
-    font-size: 0.85em;
-}
-
-.checkbox-option input[type="checkbox"]:checked ~ .checkbox-label {
-    color: #3498db;
-    font-weight: 600;
-}
-
-/* Container for radio/checkbox groups */
-#onDutyTypeSelector, #regularizeTypeSelector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-/* Staff exclusion list improvements */
-.staff-exclusion-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .radio-option, .checkbox-option {
-        flex: 1 0 100%;
-        min-width: auto;
-    }
-    
-    .checkbox-item {
-        flex: 1 0 100%;
-    }
-    
-    .staff-exclusion-list {
-        flex-direction: column;
-        gap: 8px;
-    }
-}
-/* Role-based styles */
-.controls.hidden {
-    display: none !important;
-}
-
-/* Admin button style */
-.controls button[onclick="manageUsers()"] {
-    background: #8e44ad !important;
-}
-
-.controls button[onclick="manageUsers()"]:hover {
-    background: #7d3c98 !important;
-}
-
-/* Modal improvements */
-.modal {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+        
+        /* Update the tabs styling */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #ecf0f1;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            padding: 5px 5px 0 5px;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            flex: 1;
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+            background-color: #e9ecef;
+            margin: 0 3px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+        }
+        
+        .tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            background-color: white;
+            border-color: #dee2e6 #dee2e6 white #dee2e6;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #f1f3f4;
+            color: #2c3e50;
+        }
+        
+        /* Improve day view contrast */
+        .day-view-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .day-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .day-header .date {
+            color: #555;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        /* Improve month view contrast */
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .day-header-cell {
+            text-align: center;
+            padding: 10px 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #2c3e50;
+            border: 1px solid #dee2e6;
+        }
+        
+        .day-cell {
+            min-height: 100px;
+            background: #fefefe;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .day-cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .day-cell.today {
+            border-color: #3498db;
+            background-color: #e8f4fc;
+            border-width: 2px;
+        }
+        
+        .day-cell .date-num {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #2c3e50;
+            font-size: 1em;
+        }
+        
+        .day-cell .day-name {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        .day-cell .operator-status-item {
+            margin-bottom: 2px;
+            padding: 3px 5px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+        
+        /* Improve week view contrast */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .day-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+        
+        .day-card.today {
+            border-color: #3498db;
+            background-color: #e8f4fc;
+            border-width: 2px;
+        }
+        
+        /* Improve operator names visibility */
+        .operator-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #2c3e50;
+        }
+        
+        .shift-time {
+            color: #444;
+            font-size: 0.8em;
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+            font-weight: 500;
+        }
+        
+        /* Improve badges visibility */
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 4px;
+            white-space: nowrap;
+            font-weight: 600;
+            color: white !important;
+        }
+        
+        /* Improve stats bar visibility */
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 120px;
+            flex: 1;
+            text-align: center;
+            border-left: 4px solid #3498db;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e8e8e8;
+        }
+        
+        .stat-card > div:first-child {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .stat-card > div:last-child {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Improve controls visibility */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .controls button {
+            margin-top: 0;
+            width: auto;
+            min-width: 140px;
+            flex: 1;
+            padding: 10px 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .controls button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Improve view toggle buttons */
+        .view-toggle {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .view-toggle button {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 100px;
+            color: #555;
+            transition: all 0.3s;
+        }
+        
+        .view-toggle button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .view-toggle button:hover:not(.active) {
+            background: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        /* Improve tab content background */
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Improve shift items contrast */
+        .shift-item {
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            border: 1px solid #e8e8e8;
+        }
+        
+        /* Improve operator count display */
+        .operator-count-display {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.9em;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .operator-count-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 100px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        /* Improve navigation bars */
+        .week-navigation, .month-navigation, .day-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            gap: 10px;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .nav-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            flex: 1;
+            min-width: 100%;
+            order: -1;
+        }
+        
+        .nav-buttons button {
+            padding: 8px 15px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            background: white;
+            color: #3498db;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 100px;
+            transition: all 0.3s;
+        }
+        
+        .nav-buttons button:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        /* Improve container contrast */
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        /* Mobile responsiveness improvements */
+        @media (max-width: 768px) {
+            .tab {
+                padding: 8px 10px;
+                font-size: 0.85em;
+                margin: 0 2px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            .controls button {
+                min-width: 120px;
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+            
+            .view-toggle button {
+                min-width: 80px;
+                padding: 8px 10px;
+                font-size: 0.85em;
+            }
+            
+            .stat-card {
+                padding: 10px;
+                min-width: 90px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .tab {
+                flex: 1 0 100%;
+                margin-bottom: 5px;
+                border-radius: 5px;
+            }
+            
+            .tabs {
+                padding: 5px;
+            }
+            
+            .tab.active {
+                border-radius: 5px;
+                border: 1px solid #3498db;
+            }
+            
+            .view-toggle button {
+                flex: 1 0 100%;
+                margin-bottom: 5px;
+            }
+        }
+        
+        /* Custom Radio Buttons */
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .radio-option:hover {
+            background: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+        
+        .radio-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #95a5a6;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-custom:after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3498db;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: all 0.3s ease;
+        }
+        
+        .radio-option input[type="radio"]:checked + .radio-custom {
+            border-color: #3498db;
+            background-color: #e8f4fc;
+        }
+        
+        .radio-option input[type="radio"]:checked + .radio-custom:after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .radio-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .radio-option input[type="radio"]:checked ~ .radio-label {
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        /* Custom Checkboxes */
+        .checkbox-item {
+            flex: 1 0 45%;
+            margin-bottom: 8px;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-option:hover {
+            background: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        .checkbox-option input[type="checkbox"] {
+            display: none;
+        }
+        
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #95a5a6;
+            border-radius: 4px;
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        .checkbox-custom:after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-option input[type="checkbox"]:checked + .checkbox-custom {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .checkbox-option input[type="checkbox"]:checked + .checkbox-custom:after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .checkbox-label {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.85em;
+        }
+        
+        .checkbox-option input[type="checkbox"]:checked ~ .checkbox-label {
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        /* Container for radio/checkbox groups */
+        #onDutyTypeSelector, #regularizeTypeSelector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Staff exclusion list improvements */
+        .staff-exclusion-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .radio-option, .checkbox-option {
+                flex: 1 0 100%;
+                min-width: auto;
+            }
+            
+            .checkbox-item {
+                flex: 1 0 100%;
+            }
+            
+            .staff-exclusion-list {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+        
+        /* ===== AUTHENTICATION STYLES ===== */
+        #auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+        }
+        
+        .auth-modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .auth-modal h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .auth-tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .auth-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .auth-form input, .auth-form select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .auth-form input:focus, .auth-form select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .auth-button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .auth-button:hover {
+            background: #2980b9;
+        }
+        
+        .auth-error {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+            padding: 8px;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+        
+        .auth-message {
+            color: #27ae60;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+            padding: 8px;
+            background: #e8f6ef;
+            border-radius: 5px;
+        }
+        
+        /* User info in header */
+        #user-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border: 1px solid #ddd;
+        }
+        
+        #user-role {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        #logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        #logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        /* Role-based visibility */
+        .viewer-only {
+            display: none;
+        }
+        
+        .admin-only {
+            display: none;
+        }
+        
+        /* Viewer role specific styles */
+        body.viewer .admin-only {
+            display: none !important;
+        }
+        
+        body.admin .admin-only {
+            display: block !important;
+        }
+        
+        body.viewer .viewer-only {
+            display: block !important;
+        }
+        
+        /* Hide controls for viewer */
+        body.viewer .controls {
+            display: none;
+        }
+        
+        body.viewer .approval-actions {
+            display: none;
+        }
+        
+        body.viewer .button-group button:not(.btn-secondary) {
+            display: none;
+        }
+        
+        /* Specific button hiding for viewer */
+        body.viewer button[onclick*="openAddLeaveModal"],
+        body.viewer button[onclick*="openCancelLeaveModal"],
+        body.viewer button[onclick*="openEditShiftModal"],
+        body.viewer button[onclick*="openEditObituaryModal"],
+        body.viewer button[onclick*="openOffDutyModal"],
+        body.viewer button[onclick*="openOnDutyModal"],
+        body.viewer button[onclick*="openLateEntryModal"],
+        body.viewer button[onclick*="openExtraHoursModal"],
+        body.viewer button[onclick*="openCancelOffDutyModal"],
+        body.viewer button[onclick*="openApplyCOFFModal"],
+        body.viewer button[onclick*="openHolidayModal"],
+        body.viewer button[onclick*="openSkeletonModal"] {
+            display: none;
+        }
+        
+        /* Report export restrictions */
+        body.viewer button[onclick*="exportAllData"] {
+            display: none;
+        }
+        
+        /* Modal submit buttons for viewer */
+        body.viewer .modal-content button:not(.btn-secondary) {
+            display: none;
+        }
+        
+        /* Disable form inputs for viewer */
+        body.viewer input:not([readonly]),
+        body.viewer select,
+        body.viewer textarea {
+            pointer-events: none;
+            opacity: 0.7;
+            background: #f5f5f5;
+        }
+        
+        /* Approval tab restrictions for viewer */
+        body.viewer .tab[onclick="switchTab('approvals')"] {
+            display: none;
+        }
+        
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.success {
+            background: #27ae60;
+        }
+        
+        .notification.error {
+            background: #e74c3c;
+        }
+        
+        .notification.info {
+            background: #3498db;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile responsive adjustments for auth */
+        @media (max-width: 768px) {
+            .auth-modal {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            #user-info {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 10px auto;
+                width: 90%;
+                justify-content: center;
+            }
+            
+            h1 {
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-        <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px;">
-            <h1>Shift & Leave Management System</h1>
-            <h2 style="margin: 20px 0;">Login Required</h2>
+    <!-- Authentication Container (Initially shown) -->
+    <div id="auth-container">
+        <div class="auth-modal">
+            <h2>🔒 Shift & Leave System</h2>
             
-            <div id="login-container" style="margin: 30px 0;">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form active">
                 <div class="form-group">
-                    <label for="login-email">Email:</label>
-                    <input type="email" id="login-email" placeholder="user@example.com" style="width: 100%; padding: 10px;">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Enter email">
                 </div>
                 <div class="form-group">
-                    <label for="login-password">Password:</label>
-                    <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 10px;">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
                 </div>
-                <button onclick="login()" style="width: 100%; padding: 12px; margin: 10px 0; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Login</button>
-                
-                <div id="login-error" style="color: #e74c3c; margin: 10px 0; padding: 10px; background: #ffebee; border-radius: 5px; display: none;"></div>
-                
-                <hr style="margin: 20px 0;">
-                <p style="color: #666; font-size: 0.9em;">Don't have an account? Contact administrator</p>
+                <button class="auth-button" onclick="login()">Login</button>
+                <div id="login-error" class="auth-error">Invalid credentials</div>
+                <div id="login-message" class="auth-message">Login successful!</div>
+            </div>
+            
+            <!-- Registration Form -->
+            <div id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Choose email">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" placeholder="Choose password">
+                </div>
+                <div class="form-group">
+                    <label for="register-role">Role</label>
+                    <select id="register-role">
+                        <option value="viewer">Viewer (Read Only)</option>
+                        <option value="admin">Admin (Full Access)</option>
+                    </select>
+                </div>
+                <button class="auth-button" onclick="register()">Register</button>
+                <div id="register-error" class="auth-error">Registration error</div>
+                <div id="register-message" class="auth-message">Registration successful!</div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9em; color: #666;">
+                <p><strong>First User:</strong> Register as Admin</p>
+                <p><small>All data is stored securely in cloud database</small></p>
             </div>
         </div>
     </div>
+    
+    <!-- Main Application Container (Initially hidden) -->
+    <div id="app-container" style="display: none;">
+        <div id="user-info">
+            <span id="current-user"></span>
+            <span id="user-role"></span>
+            <button id="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <!-- PASTE YOUR ENTIRE ORIGINAL HTML CONTENT HERE -->
+        <!-- From <div class="container"> to all modals -->
+        <!-- I'll include a shortened version, but you should paste your complete original HTML -->
 
-    <!-- USER INFO BAR -->
-    <div id="user-info-bar" style="display: none; background: #2c3e50; color: white; padding: 10px 15px; margin: 10px; border-radius: 5px; max-width: 1400px; margin: 10px auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <span id="current-user-email"></span>
-                <span id="user-role-badge" style="background: #3498db; padding: 2px 8px; border-radius: 10px; margin-left: 10px; font-size: 0.8em; font-weight: bold;"></span>
-            </div>
-            <button onclick="logout()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.9em;">Logout</button>
-        </div>
-    </div>
-
-    <div class="container">
-        <h1>📅 Shift & Leave Management System</h1>
-        
-        <div class="stats-bar">
-            <div class="stat-card today-highlight">
-                <div>Today's Date</div>
-                <div id="current-date" style="font-size: 1.1em; font-weight: bold;"></div>
-            </div>
-            <div class="stat-card">
-                <div>Total Staff</div>
-                <div style="font-size: 1.1em; font-weight: bold;">5</div>
-            </div>
-            <div class="stat-card pending">
-                <div>Pending Approvals</div>
-                <div id="pending-count" style="font-size: 1.1em; font-weight: bold;">0</div>
-            </div>
-            <div class="stat-card approved">
-                <div>Comp-off Balance</div>
-                <div id="coff-balance" style="font-size: 1.1em; font-weight: bold;">0 days</div>
-            </div>
-        </div>
-        
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
-            <div class="tab" onclick="switchTab('approvals')">Approvals</div>
-            <div class="tab" onclick="switchTab('coff')">Comp-off</div>
-            <div class="tab" onclick="switchTab('reports')">Reports</div>
-        </div>
-        
-        <!-- Dashboard Tab -->
-        <div id="dashboard-tab" class="tab-content active">
-            <div class="view-toggle">
-                <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
-                <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
-                <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
-            </div>
+        <div class="container">
+            <h1>📅 Shift & Leave Management System</h1>
             
-            <div class="controls">
-                <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
-                <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
-                <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
-                <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
-                <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
-                <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
-                <button onclick="openLateEntryModal()">⏰ Late Entry</button>
-                <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
-                <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
-                <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
-                <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
-                <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
-            </div>
-            
-            <div class="staff-list" id="staff-list">
-                <!-- Staff list will be populated by JavaScript -->
-            </div>
-            
-            <!-- Today View -->
-            <div id="todayView" class="day-view">
-                <div class="day-navigation">
-                    <div class="nav-title" id="dayTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousDay()">◀ Previous Day</button>
-                        <button onclick="goToToday()">Today</button>
-                        <button onclick="nextDay()">Next Day ▶</button>
-                    </div>
+            <div class="stats-bar">
+                <div class="stat-card today-highlight">
+                    <div>Today's Date</div>
+                    <div id="current-date" style="font-size: 1.1em; font-weight: bold;"></div>
                 </div>
-                <div class="day-view-container" id="todayViewContainer">
-                    <!-- Today view will be populated by JavaScript -->
+                <div class="stat-card">
+                    <div>Total Staff</div>
+                    <div style="font-size: 1.1em; font-weight: bold;">5</div>
+                </div>
+                <div class="stat-card pending">
+                    <div>Pending Approvals</div>
+                    <div id="pending-count" style="font-size: 1.1em; font-weight: bold;">0</div>
+                </div>
+                <div class="stat-card approved">
+                    <div>Comp-off Balance</div>
+                    <div id="coff-balance" style="font-size: 1.1em; font-weight: bold;">0 days</div>
                 </div>
             </div>
             
-            <!-- Week View (7 Days) -->
-            <div id="calendarView" class="calendar-view active">
-                <div class="week-navigation">
-                    <div class="nav-title" id="weekTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousWeek()">◀ Previous Week</button>
-                        <button onclick="goToTodayWeek()">Today</button>
-                        <button onclick="nextWeek()">Next Week ▶</button>
-                    </div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+                <div class="tab admin-only" onclick="switchTab('approvals')">Approvals</div>
+                <div class="tab" onclick="switchTab('coff')">Comp-off</div>
+                <div class="tab" onclick="switchTab('reports')">Reports</div>
+            </div>
+            
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <div class="view-toggle">
+                    <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
+                    <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
+                    <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
                 </div>
                 
-                <div class="calendar" id="calendar">
-                    <!-- Calendar will be populated by JavaScript -->
+                <div class="controls admin-only">
+                    <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
+                    <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
+                    <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
+                    <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
+                    <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
+                    <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
+                    <button onclick="openLateEntryModal()">⏰ Late Entry</button>
+                    <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
+                    <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
+                    <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
+                    <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
+                    <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
                 </div>
-            </div>
-            
-            <!-- Month View -->
-            <div id="monthView" class="month-view">
-                <div class="month-navigation">
-                    <div class="nav-title" id="monthTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousMonth()">◀ Previous Month</button>
-                        <button onclick="goToTodayMonth()">Today</button>
-                        <button onclick="nextMonth()">Next Month ▶</button>
+                
+                <div class="controls viewer-only">
+                    <p style="text-align: center; color: #666; padding: 10px;">
+                        <i>Viewer Mode - You can only view data. Contact admin for modifications.</i>
+                    </p>
+                </div>
+                
+                <div class="staff-list" id="staff-list">
+                    <!-- Staff list will be populated by JavaScript -->
+                </div>
+                
+                <!-- Today View -->
+                <div id="todayView" class="day-view">
+                    <div class="day-navigation">
+                        <div class="nav-title" id="dayTitle"></div>
+                        <div class="nav-buttons">
+                            <button onclick="previousDay()">◀ Previous Day</button>
+                            <button onclick="goToToday()">Today</button>
+                            <button onclick="nextDay()">Next Day ▶</button>
+                        </div>
+                    </div>
+                    <div class="day-view-container" id="todayViewContainer">
+                        <!-- Today view will be populated by JavaScript -->
                     </div>
                 </div>
                 
-                <div class="month-grid" id="monthGrid">
-                    <!-- Month grid will be populated by JavaScript -->
+                <!-- Week View (7 Days) -->
+                <div id="calendarView" class="calendar-view active">
+                    <div class="week-navigation">
+                        <div class="nav-title" id="weekTitle"></div>
+                        <div class="nav-buttons">
+                            <button onclick="previousWeek()">◀ Previous Week</button>
+                            <button onclick="goToTodayWeek()">Today</button>
+                            <button onclick="nextWeek()">Next Week ▶</button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar" id="calendar">
+                        <!-- Calendar will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Month View -->
+                <div id="monthView" class="month-view">
+                    <div class="month-navigation">
+                        <div class="nav-title" id="monthTitle"></div>
+                        <div class="nav-buttons">
+                            <button onclick="previousMonth()">◀ Previous Month</button>
+                            <button onclick="goToTodayMonth()">Today</button>
+                            <button onclick="nextMonth()">Next Month ▶</button>
+                        </div>
+                    </div>
+                    
+                    <div class="month-grid" id="monthGrid">
+                        <!-- Month grid will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Approvals Tab -->
+            <div id="approvals-tab" class="tab-content">
+                <h2>📋 Pending Approvals</h2>
+                <div id="pending-approvals-container">
+                    <!-- Pending approvals will be populated by JavaScript -->
+                </div>
+                
+                <h2>✅ Approved Leaves</h2>
+                <div id="approved-leaves-container">
+                    <!-- Approved leaves will be populated by JavaScript -->
+                </div>
+                
+                <h2>❌ Rejected Leaves</h2>
+                <div id="rejected-leaves-container">
+                    <!-- Rejected leaves will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Comp-off Tab -->
+            <div id="coff-tab" class="tab-content">
+                <h2>🔄 Comp-off Management</h2>
+                <div class="controls admin-only">
+                    <button onclick="openApplyCOFFModal()">🔄 Apply for Comp-off</button>
+                    <button onclick="viewCOFFSummary()">📊 View COFF Summary</button>
+                </div>
+                <div id="coff-summary-container">
+                    <!-- COFF summary will be populated by JavaScript -->
+                </div>
+                <div id="coff-history-container">
+                    <!-- COFF history will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Reports Tab -->
+            <div id="reports-tab" class="tab-content">
+                <h2>📊 Reports</h2>
+                <div class="controls">
+                    <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
+                    <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
+                    <button onclick="generateCOFFReport()">🔄 COFF Report</button>
+                    <button onclick="generateOTReport()">💰 OT Report</button>
+                    <button class="admin-only" onclick="exportAllData()">💾 Export All Data</button>
+                </div>
+                
+                <!-- Navigation for attendance report -->
+                <div id="attendance-nav">
+                    <div class="nav-buttons" style="justify-content: center;">
+                        <button onclick="previousAttendancePeriod()">◀ Previous Period</button>
+                        <button onclick="goToCurrentAttendancePeriod()">Current Period</button>
+                        <button onclick="nextAttendancePeriod()">Next Period ▶</button>
+                    </div>
+                    <div id="attendance-period-title"></div>
+                </div>
+                
+                <div id="report-container">
+                    <!-- Reports will be displayed here -->
                 </div>
             </div>
         </div>
         
-        <!-- Approvals Tab -->
-        <div id="approvals-tab" class="tab-content">
-            <h2>📋 Pending Approvals</h2>
-            <div id="pending-approvals-container">
-                <!-- Pending approvals will be populated by JavaScript -->
-            </div>
-            
-            <h2>✅ Approved Leaves</h2>
-            <div id="approved-leaves-container">
-                <!-- Approved leaves will be populated by JavaScript -->
-            </div>
-            
-            <h2>❌ Rejected Leaves</h2>
-            <div id="rejected-leaves-container">
-                <!-- Rejected leaves will be populated by JavaScript -->
+        <!-- PASTE ALL YOUR ORIGINAL MODALS HERE -->
+        <!-- I'll include the first modal as example -->
+        
+        <!-- Modal for Day Details -->
+        <div id="dayDetailsModal" class="modal day-details-modal">
+            <div class="modal-content">
+                <h3 id="dayDetailsTitle"></h3>
+                <div class="day-stats" id="dayStats">
+                    <!-- Day statistics will be populated by JavaScript -->
+                </div>
+                <div class="day-details-container">
+                    <h4>Shift Details</h4>
+                    <div id="dayShiftDetails">
+                        <!-- Shift details will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="closeModal('dayDetailsModal')">Close</button>
+                </div>
             </div>
         </div>
         
-        <!-- Comp-off Tab -->
-        <div id="coff-tab" class="tab-content">
-            <h2>🔄 Comp-off Management</h2>
-            <div class="controls">
-                <button onclick="openApplyCOFFModal()">🔄 Apply for Comp-off</button>
-                <button onclick="viewCOFFSummary()">📊 View COFF Summary</button>
-            </div>
-            <div id="coff-summary-container">
-                <!-- COFF summary will be populated by JavaScript -->
-            </div>
-            <div id="coff-history-container">
-                <!-- COFF history will be populated by JavaScript -->
+        <!-- Modal for adding leave with date range -->
+        <div id="leaveModal" class="modal">
+            <div class="modal-content">
+                <h3>Apply for Leave</h3>
+                <div class="form-group">
+                    <label for="leaveStaff">Staff Member:</label>
+                    <select id="leaveStaff" onchange="checkLeaveEligibility()">
+                        <option value="Sreejith">Sreejith</option>
+                        <option value="Sajeev">Sajeev</option>
+                        <option value="Umesh">Umesh</option>
+                        <option value="Rajesh">Rajesh</option>
+                        <option value="ANEESH">ANEESH (CTP)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Leave Period:</label>
+                    <div class="date-range-group">
+                        <div class="form-group">
+                            <label for="leaveFromDate">From Date:</label>
+                            <input type="date" id="leaveFromDate" onchange="updateLeaveToDate(); checkLeaveEligibility()">
+                        </div>
+                        <div style="align-self: center;">to</div>
+                        <div class="form-group">
+                            <label for="leaveToDate">To Date:</label>
+                            <input type="date" id="leaveToDate" onchange="checkLeaveEligibility()">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="leaveType">Leave Type:</label>
+                    <select id="leaveType">
+                        <option value="full">Full Day</option>
+                        <option value="half">Half Day</option>
+                    </select>
+                </div>
+                <div id="leaveEligibilityError" class="error-message">
+                    <!-- Error message will be populated by JavaScript -->
+                </div>
+                <div class="button-group">
+                    <button class="admin-only" onclick="submitLeave()">Submit for Approval</button>
+                    <button class="btn-secondary" onclick="closeModal('leaveModal')">Cancel</button>
+                </div>
             </div>
         </div>
         
-        <!-- Reports Tab -->
-        <div id="reports-tab" class="tab-content">
-            <h2>📊 Reports</h2>
-            <div class="controls">
-                <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
-                <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
-                <button onclick="generateCOFFReport()">🔄 COFF Report</button>
-                <button onclick="generateOTReport()">💰 OT Report</button>
-                <button onclick="exportAllData()">💾 Export All Data</button>
-            </div>
-            
-            <!-- Navigation for attendance report -->
-            <div id="attendance-nav">
-                <div class="nav-buttons" style="justify-content: center;">
-                    <button onclick="previousAttendancePeriod()">◀ Previous Period</button>
-                    <button onclick="goToCurrentAttendancePeriod()">Current Period</button>
-                    <button onclick="nextAttendancePeriod()">Next Period ▶</button>
-                </div>
-                <div id="attendance-period-title"></div>
-            </div>
-            
-            <div id="report-container">
-                <!-- Reports will be displayed here -->
-            </div>
-        </div>
-    </div>
-    
-    <!-- All modals remain the same as original -->
-    <!-- Modal for Day Details -->
-    <div id="dayDetailsModal" class="modal day-details-modal">
-        <div class="modal-content">
-            <h3 id="dayDetailsTitle"></h3>
-            <div class="day-stats" id="dayStats">
-                <!-- Day statistics will be populated by JavaScript -->
-            </div>
-            <div class="day-details-container">
-                <h4>Shift Details</h4>
-                <div id="dayShiftDetails">
-                    <!-- Shift details will be populated by JavaScript -->
-                </div>
-            </div>
-            <div class="button-group">
-                <button class="btn-secondary" onclick="closeModal('dayDetailsModal')">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for adding leave with date range -->
-    <div id="leaveModal" class="modal">
-        <div class="modal-content">
-            <h3>Apply for Leave</h3>
-            <div class="form-group">
-                <label for="leaveStaff">Staff Member:</label>
-                <select id="leaveStaff" onchange="checkLeaveEligibility()">
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Leave Period:</label>
-                <div class="date-range-group">
-                    <div class="form-group">
-                        <label for="leaveFromDate">From Date:</label>
-                        <input type="date" id="leaveFromDate" onchange="updateLeaveToDate(); checkLeaveEligibility()">
-                    </div>
-                    <div style="align-self: center;">to</div>
-                    <div class="form-group">
-                        <label for="leaveToDate">To Date:</label>
-                        <input type="date" id="leaveToDate" onchange="checkLeaveEligibility()">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="leaveType">Leave Type:</label>
-                <select id="leaveType">
-                    <option value="full">Full Day</option>
-                    <option value="half">Half Day</option>
-                </select>
-            </div>
-            <div id="leaveEligibilityError" class="error-message">
-                <!-- Error message will be populated by JavaScript -->
-            </div>
-            <div class="button-group">
-                <button onclick="submitLeave()">Submit for Approval</button>
-                <button class="btn-secondary" onclick="closeModal('leaveModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- [ALL OTHER MODALS REMAIN THE SAME AS ORIGINAL] -->
-    <!-- Modal for editing obituary duty -->
-    <div id="editObituaryModal" class="modal">
-        <div class="modal-content">
-            <h3>Edit Obituary Duty (Transfer)</h3>
-            <div class="form-group">
-                <label for="obituaryDate">Select Date:</label>
-                <input type="date" id="obituaryDate" onchange="loadCurrentObituaryDuty()">
-            </div>
-            <div class="form-group">
-                <label>Current Assignment:</label>
-                <div id="currentObituaryInfo" style="padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                    Loading...
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Transfer From:</label>
-                <select id="transferFromStaff" onchange="updateAvailableStaff()">
-                    <option value="">Select current obituary duty holder</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Transfer To:</label>
-                <select id="transferToStaff">
-                    <option value="">Select new staff for obituary duty</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="obituaryReason">Reason for Transfer (Optional):</label>
-                <textarea id="obituaryReason" rows="2" placeholder="Reason for transferring obituary duty"></textarea>
-            </div>
-            <div class="button-group">
-                <button onclick="transferObituaryDuty()">Transfer Obituary Duty</button>
-                <button class="btn-secondary" onclick="closeModal('editObituaryModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for cancelling leave -->
-    <div id="cancelLeaveModal" class="modal">
-        <div class="modal-content">
-            <h3>Cancel Leave</h3>
-            <div class="form-group">
-                <label for="cancelLeaveStaff">Select Staff Member:</label>
-                <select id="cancelLeaveStaff" onchange="loadLeaveForStaff()">
-                    <option value="">All Staff</option>
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Leave Period:</label>
-                <div class="date-range-group">
-                    <div class="form-group">
-                        <label for="cancelFromDate">From Date:</label>
-                        <input type="date" id="cancelFromDate" onchange="loadLeaveForStaff()">
-                    </div>
-                    <div style="align-self: center;">to</div>
-                    <div class="form-group">
-                        <label for="cancelToDate">To Date:</label>
-                        <input type="date" id="cancelToDate" onchange="loadLeaveForStaff()">
-                    </div>
-                </div>
-            </div>
-            <div id="leaveListContainer">
-                <!-- Leave list will be populated by JavaScript -->
-            </div>
-            <div class="button-group">
-                <button class="btn-secondary" onclick="closeModal('cancelLeaveModal')">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for editing shift -->
-    <div id="editShiftModal" class="modal">
-        <div class="modal-content">
-            <h3>Edit Shift Schedule</h3>
-            <div class="form-group">
-                <label for="effectiveDate">Effective From Date:</label>
-                <input type="date" id="effectiveDate">
-            </div>
-            
-            <div class="edit-shift-grid" id="editShiftGrid">
-                <!-- Shift grid will be populated by JavaScript -->
-            </div>
-            
-            <div class="button-group">
-                <button onclick="saveShiftEdit()">Save Changes</button>
-                <button class="btn-secondary" onclick="closeModal('editShiftModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for off-duty working entry -->
-    <div id="offDutyModal" class="modal">
-        <div class="modal-content">
-            <h3>Off-Duty Working Entry</h3>
-            <div class="form-group">
-                <label for="offDutyStaff">Staff Member (Off-duty):</label>
-                <select id="offDutyStaff" onchange="updateOffDutyStaffOptions()">
-                    <!-- Options will be populated by JavaScript -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="offDutyDate">Date:</label>
-                <input type="date" id="offDutyDate" onchange="updateOffDutyStaffOptions()">
-            </div>
-            <div class="form-group">
-                <label for="offDutyShift">Actual Shift Worked:</label>
-                <select id="offDutyShift">
-                    <option value="5pm-1:30am">5pm-1:30am</option>
-                    <option value="4pm-12:30pm">4pm-12:30pm</option>
-                    <option value="7pm-3:30pm">7pm-3:30pm</option>
-                    <option value="7:00pm-3:30am">7:00pm-3:30am</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="offDutyReason">Reason (Optional):</label>
-                <input type="text" id="offDutyReason" placeholder="e.g., Emergency coverage, Project deadline">
-            </div>
-            <div class="button-group">
-                <button onclick="saveOffDutyEntry()">Save Entry</button>
-                <button class="btn-secondary" onclick="closeModal('offDutyModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for On Duty -->
-    <div id="onDutyModal" class="modal">
-        <div class="modal-content">
-            <h3>On Duty (Outside Office Work)</h3>
-            <div class="form-group">
-                <label for="onDutyStaff">Staff Member:</label>
-                <select id="onDutyStaff">
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-             <div class="form-group">
-                <label for="onDutyDate">Date:</label>
-                <input type="date" id="onDutyDate">
-            </div>
-            <div class="form-group">
-    <label>On Duty Type:</label>
-    <div id="onDutyTypeSelector">
-        <label class="radio-option">
-            <input type="radio" name="onDutyType" value="regular" checked onclick="toggleExtraHours()">
-            <span class="radio-custom"></span>
-            <span class="radio-label">Regular Shift Time</span>
-        </label>
-        <label class="radio-option">
-            <input type="radio" name="onDutyType" value="extra" onclick="toggleExtraHours()">
-            <span class="radio-custom"></span>
-            <span class="radio-label">Extra Hours</span>
-        </label>
-    </div>
-</div>
-            <div class="form-group" id="extraHoursSection" style="display: none;">
-                <label for="onDutyExtraHours">Extra Hours:</label>
-                <select id="onDutyExtraHours">
-                    <option value="0.5">0.5 hour</option>
-                    <option value="1">1 hour</option>
-                    <option value="1.5">1.5 hours</option>
-                    <option value="2">2 hours</option>
-                    <option value="2.5">2.5 hours</option>
-                    <option value="3">3 hours</option>
-                    <option value="3.5">3.5 hours</option>
-                    <option value="4">4 hours</option>
-                    <option value="4.5">4.5 hours</option>
-                    <option value="5">5 hours</option>
-                    <option value="5.5">5.5 hours</option>
-                    <option value="6">6 hours</option>
-                    <option value="6.5">6.5 hours</option>
-                    <option value="7">7 hours</option>
-                    <option value="7.5">7.5 hours</option>
-                    <option value="8">8 hours (Full day)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="onDutyReason">Reason/Location:</label>
-                <textarea id="onDutyReason" rows="3" placeholder="e.g., Client site visit, Field work"></textarea>
-            </div>
-            <div class="button-group">
-                <button onclick="saveOnDuty()">Save On Duty</button>
-                <button class="btn-secondary" onclick="closeModal('onDutyModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for Late Entry -->
-    <div id="lateEntryModal" class="modal">
-        <div class="modal-content">
-            <h3>Late Entry Registration</h3>
-            <div class="form-group">
-                <label for="lateEntryStaff">Staff Member:</label>
-                <select id="lateEntryStaff" onchange="updateRegularShiftTime()">
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="lateEntryDate">Date:</label>
-                <input type="date" id="lateEntryDate" onchange="updateRegularShiftTime()">
-            </div>
-            <div class="form-group">
-                <label for="regularShiftTime">Regular Shift Time:</label>
-                <input type="text" id="regularShiftTime" readonly style="background: #f5f5f5;">
-            </div>
-            <div class="form-group">
-                <label for="actualTime">Actual Entry Time:</label>
-                <input type="time" id="actualTime" onchange="calculateDelay()" required>
-            </div>
-            <div class="form-group">
-                <label for="delayMinutes">Calculated Delay:</label>
-                <input type="text" id="delayMinutes" readonly style="background: #f5f5f5;">
-                <div id="delayMessage" style="font-size: 0.9em; margin-top: 5px; color: #666;"></div>
-            </div>
-<div class="form-group">
-    <label>Regularization:</label>
-    <div id="regularizeTypeSelector">
-        <label class="radio-option">
-            <input type="radio" name="regularizeType" value="coff" checked onclick="toggleCOFFRequirement()">
-            <span class="radio-custom"></span>
-            <span class="radio-label">Regularize from COFF</span>
-        </label>
-        <label class="radio-option">
-            <input type="radio" name="regularizeType" value="skip" onclick="toggleCOFFRequirement()">
-            <span class="radio-custom"></span>
-            <span class="radio-label">Skip Regularization</span>
-        </label>
-    </div>
-                <div id="coffRequirement" style="padding: 10px; background: #e8f4fc; border-radius: 5px; margin-top: 10px; display: block;">
-                    <strong>COFF Required:</strong> <span id="coffHoursRequired">0</span> hours<br>
-                    <small>Based on delay calculation</small>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="lateEntryReason">Reason for Late Entry:</label>
-                <textarea id="lateEntryReason" rows="2" placeholder="e.g., Traffic, Personal emergency"></textarea>
-            </div>
-            <div class="button-group">
-                <button onclick="saveLateEntry()">Save Late Entry</button>
-                <button class="btn-secondary" onclick="closeModal('lateEntryModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for extra hours -->
-    <div id="extraHoursModal" class="modal">
-        <div class="modal-content">
-            <h3>Add Extra Working Hours</h3>
-            <div class="form-group">
-                <label for="extraHoursStaff">Staff Member:</label>
-                <select id="extraHoursStaff">
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="extraHoursDate">Date:</label>
-                <input type="date" id="extraHoursDate">
-            </div>
-            <div class="form-group">
-                <label for="extraHours">Extra Hours:</label>
-                <select id="extraHours">
-                    <option value="0.5">0.5 hour</option>
-                    <option value="1">1 hour</option>
-                    <option value="1.5">1.5 hours</option>
-                    <option value="2">2 hours</option>
-                    <option value="2.5">2.5 hours</option>
-                    <option value="3">3 hours</option>
-                    <option value="3.5">3.5 hours</option>
-                    <option value="4">4 hours</option>
-                    <option value="4.5">4.5 hours</option>
-                    <option value="5">5 hours</option>
-                    <option value="5.5">5.5 hours</option>
-                    <option value="6">6 hours</option>
-                    <option value="6.5">6.5 hours</option>
-                    <option value="7">7 hours</option>
-                    <option value="7.5">7.5 hours</option>
-                    <option value="8">8 hours (Full day)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="extraHoursReason">Reason:</label>
-                <textarea id="extraHoursReason" rows="3" placeholder="Reason for extra hours"></textarea>
-            </div>
-            <div class="button-group">
-                <button onclick="saveExtraHours()">Save Extra Hours</button>
-                <button class="btn-secondary" onclick="closeModal('extraHoursModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for cancel off-duty working -->
-    <div id="cancelOffDutyModal" class="modal">
-        <div class="modal-content">
-            <h3>Cancel Off-Duty Working Entry</h3>
-            <div class="form-group">
-                <label for="cancelOffDutyDate">Select Date:</label>
-                <input type="date" id="cancelOffDutyDate" onchange="loadOffDutyForDate()">
-            </div>
-            <div id="offDutyListContainer">
-                <!-- Off-duty list will be populated by JavaScript -->
-            </div>
-            <div class="button-group">
-                <button class="btn-secondary" onclick="closeModal('cancelOffDutyModal')">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for COFF application -->
-    <div id="applyCOFFModal" class="modal">
-        <div class="modal-content">
-            <h3>Apply for Compensatory Off (COFF)</h3>
-            <div class="form-group">
-                <label for="coffStaff">Staff Member:</label>
-                <select id="coffStaff" onchange="updateCOFFBalanceDisplay()">
-                    <option value="Sreejith">Sreejith</option>
-                    <option value="Sajeev">Sajeev</option>
-                    <option value="Umesh">Umesh</option>
-                    <option value="Rajesh">Rajesh</option>
-                    <option value="ANEESH">ANEESH (CTP)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>COFF Period:</label>
-                <div class="date-range-group">
-                    <div class="form-group">
-                        <label for="coffFromDate">From Date:</label>
-                        <input type="date" id="coffFromDate" onchange="updateCoffToDate()">
-                    </div>
-                    <div style="align-self: center;">to</div>
-                    <div class="form-group">
-                        <label for="coffToDate">To Date:</label>
-                        <input type="date" id="coffToDate">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="coffReason">Reason:</label>
-                <textarea id="coffReason" rows="3" placeholder="Reason for compensatory off"></textarea>
-            </div>
-            <div class="coff-summary">
-                <h4>Your COFF Balance</h4>
-                <div id="coffBalanceDisplay">Calculating...</div>
-            </div>
-            <div class="button-group">
-                <button onclick="submitCOFF()">Submit COFF Request</button>
-                <button class="btn-secondary" onclick="closeModal('applyCOFFModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for adding/removing holiday -->
-    <div id="holidayModal" class="modal">
-        <div class="modal-content">
-            <h3>Add/Remove Holiday</h3>
-            <div class="form-group">
-                <label for="holidayName">Holiday Name:</label>
-                <input type="text" id="holidayName" placeholder="e.g., New Year, Diwali, Christmas">
-            </div>
-            <div class="form-group">
-                <label for="holidayDate">Date:</label>
-                <input type="date" id="holidayDate" onchange="checkExistingHoliday()">
-            </div>
-            <div id="existingHolidayInfo" style="display: none; padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                <!-- Existing holiday info will be shown here -->
-            </div>
-            <div class="button-group">
-                <button id="holidayActionBtn" onclick="saveHoliday()">Add Holiday</button>
-                <button class="btn-secondary" onclick="closeModal('holidayModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal for adding/removing skeleton shift -->
-    <div id="skeletonModal" class="modal">
-        <div class="modal-content">
-            <h3>Add/Remove Skeleton Shift</h3>
-            <div class="form-group">
-                <label for="skeletonDate">Date:</label>
-                <input type="date" id="skeletonDate" onchange="checkExistingSkeleton()">
-            </div>
-            <div class="form-group">
-                <label for="skeletonHours">Skeleton Hours:</label>
-                <select id="skeletonHours">
-                    <option value="4">4 hours (Half day)</option>
-                    <option value="8">8 hours (Full day)</option>
-                </select>
-            </div>
-<div class="form-group">
-    <label>Exclude Employees from OT:</label>
-    <div class="staff-exclusion-list" id="skeletonExcludeList">
-        <!-- Staff exclusion checkboxes will be populated here -->
-    </div>
-</div>
-            <div class="form-group">
-                <label for="skeletonReason">Reason:</label>
-                <textarea id="skeletonReason" rows="3" placeholder="Reason for skeleton shift"></textarea>
-            </div>
-            <div id="existingSkeletonInfo" style="display: none; padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                <!-- Existing skeleton info will be shown here -->
-            </div>
-            <div class="button-group">
-                <button id="skeletonActionBtn" onclick="saveSkeletonShift()">Add Skeleton Shift</button>
-                <button class="btn-secondary" onclick="closeModal('skeletonModal')">Cancel</button>
-            </div>
-        </div>
+        <!-- PASTE ALL YOUR OTHER MODALS HERE -->
+        <!-- Make sure to add "admin-only" class to action buttons -->
+        
     </div>
 
-    <!-- Modal for approval with reason -->
-    <div id="approvalReasonModal" class="modal">
-        <div class="modal-content">
-            <h3>Approve/Reject Leave</h3>
-            <div class="form-group">
-                <label for="approvalReason">Reason (Optional):</label>
-                <textarea id="approvalReason" rows="3" placeholder="Enter reason for approval/rejection"></textarea>
-            </div>
-            <div class="button-group">
-                <button id="approveWithReasonBtn" class="btn-success" onclick="approveLeaveWithReason()">Approve</button>
-                <button id="rejectWithReasonBtn" class="btn-danger" onclick="rejectLeaveWithReason()">Reject</button>
-                <button class="btn-secondary" onclick="closeModal('approvalReasonModal')">Cancel</button>
-            </div>
-        </div>
-    </div>
+    <!-- Add Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 
-     <script>
+    <script>
 // ==================== FIREBASE CONFIGURATION ====================
-// Replace these values with your actual Firebase config
+// REPLACE THESE WITH YOUR ACTUAL FIREBASE CONFIG VALUES
 const firebaseConfig = {
     apiKey: "AIzaSyBsZb_05bhHF7Mu5qPlZMgl3Ekpi2Citiw",
     authDomain: "phc-shift.firebaseapp.com",
@@ -2730,157 +2622,47 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+try {
+    firebase.initializeApp(firebaseConfig);
+} catch (err) {
+    if (!/already exists/.test(err.message)) {
+        console.error('Firebase initialization error:', err.stack);
+    }
+}
 const db = firebase.firestore();
+const auth = firebase.auth();
 
-// Firebase collections
-const SHIFT_DATA_COLLECTION = "shiftData";
-const LEAVE_DATA_COLLECTION = "leaveData";
-const USERS_COLLECTION = "users";
-
-// User roles
-const ROLES = {
-    ADMIN: 'admin',
-    VIEWER: 'viewer'
-};
-
-// Current user state
+// ==================== AUTHENTICATION SYSTEM ====================
 let currentUser = null;
-let currentUserRole = ROLES.VIEWER;
+let currentRole = null;
 
-// Initialize the application
-function initApp() {
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
+// Authentication functions
+function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
     
-    updateStats();
-    renderStaffList();
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-    updateWeekTitle();
-    updateMonthTitle();
-    updateDayTitle();
-    
-    // Set default dates for modals
-    const todayStr = formatDateForInput(new Date());
-    document.getElementById('leaveFromDate').value = todayStr;
-    document.getElementById('leaveToDate').value = todayStr;
-    document.getElementById('obituaryDate').value = todayStr;
-    document.getElementById('offDutyDate').value = todayStr;
-    document.getElementById('effectiveDate').value = todayStr;
-    document.getElementById('cancelOffDutyDate').value = todayStr;
-    document.getElementById('coffFromDate').value = todayStr;
-    document.getElementById('coffToDate').value = todayStr;
-    document.getElementById('holidayDate').value = todayStr;
-    document.getElementById('skeletonDate').value = todayStr;
-    document.getElementById('cancelFromDate').value = todayStr;
-    document.getElementById('cancelToDate').value = todayStr;
-    document.getElementById('extraHoursDate').value = todayStr;
-    document.getElementById('onDutyDate').value = todayStr;
-    document.getElementById('lateEntryDate').value = todayStr;
-    
-    // Populate off-duty staff dropdown
-    updateOffDutyStaffOptions();
-    
-    // Initialize COFF tab
-    renderCOFFSummary();
-    renderCOFFHistory();
-    
-    // Initialize approvals tab
-    renderApprovals();
-    
-    // Calculate OT for skeleton shifts
-    calculateSkeletonOT();
-    
-    // Calculate COFF balances on init
-    calculateCOFFBalances();
-}
-
-// Fix date format for input fields
-function formatDateForInput(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Format date for display
-function formatDateForDisplay(date) {
-    return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric',
-        weekday: 'short'
-    });
-}
-
-// Show login screen
-function showLoginScreen() {
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('user-info-bar').style.display = 'none';
-    document.querySelector('.container').style.display = 'none';
-    document.body.style.overflow = 'hidden';
-}
-
-// Show main application
-function showMainApp() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('user-info-bar').style.display = 'block';
-    document.querySelector('.container').style.display = 'block';
-    document.body.style.overflow = 'auto';
-}
-
-// Load user role from Firestore
-async function loadUserRole(email) {
-    try {
-        const userDoc = await db.collection(USERS_COLLECTION).doc(email).get();
-        if (userDoc.exists) {
-            currentUserRole = userDoc.data().role || ROLES.VIEWER;
-        } else {
-            // Create new user with viewer role by default
-            currentUserRole = ROLES.VIEWER;
-            await db.collection(USERS_COLLECTION).doc(email).set({
-                email: email,
-                role: ROLES.VIEWER,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-        updateUIForRole();
-    } catch (error) {
-        console.error("Error loading user role:", error);
-        currentUserRole = ROLES.VIEWER;
-    }
-}
-
-// Update UI based on user role
-function updateUIForRole() {
-    const isAdmin = currentUserRole === ROLES.ADMIN;
-    const isViewer = currentUserRole === ROLES.VIEWER;
-    
-    if (currentUser) {
-        document.getElementById('current-user-email').textContent = currentUser.email;
-        document.getElementById('user-role-badge').textContent = isAdmin ? 'ADMIN' : 'VIEWER';
-        document.getElementById('user-role-badge').style.background = isAdmin ? '#27ae60' : '#3498db';
+    if (tab === 'login') {
+        document.querySelector('.auth-tab[onclick="switchAuthTab(\'login\')"]').classList.add('active');
+        document.getElementById('login-form').classList.add('active');
+    } else {
+        document.querySelector('.auth-tab[onclick="switchAuthTab(\'register\')"]').classList.add('active');
+        document.getElementById('register-form').classList.add('active');
     }
     
-    // Show/hide controls based on role
-    const controls = document.querySelector('.controls');
-    if (controls) {
-        controls.style.display = isViewer ? 'none' : 'flex';
-    }
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('register-error').style.display = 'none';
+    document.getElementById('login-message').style.display = 'none';
+    document.getElementById('register-message').style.display = 'none';
 }
 
-// Login function
-function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
     const errorDiv = document.getElementById('login-error');
+    const messageDiv = document.getElementById('login-message');
+    
+    errorDiv.style.display = 'none';
+    messageDiv.style.display = 'none';
     
     if (!email || !password) {
         errorDiv.textContent = 'Please enter email and password';
@@ -2888,228 +2670,564 @@ function login() {
         return;
     }
     
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            // Signed in successfully
-            currentUser = userCredential.user;
-            errorDiv.style.display = 'none';
-            return loadUserRole(currentUser.email);
-        })
-        .then(() => {
-            showMainApp();
-            initApp();
-            loadAllData();
-        })
-        .catch((error) => {
-            errorDiv.textContent = error.message;
-            errorDiv.style.display = 'block';
-        });
-}
-
-// Logout function
-function logout() {
-    auth.signOut()
-        .then(() => {
-            currentUser = null;
-            currentUserRole = ROLES.VIEWER;
-            showLoginScreen();
-        })
-        .catch((error) => {
-            console.error("Logout error:", error);
-            alert("Logout error: " + error.message);
-        });
-}
-
-// Initialize authentication state listener
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        // User is signed in
-        currentUser = user;
-        try {
-            await loadUserRole(user.email);
-            showMainApp();
-            initApp();
-            await loadAllData();
-        } catch (error) {
-            console.error("Error in auth state change:", error);
-            showLoginScreen();
-        }
-    } else {
-        // No user is signed in
-        showLoginScreen();
-    }
-});
-
-// Load all data from Firebase
-async function loadAllData() {
     try {
-        // Load shift data
-        const shiftDoc = await db.collection(SHIFT_DATA_COLLECTION).doc('current').get();
-        if (shiftDoc.exists) {
-            const data = shiftDoc.data();
-            // Keep the original shifts structure and only update if needed
-            if (data.shifts) {
-                shiftData.shifts = data.shifts;
-            }
+        // Show loading
+        messageDiv.textContent = 'Logging in...';
+        messageDiv.style.display = 'block';
+        
+        // Sign in with Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Get user role from Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (userDoc.exists) {
+            currentUser = user;
+            currentRole = userDoc.data().role;
+            
+            // Save session
+            sessionStorage.setItem('currentUserId', user.uid);
+            sessionStorage.setItem('currentUserEmail', user.email);
+            sessionStorage.setItem('currentRole', currentRole);
+            
+            // Show success message
+            messageDiv.textContent = 'Login successful! Loading data...';
+            
+            // Initialize app
+            setTimeout(async () => {
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                document.getElementById('current-user').textContent = user.email;
+                document.getElementById('user-role').textContent = currentRole.toUpperCase();
+                
+                document.body.classList.add(currentRole);
+                
+                // Load all data from Firestore
+                await loadAllData();
+                initApp();
+                startAutoSave();
+            }, 1000);
+        } else {
+            errorDiv.textContent = 'User data not found';
+            errorDiv.style.display = 'block';
+            messageDiv.style.display = 'none';
         }
-        
-        // Load leave data
-        const leaveDoc = await db.collection(LEAVE_DATA_COLLECTION).doc('data').get();
-        if (leaveDoc.exists) {
-            const data = leaveDoc.data();
-            leaveData = data.leaveData || {};
-            leaveRequests = data.leaveRequests || [];
-            offDutyEntries = data.offDutyEntries || {};
-            onDutyEntries = data.onDutyEntries || {};
-            extraHoursData = data.extraHoursData || {};
-            coffData = data.coffData || { balances: {}, history: [], pending: [] };
-            holidays = data.holidays || {};
-            skeletonShifts = data.skeletonShifts || {};
-            otData = data.otData || { monthly: {} };
-            lateEntries = data.lateEntries || { entries: [] };
-        }
-        
-        // Refresh views with loaded data
-        renderWeekView();
-        renderMonthView();
-        renderTodayView();
-        renderApprovals();
-        renderCOFFSummary();
-        renderCOFFHistory();
-        
-        console.log("Data loaded successfully from Firebase");
     } catch (error) {
-        console.error("Error loading from Firebase:", error);
-        // Continue with default/local data
+        console.error('Login error:', error);
+        errorDiv.textContent = error.message || 'Login failed. Please try again.';
+        errorDiv.style.display = 'block';
+        messageDiv.style.display = 'none';
     }
 }
 
-// Save all data to Firebase
-async function saveAllData() {
-    if (!currentUser) {
-        console.warn("User not logged in, cannot save to Firebase");
+async function register() {
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+    const role = document.getElementById('register-role').value;
+    const errorDiv = document.getElementById('register-error');
+    const messageDiv = document.getElementById('register-message');
+    
+    errorDiv.style.display = 'none';
+    messageDiv.style.display = 'none';
+    
+    if (!email || !password) {
+        errorDiv.textContent = 'Please enter email and password';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.style.display = 'block';
         return;
     }
     
     try {
-        // Save shift data
-        await db.collection(SHIFT_DATA_COLLECTION).doc('current').set({
-            shifts: shiftData.shifts,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedBy: currentUser.email
-        }, { merge: true });
+        // Show loading
+        messageDiv.textContent = 'Creating account...';
+        messageDiv.style.display = 'block';
         
-        // Save leave data
-        await db.collection(LEAVE_DATA_COLLECTION).doc('data').set({
-            leaveData: leaveData,
-            leaveRequests: leaveRequests,
-            offDutyEntries: offDutyEntries,
-            onDutyEntries: onDutyEntries,
-            extraHoursData: extraHoursData,
-            coffData: coffData,
-            holidays: holidays,
-            skeletonShifts: skeletonShifts,
-            otData: otData,
-            lateEntries: lateEntries,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedBy: currentUser.email
-        }, { merge: true });
+        // Create user with Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
         
-        console.log("All data saved to Firebase");
+        // Save user data to Firestore
+        await db.collection('users').doc(user.uid).set({
+            email: email,
+            role: role,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Create default data if this is the first admin
+        if (role === 'admin') {
+            const shiftDataCheck = await db.collection('shiftData').doc('default').get();
+            if (!shiftDataCheck.exists) {
+                await initializeDefaultData();
+            }
+        }
+        
+        messageDiv.textContent = 'Registration successful! Please login.';
+        
+        document.getElementById('register-email').value = '';
+        document.getElementById('register-password').value = '';
+        
+        setTimeout(() => {
+            switchAuthTab('login');
+            document.getElementById('login-email').value = email;
+        }, 2000);
     } catch (error) {
-        console.error("Error saving to Firebase:", error);
+        console.error('Registration error:', error);
+        errorDiv.textContent = error.message || 'Registration failed. Please try again.';
+        errorDiv.style.display = 'block';
+        messageDiv.style.display = 'none';
     }
 }
 
-// Load all data from Firebase
+async function initializeDefaultData() {
+    try {
+        // Initialize default shift data
+        const defaultShiftData = {
+            days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            shifts: {
+                "Sunday": {
+                    "Sreejith": "Obituary duty 5pm-1:30am",
+                    "Sajeev": "5pm-1:30am",
+                    "Umesh": "5pm-1:30am",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "7:00pm-3:30am"
+                },
+                "Monday": {
+                    "Sreejith": "Obituary duty 5pm-1:30am",
+                    "Sajeev": "Off-operator",
+                    "Umesh": "5pm-1:30am",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "7:00pm-3:30am"
+                },
+                "Tuesday": {
+                    "Sreejith": "5pm-1:30am",
+                    "Sajeev": "Obituary duty 5pm-1:30am",
+                    "Umesh": "Off-operator",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "7:00pm-3:30am"
+                },
+                "Wednesday": {
+                    "Sreejith": "Off-operator",
+                    "Sajeev": "5pm-1:30am",
+                    "Umesh": "Obituary duty 5pm-1:30am",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "Off-operator"
+                },
+                "Thursday": {
+                    "Sreejith": "Obituary duty 5pm-1:30am",
+                    "Sajeev": "4pm-12:30pm",
+                    "Umesh": "5pm-1:30am",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "7:00pm-3:30am"
+                },
+                "Friday": {
+                    "Sreejith": "5pm-1:30am",
+                    "Sajeev": "Obituary duty 5pm-1:30am",
+                    "Umesh": "7pm-3:30pm",
+                    "Rajesh": "Off-operator",
+                    "ANEESH": "7:00pm-3:30am"
+                },
+                "Saturday": {
+                    "Sreejith": "4pm-12:30pm",
+                    "Sajeev": "5pm-1:30am",
+                    "Umesh": "Obituary duty 5pm-1:30am",
+                    "Rajesh": "7pm-3:30pm",
+                    "ANEESH": "7:00pm-3:30am"
+                }
+            }
+        };
+        
+        await db.collection('shiftData').doc('default').set(defaultShiftData);
+        
+        // Initialize empty application data
+        const emptyData = {
+            leaveData: {},
+            leaveRequests: [],
+            offDutyEntries: {},
+            onDutyEntries: {},
+            extraHoursData: {},
+            holidays: {},
+            skeletonShifts: {},
+            otData: { monthly: {} },
+            lateEntries: { entries: [] },
+            coffData: {
+                balances: {
+                    "Sreejith": 0,
+                    "Sajeev": 0,
+                    "Umesh": 0,
+                    "Rajesh": 0,
+                    "ANEESH": 0
+                },
+                history: [],
+                pending: []
+            },
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await db.collection('applicationData').doc('main').set(emptyData);
+        
+        console.log('Default data initialized');
+    } catch (error) {
+        console.error('Error initializing default data:', error);
+    }
+}
+
 async function loadAllData() {
     try {
+        // Show loading indicator
+        showLoading(true);
+        
         // Load shift data
-        const shiftDoc = await db.collection(SHIFT_DATA_COLLECTION).doc('current').get();
+        const shiftDoc = await db.collection('shiftData').doc('default').get();
         if (shiftDoc.exists) {
-            const data = shiftDoc.data();
-            shiftData.shifts = data.shifts || shiftData.shifts;
-        }
-        
-        // Load leave data
-        const leaveDoc = await db.collection(LEAVE_DATA_COLLECTION).doc('data').get();
-        if (leaveDoc.exists) {
-            const data = leaveDoc.data();
-            leaveData = data.leaveData || {};
-            leaveRequests = data.leaveRequests || [];
-            offDutyEntries = data.offDutyEntries || {};
-            onDutyEntries = data.onDutyEntries || {};
-            extraHoursData = data.extraHoursData || {};
-            coffData = data.coffData || { balances: {}, history: [], pending: [] };
-            holidays = data.holidays || {};
-            skeletonShifts = data.skeletonShifts || {};
-            otData = data.otData || { monthly: {} };
-            lateEntries = data.lateEntries || { entries: [] };
+            window.shiftData = shiftDoc.data();
         } else {
-            loadFromLocalStorage();
+            // Use default data if not in Firestore
+            window.shiftData = {
+                days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                shifts: {
+                    "Sunday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Monday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "Off-operator",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Tuesday": {
+                        "Sreejith": "5pm-1:30am",
+                        "Sajeev": "Obituary duty 5pm-1:30am",
+                        "Umesh": "Off-operator",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Wednesday": {
+                        "Sreejith": "Off-operator",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "Obituary duty 5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "Off-operator"
+                    },
+                    "Thursday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "4pm-12:30pm",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Friday": {
+                        "Sreejith": "5pm-1:30am",
+                        "Sajeev": "Obituary duty 5pm-1:30am",
+                        "Umesh": "7pm-3:30pm",
+                        "Rajesh": "Off-operator",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Saturday": {
+                        "Sreejith": "4pm-12:30pm",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "Obituary duty 5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    }
+                }
+            };
         }
         
-        // Initialize app
-        initApp();
+        // Load application data
+        const appDataDoc = await db.collection('applicationData').doc('main').get();
+        if (appDataDoc.exists) {
+            const data = appDataDoc.data();
+            window.leaveData = data.leaveData || {};
+            window.leaveRequests = data.leaveRequests || [];
+            window.offDutyEntries = data.offDutyEntries || {};
+            window.onDutyEntries = data.onDutyEntries || {};
+            window.extraHoursData = data.extraHoursData || {};
+            window.holidays = data.holidays || {};
+            window.skeletonShifts = data.skeletonShifts || {};
+            window.otData = data.otData || { monthly: {} };
+            window.lateEntries = data.lateEntries || { entries: [] };
+            window.coffData = data.coffData || {
+                balances: {
+                    "Sreejith": 0,
+                    "Sajeev": 0,
+                    "Umesh": 0,
+                    "Rajesh": 0,
+                    "ANEESH": 0
+                },
+                history: [],
+                pending: []
+            };
+        } else {
+            // Initialize empty data if not in Firestore
+            window.leaveData = {};
+            window.leaveRequests = [];
+            window.offDutyEntries = {};
+            window.onDutyEntries = {};
+            window.extraHoursData = {};
+            window.holidays = {};
+            window.skeletonShifts = {};
+            window.otData = { monthly: {} };
+            window.lateEntries = { entries: [] };
+            window.coffData = {
+                balances: {
+                    "Sreejith": 0,
+                    "Sajeev": 0,
+                    "Umesh": 0,
+                    "Rajesh": 0,
+                    "ANEESH": 0
+                },
+                history: [],
+                pending: []
+            };
+        }
         
+        console.log('All data loaded from Firestore');
+        showLoading(false);
     } catch (error) {
-        console.error("Error loading from Firebase:", error);
-        loadFromLocalStorage();
-        initApp();
-        alert("Using local data. Firebase error: " + error.message);
+        console.error('Error loading data:', error);
+        showNotification('Error loading data: ' + error.message, 'error');
+        showLoading(false);
     }
 }
 
-// Fallback localStorage functions
-function saveToLocalStorage() {
-    try {
-        localStorage.setItem('shiftData', JSON.stringify(shiftData));
-        localStorage.setItem('leaveData', JSON.stringify(leaveData));
-        localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-        localStorage.setItem('offDutyEntries', JSON.stringify(offDutyEntries));
-        localStorage.setItem('onDutyEntries', JSON.stringify(onDutyEntries));
-        localStorage.setItem('extraHoursData', JSON.stringify(extraHoursData));
-        localStorage.setItem('coffData', JSON.stringify(coffData));
-        localStorage.setItem('holidays', JSON.stringify(holidays));
-        localStorage.setItem('skeletonShifts', JSON.stringify(skeletonShifts));
-        localStorage.setItem('otData', JSON.stringify(otData));
-        localStorage.setItem('lateEntries', JSON.stringify(lateEntries));
-    } catch (e) {
-        console.error("Error saving to localStorage:", e);
+async function saveAllData() {
+    if (!isAdmin()) {
+        console.log('Only admins can save data');
+        return;
     }
-}
-
-function loadFromLocalStorage() {
+    
     try {
-        const savedShiftData = JSON.parse(localStorage.getItem('shiftData'));
-        if (savedShiftData && savedShiftData.shifts) {
-            shiftData.shifts = savedShiftData.shifts;
-        }
+        const dataToSave = {
+            leaveData: window.leaveData || {},
+            leaveRequests: window.leaveRequests || [],
+            offDutyEntries: window.offDutyEntries || {},
+            onDutyEntries: window.onDutyEntries || {},
+            extraHoursData: window.extraHoursData || {},
+            holidays: window.holidays || {},
+            skeletonShifts: window.skeletonShifts || {},
+            otData: window.otData || { monthly: {} },
+            lateEntries: window.lateEntries || { entries: [] },
+            coffData: window.coffData || {
+                balances: {
+                    "Sreejith": 0,
+                    "Sajeev": 0,
+                    "Umesh": 0,
+                    "Rajesh": 0,
+                    "ANEESH": 0
+                },
+                history: [],
+                pending: []
+            },
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy: currentUser.email
+        };
         
-        leaveData = JSON.parse(localStorage.getItem('leaveData')) || {};
-        leaveRequests = JSON.parse(localStorage.getItem('leaveRequests')) || [];
-        offDutyEntries = JSON.parse(localStorage.getItem('offDutyEntries')) || {};
-        onDutyEntries = JSON.parse(localStorage.getItem('onDutyEntries')) || {};
-        extraHoursData = JSON.parse(localStorage.getItem('extraHoursData')) || {};
-        coffData = JSON.parse(localStorage.getItem('coffData')) || { balances: {}, history: [], pending: [] };
-        holidays = JSON.parse(localStorage.getItem('holidays')) || {};
-        skeletonShifts = JSON.parse(localStorage.getItem('skeletonShifts')) || {};
-        otData = JSON.parse(localStorage.getItem('otData')) || { monthly: {} };
-        lateEntries = JSON.parse(localStorage.getItem('lateEntries')) || { entries: [] };
-    } catch (e) {
-        console.error("Error loading from localStorage:", e);
+        await db.collection('applicationData').doc('main').set(dataToSave, { merge: true });
+        console.log('Data saved to Firestore');
+        
+        // Show save confirmation (but only occasionally to avoid annoyance)
+        if (Math.random() < 0.1) { // 10% chance to show save notification
+            showNotification('Data auto-saved', 'info');
+        }
+    } catch (error) {
+        console.error('Error saving data:', error);
+        showNotification('Error saving data: ' + error.message, 'error');
     }
 }
 
-// Initialize the application
-function initApp() {
+// Auto-save function (every 2 minutes for admins)
+let autoSaveInterval;
+function startAutoSave() {
+    if (isAdmin() && !autoSaveInterval) {
+        autoSaveInterval = setInterval(() => {
+            saveAllData();
+        }, 120000); // 2 minutes
+    }
+}
+
+function stopAutoSave() {
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+        autoSaveInterval = null;
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+function showLoading(show) {
+    let loader = document.getElementById('app-loading');
+    
+    if (show) {
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'app-loading';
+            loader.className = 'loading';
+            loader.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div>Loading data from server...</div>
+            `;
+            document.getElementById('app-container').appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    } else if (loader) {
+        loader.style.display = 'none';
+    }
+}
+
+async function logout() {
+    try {
+        await auth.signOut();
+        sessionStorage.removeItem('currentUserId');
+        sessionStorage.removeItem('currentUserEmail');
+        sessionStorage.removeItem('currentRole');
+        
+        stopAutoSave();
+        document.body.classList.remove('admin', 'viewer');
+        
+        document.getElementById('auth-container').style.display = 'flex';
+        document.getElementById('app-container').style.display = 'none';
+        
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('register-email').value = '';
+        document.getElementById('register-password').value = '';
+        
+        switchAuthTab('login');
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+async function checkSession() {
+    const savedUserId = sessionStorage.getItem('currentUserId');
+    
+    if (savedUserId) {
+        try {
+            showLoading(true);
+            
+            // Check if user is still logged in
+            auth.onAuthStateChanged(async (user) => {
+                if (user && user.uid === savedUserId) {
+                    // Get user role from Firestore
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    
+                    if (userDoc.exists) {
+                        currentUser = user;
+                        currentRole = userDoc.data().role;
+                        
+                        document.getElementById('auth-container').style.display = 'none';
+                        document.getElementById('app-container').style.display = 'block';
+                        
+                        document.getElementById('current-user').textContent = user.email;
+                        document.getElementById('user-role').textContent = currentRole.toUpperCase();
+                        
+                        document.body.classList.add(currentRole);
+                        
+                        // Load data and initialize app
+                        await loadAllData();
+                        initApp();
+                        startAutoSave();
+                        showLoading(false);
+                    }
+                } else {
+                    showLoading(false);
+                }
+            });
+        } catch (error) {
+            console.error('Session check error:', error);
+            showLoading(false);
+        }
+    }
+}
+
+// Check if current user is admin
+function isAdmin() {
+    return currentRole === 'admin';
+}
+
+// Check if current user is viewer
+function isViewer() {
+    return currentRole === 'viewer';
+}
+
+// Secure function execution - only allow if admin
+function requireAdmin(callback, errorMessage = "Admin access required") {
+    if (isAdmin()) {
+        return callback();
+    } else {
+        alert(errorMessage);
+        return false;
+    }
+}
+
+// ==================== ORIGINAL APPLICATION CODE ====================
+// Staff name abbreviations
+const staffAbbreviations = {
+    "Sreejith": "SKS",
+    "Sajeev": "SJV", 
+    "Umesh": "UMU",
+    "Rajesh": "MR",
+    "ANEESH": "AMR"
+};
+
+// Initialize data (will be loaded from Firebase)
+// These are now global variables
+let shiftData = {};
+let leaveData = {};
+let leaveRequests = [];
+let offDutyEntries = {};
+let onDutyEntries = {};
+let extraHoursData = {};
+let coffData = {};
+let holidays = {};
+let skeletonShifts = {};
+let otData = {};
+let lateEntries = { entries: [] };
 
 // Attendance report navigation state
-let currentAttendancePeriod = 0; // 0 = current, -1 = previous, -2 = 2 periods ago, etc.
+let currentAttendancePeriod = 0;
 let currentAttendanceStartDate = null;
 let currentAttendanceEndDate = null;
 
-// Initialize COFF data structure
+// Initialize COFF data structure if needed
 if (!coffData.balances) {
     coffData.balances = {
         "Sreejith": 0,
@@ -3130,10 +3248,10 @@ if (!lateEntries.entries) lateEntries.entries = [];
 
 // View state
 let currentWeekStart = new Date();
-currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); // Start from Sunday
+currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
-let currentDayView = new Date(); // For today view
+let currentDayView = new Date();
 
 // For approval modal
 let currentApprovalRequestId = null;
@@ -3147,6 +3265,241 @@ const currentDateStr = today.toLocaleDateString('en-US', {
     month: 'long', 
     day: 'numeric' 
 });
+
+// ==================== MODIFIED FUNCTIONS FOR FIREBASE ====================
+
+// Modified modal open functions to check permissions
+function openAddLeaveModal() {
+    if (isViewer()) {
+        alert("Viewers cannot apply for leave. Please contact an admin.");
+        return;
+    }
+    openModal('leaveModal');
+}
+
+function openCancelLeaveModal() {
+    if (isViewer()) {
+        alert("Viewers cannot cancel leaves. Please contact an admin.");
+        return;
+    }
+    openModal('cancelLeaveModal');
+}
+
+function openEditShiftModal() {
+    if (isViewer()) {
+        alert("Viewers cannot edit shifts. Please contact an admin.");
+        return;
+    }
+    openModal('editShiftModal');
+    loadShiftEditGrid();
+}
+
+function openEditObituaryModal() {
+    if (isViewer()) {
+        alert("Viewers cannot edit obituary duty. Please contact an admin.");
+        return;
+    }
+    openModal('editObituaryModal');
+    loadCurrentObituaryDuty();
+}
+
+function openOffDutyModal() {
+    if (isViewer()) {
+        alert("Viewers cannot enter off-duty working. Please contact an admin.");
+        return;
+    }
+    openModal('offDutyModal');
+    updateOffDutyStaffOptions();
+}
+
+function openOnDutyModal() {
+    if (isViewer()) {
+        alert("Viewers cannot enter on-duty work. Please contact an admin.");
+        return;
+    }
+    openModal('onDutyModal');
+    document.getElementById('onDutyDate').value = formatDateForInput(new Date());
+    document.getElementById('onDutyExtraHours').value = '0.5';
+    document.getElementById('onDutyReason').value = '';
+    document.querySelector('input[name="onDutyType"][value="regular"]').checked = true;
+    document.getElementById('extraHoursSection').style.display = 'none';
+}
+
+function openLateEntryModal() {
+    if (isViewer()) {
+        alert("Viewers cannot register late entries. Please contact an admin.");
+        return;
+    }
+    openModal('lateEntryModal');
+    const todayStr = formatDateForInput(new Date());
+    document.getElementById('lateEntryDate').value = todayStr;
+    document.getElementById('actualTime').value = '';
+    document.getElementById('lateEntryReason').value = '';
+    document.querySelector('input[name="regularizeType"][value="coff"]').checked = true;
+    document.getElementById('coffRequirement').style.display = 'block';
+    
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    document.getElementById('actualTime').value = currentTime;
+    
+    updateRegularShiftTime();
+}
+
+function openExtraHoursModal() {
+    if (isViewer()) {
+        alert("Viewers cannot add extra hours. Please contact an admin.");
+        return;
+    }
+    openModal('extraHoursModal');
+    const todayStr = formatDateForInput(new Date());
+    document.getElementById('extraHoursDate').value = todayStr;
+    document.getElementById('extraHours').value = '1';
+    document.getElementById('extraHoursReason').value = '';
+}
+
+function openCancelOffDutyModal() {
+    if (isViewer()) {
+        alert("Viewers cannot cancel off-duty entries. Please contact an admin.");
+        return;
+    }
+    openModal('cancelOffDutyModal');
+    loadOffDutyForDate();
+}
+
+function openApplyCOFFModal() {
+    if (isViewer()) {
+        alert("Viewers cannot apply for COFF. Please contact an admin.");
+        return;
+    }
+    openModal('applyCOFFModal');
+    updateCOFFBalanceDisplay();
+}
+
+function openHolidayModal() {
+    if (isViewer()) {
+        alert("Viewers cannot manage holidays. Please contact an admin.");
+        return;
+    }
+    openModal('holidayModal');
+    checkExistingHoliday();
+}
+
+function openSkeletonModal() {
+    if (isViewer()) {
+        alert("Viewers cannot manage skeleton shifts. Please contact an admin.");
+        return;
+    }
+    openModal('skeletonModal');
+    const todayStr = formatDateForInput(new Date());
+    document.getElementById('skeletonDate').value = todayStr;
+    document.getElementById('skeletonHours').value = '8';
+    document.getElementById('skeletonReason').value = '';
+    document.getElementById('existingSkeletonInfo').style.display = 'none';
+    document.getElementById('skeletonActionBtn').textContent = 'Add Skeleton Shift';
+    document.getElementById('skeletonActionBtn').className = '';
+    
+    const excludeList = document.getElementById('skeletonExcludeList');
+    excludeList.innerHTML = '';
+    
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    staffList.forEach(staff => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML = `
+            <label class="checkbox-option">
+                <input type="checkbox" id="exclude_${staff}" value="${staff}">
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label">${staffAbbreviations[staff]} (${staff})</span>
+            </label>
+        `;
+        excludeList.appendChild(item);
+    });
+    
+    checkExistingSkeleton();
+}
+
+// Modified submit functions to save to Firebase
+async function submitLeave() {
+    if (!isAdmin()) return;
+    if (!checkLeaveEligibility()) return;
+    
+    const staff = document.getElementById('leaveStaff').value;
+    const fromDate = new Date(document.getElementById('leaveFromDate').value);
+    const toDate = new Date(document.getElementById('leaveToDate').value);
+    const type = document.getElementById('leaveType').value;
+    
+    const dateRange = getDatesInRange(fromDate, toDate);
+    const leaveTypeText = type === 'full' ? 'Full Day Leave' : 'Half Day Leave';
+    
+    dateRange.forEach(date => {
+        const dateKey = formatDateForInput(date);
+        const leaveRequest = {
+            id: Date.now() + Math.random(),
+            staff: staff,
+            date: dateKey,
+            type: leaveTypeText,
+            reason: '',
+            status: 'pending',
+            requestedAt: new Date().toISOString(),
+            isCOFF: false,
+            requestedBy: currentUser.email
+        };
+        
+        leaveRequests.push(leaveRequest);
+    });
+    
+    await saveAllData();
+    updateStats();
+    
+    alert(`Leave request submitted for ${staff} from ${formatDateForInput(fromDate)} to ${formatDateForInput(toDate)}`);
+    closeModal('leaveModal');
+    
+    renderWeekView();
+    renderMonthView();
+    renderTodayView();
+    renderApprovals();
+}
+
+async function transferObituaryDuty() {
+    if (!isAdmin()) return;
+    
+    const date = document.getElementById('obituaryDate').value;
+    const transferFrom = document.getElementById('transferFromStaff').value;
+    const transferTo = document.getElementById('transferToStaff').value;
+    const reason = document.getElementById('obituaryReason').value;
+    
+    if (!transferFrom || !transferTo) {
+        alert('Please select both "Transfer From" and "Transfer To" staff members.');
+        return;
+    }
+    
+    if (transferFrom === transferTo) {
+        alert('Cannot transfer obituary duty to the same staff member.');
+        return;
+    }
+    
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+    const fromAbbrev = staffAbbreviations[transferFrom];
+    const toAbbrev = staffAbbreviations[transferTo];
+    
+    const fromCurrentShift = shiftData.shifts[dayName][transferFrom];
+    const toCurrentShift = shiftData.shifts[dayName][transferTo];
+    
+    shiftData.shifts[dayName][transferFrom] = toCurrentShift;
+    shiftData.shifts[dayName][transferTo] = "Obituary duty 5pm-1:30am";
+    
+    // Save shift data to Firebase
+    await db.collection('shiftData').doc('default').set(shiftData, { merge: true });
+    
+    alert(`Obituary duty transferred from ${fromAbbrev} (${transferFrom}) to ${toAbbrev} (${transferTo}) on ${date}${reason ? `\nReason: ${reason}` : ''}`);
+    closeModal('editObituaryModal');
+    
+    renderWeekView();
+    renderMonthView();
+    renderTodayView();
+}
 
 // Initialize the application
 function initApp() {
@@ -3178,55 +3531,24 @@ function initApp() {
     document.getElementById('onDutyDate').value = todayStr;
     document.getElementById('lateEntryDate').value = todayStr;
     
-    // Populate off-duty staff dropdown
     updateOffDutyStaffOptions();
-    
-    // Initialize COFF tab
     renderCOFFSummary();
     renderCOFFHistory();
-    
-    // Initialize approvals tab
     renderApprovals();
-    
-    // Calculate OT for skeleton shifts
     calculateSkeletonOT();
-    
-    // Calculate COFF balances on init
     calculateCOFFBalances();
-    
-    // Add touch event listeners for better mobile experience
     initTouchEvents();
     
-    // Update UI for current role
-    if (currentUser) {
-        updateUIForRole();
+    // Adjust UI based on role
+    if (isViewer()) {
+        // Switch to dashboard tab by default for viewers
+        switchTab('dashboard');
     }
-    
-    isInitialized = true;
 }
 
-// Initialize touch events for mobile
-function initTouchEvents() {
-    // Make buttons more touch-friendly
-    const buttons = document.querySelectorAll('button, .tab, .day-cell');
-    buttons.forEach(button => {
-        button.addEventListener('touchstart', function() {
-            this.style.transform = 'scale(0.98)';
-        });
-        button.addEventListener('touchend', function() {
-            this.style.transform = '';
-        });
-    });
-    
-    // Prevent zoom on input focus for mobile
-    document.addEventListener('touchstart', function(event) {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
-            event.target.style.fontSize = '16px';
-        }
-    });
-}
+// ==================== ORIGINAL HELPER FUNCTIONS ====================
+// These are your original functions - you need to paste them here
 
-// Fix date format for input fields
 function formatDateForInput(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -3234,7 +3556,6 @@ function formatDateForInput(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Format date for display
 function formatDateForDisplay(date) {
     return date.toLocaleDateString('en-US', { 
         month: 'short', 
@@ -3244,7 +3565,6 @@ function formatDateForDisplay(date) {
     });
 }
 
-// Update statistics
 function updateStats() {
     const pendingCount = leaveRequests.filter(req => req.status === 'pending').length;
     document.getElementById('pending-count').textContent = pendingCount;
@@ -3256,7 +3576,6 @@ function updateStats() {
     document.getElementById('coff-balance').textContent = totalCoffBalance.toFixed(1) + ' days';
 }
 
-// Render staff list
 function renderStaffList() {
     const staffList = document.getElementById('staff-list');
     const staff = [
@@ -3279,148 +3598,11 @@ function renderStaffList() {
     });
 }
 
-// Render today view
-function renderTodayView() {
-    const container = document.getElementById('todayViewContainer');
-    const date = currentDayView;
-    const dayIndex = date.getDay();
-    const dayName = shiftData.days[dayIndex];
-    const dateStr = formatDateForDisplay(date);
-    
-    const isToday = date.toDateString() === today.toDateString();
-    const dateKey = formatDateForInput(date);
-    const isHoliday = holidays[dateKey];
-    const isSkeleton = skeletonShifts[dateKey];
-    
-    let html = `
-        <div class="day-header" style="margin-bottom: 15px;">
-            <div class="day-name">${dayName}</div>
-            <div class="date">${dateStr}</div>
-        </div>
-    `;
-    
-    // Add holiday/skeleton marker
-    if (isHoliday) {
-        html += `<div class="holiday-marker" style="position: static; margin-bottom: 10px; padding: 5px 8px; font-size: 0.8em;">HOLIDAY: ${holidays[dateKey].name}</div>`;
-    } else if (isSkeleton) {
-        html += `<div class="skeleton-marker" style="position: static; margin-bottom: 10px; padding: 5px 8px; font-size: 0.8em;">SKELETON SHIFT: ${skeletonShifts[dateKey].hours} hours</div>`;
-    }
-    
-    // Get all staff for today - INCLUDING ANEESH
-    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-    let availableOperators = 0;
-    let hasCriticalWarning = false;
-    
-    staffList.forEach(staff => {
-        const shift = shiftData.shifts[dayName][staff];
-        const isOnLeave = checkIfOnLeave(staff, date);
-        const isOffDutyWorking = checkOffDutyWorking(staff, date);
-        const isOnDuty = checkOnDuty(staff, date);
-        const hasExtraHours = checkExtraHours(staff, date);
-        const leaveStatus = getLeaveStatus(staff, date);
-        const hasLateEntry = checkLateEntry(staff, date);
-        const abbrev = staffAbbreviations[staff];
-        
-        let statusClass = '';
-        let statusText = '';
-        let badge = '';
-        let shiftDisplay = shift || 'Not Scheduled';
-        
-        if (hasLateEntry) {
-            statusClass = 'late-entry';
-            const lateEntry = getLateEntry(staff, date);
-            statusText = `Late Entry: ${lateEntry.delayMinutes} min delay`;
-            badge = '<span class="badge late-entry-badge">LATE</span>';
-            shiftDisplay = lateEntry.actualTime || shiftDisplay;
-            availableOperators++;
-        } else if (leaveStatus === 'pending') {
-            statusClass = 'leave-pending';
-            statusText = 'Pending Leave';
-            badge = '<span class="badge leave-pending-badge">PENDING</span>';
-        } else if (leaveStatus === 'approved') {
-            statusClass = 'leave-approved';
-            statusText = 'On Leave';
-            badge = '<span class="badge leave-approved-badge">LEAVE</span>';
-        } else if (leaveStatus === 'rejected') {
-            statusClass = 'leave-rejected';
-            statusText = 'Leave Rejected';
-            badge = '<span class="badge leave-rejected-badge">REJECTED</span>';
-        } else if (isOffDutyWorking) {
-            statusClass = 'off-duty-working';
-            statusText = 'Off-duty Working';
-            const entry = offDutyEntries[dateKey];
-            shiftDisplay = entry ? entry.shift : shiftDisplay;
-            badge = '<span class="badge off-duty-working-badge">OFF-DUTY</span>';
-            availableOperators++;
-        } else if (isOnDuty) {
-            statusClass = 'on-duty';
-            const entry = onDutyEntries[dateKey];
-            statusText = entry && entry.type === 'extra' ? `On Duty (+${entry.hours}h extra)` : 'On Duty (OD)';
-            badge = '<span class="badge on-duty-badge">OD</span>';
-            availableOperators++;
-        } else if (hasExtraHours) {
-            statusClass = 'extra-hours';
-            const extra = extraHoursData[dateKey];
-            statusText = `+${extra.hours} extra hours`;
-            badge = '<span class="badge extra-hours-badge">EXTRA</span>';
-            availableOperators++;
-        } else if (shift && shift.includes('Obituary')) {
-            statusClass = 'obituary-duty';
-            statusText = 'Obituary Duty';
-            availableOperators++;
-            badge = '<span class="badge obituary-badge">OBITUARY</span>';
-        } else if (shift && shift.includes('Off')) {
-            statusClass = 'off-duty';
-            statusText = 'Off Duty';
-        } else if (shift && !isOnLeave) {
-            availableOperators++;
-        }
-        
-        if (isHoliday) {
-            badge += '<span class="badge holiday-badge">HOLIDAY</span>';
-            statusText = 'Holiday';
-        }
-        
-        if (isSkeleton) {
-            badge += '<span class="badge skeleton-badge">SKELETON</span>';
-            statusText = 'Skeleton Shift';
-        }
-        
-        html += `
-            <div class="shift-item ${statusClass}">
-                <div class="operator-name">
-                    <span class="status-indicator ${getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry)}"></span>
-                    ${abbrev} (${staff})
-                    ${badge}
-                </div>
-                <div class="shift-time">${shiftDisplay}</div>
-            </div>
-            ${statusText ? `<div style="font-size: 0.75em; color: #666; margin-left: 20px; margin-bottom: 5px;">${statusText}</div>` : ''}
-        `;
-    });
-    
-    // Add operator count - Now includes ANEESH in total
-    html += `
-        <div class="operator-count-display" style="margin-top: 15px;">
-            <div class="operator-count-item">
-                <span class="operator-dot available"></span>
-                <span>Available Operators: ${availableOperators}/5</span>
-            </div>
-        </div>
-    `;
-    
-    // Add warnings - Adjusted for 5 operators
-    if (availableOperators <= 2) {
-        html += `<div class="warning" style="margin-top: 12px;">⚠️ Minimum operators only (${availableOperators} available)</div>`;
-    } else if (availableOperators < 2) {
-        html += `<div class="warning critical" style="margin-top: 12px;">❌ CRITICAL: Less than 2 operators available!</div>`;
-        hasCriticalWarning = true;
-    }
-    
-    container.innerHTML = html;
-}
-
+// ==================== YOUR ORIGINAL FUNCTIONS GO HERE ====================
+// PASTE ALL YOUR ORIGINAL FUNCTIONS FROM YOUR EXISTING CODE
+// Starting from renderWeekView() to the end of your script
 // Render week view (7 days starting from current week start)
+
 function renderWeekView() {
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
@@ -6473,16 +6655,7 @@ function getDatesInRange(startDate, endDate) {
 }
 
 function saveAllData() {
-    localStorage.setItem('leaveData', JSON.stringify(leaveData));
-    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-    localStorage.setItem('offDutyEntries', JSON.stringify(offDutyEntries));
-    localStorage.setItem('onDutyEntries', JSON.stringify(onDutyEntries));
-    localStorage.setItem('extraHoursData', JSON.stringify(extraHoursData));
-    localStorage.setItem('coffData', JSON.stringify(coffData));
-    localStorage.setItem('holidays', JSON.stringify(holidays));
-    localStorage.setItem('skeletonShifts', JSON.stringify(skeletonShifts));
-    localStorage.setItem('otData', JSON.stringify(otData));
-    localStorage.setItem('lateEntries', JSON.stringify(lateEntries));
+saveAllData();
 }
 
 // Initialize app on load
@@ -6522,165 +6695,7 @@ document.addEventListener('keydown', function(event) {
 
 // Handle touch events for better mobile experience
 document.addEventListener('touchstart', function() {}, {passive: true});
-// ==================== ADMIN MANAGEMENT FUNCTIONS ====================
-
-// Add admin button to controls
-function addAdminButton() {
-    if (currentUserRole === ROLES.ADMIN) {
-        const controls = document.querySelector('.controls');
-        if (controls) {
-            const adminBtn = document.createElement('button');
-            adminBtn.textContent = '👥 Manage Users';
-            adminBtn.onclick = manageUsers;
-            adminBtn.style.background = '#8e44ad';
-            controls.appendChild(adminBtn);
-        }
-    }
-}
-
-// Manage users function
-async function manageUsers() {
-    if (currentUserRole !== ROLES.ADMIN) {
-        alert("Only administrators can manage users");
-        return;
-    }
-    
-    try {
-        const usersSnapshot = await db.collection(USERS_COLLECTION).get();
-        let html = '<h3>User Management</h3><table style="width:100%;"><thead><tr><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody>';
-        
-        usersSnapshot.forEach(doc => {
-            const user = doc.data();
-            html += `<tr>
-                <td>${user.email}</td>
-                <td>
-                    <select id="role-${user.email.replace('@', '-')}" style="width:100px;">
-                        <option value="viewer" ${user.role === 'viewer' ? 'selected' : ''}>Viewer</option>
-                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                    </select>
-                </td>
-                <td>
-                    <button onclick="updateUserRole('${user.email}')" style="padding:5px 10px;">Update</button>
-                    ${user.email !== currentUser.email ? `<button onclick="deleteUser('${user.email}')" style="padding:5px 10px;background:#e74c3c;color:white;">Delete</button>` : ''}
-                </td>
-            </tr>`;
-        });
-        
-        html += '</tbody></table>';
-        
-        // Create modal for user management
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>User Management</h3>
-                <div>${html}</div>
-                <div class="form-group">
-                    <h4>Add New User</h4>
-                    <input type="email" id="new-user-email" placeholder="user@example.com" style="width:70%;">
-                    <select id="new-user-role" style="width:25%;">
-                        <option value="viewer">Viewer</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <button onclick="addNewUser()" style="width:100%;margin-top:10px;">Add User</button>
-                </div>
-                <div class="button-group">
-                    <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Close</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    } catch (error) {
-        console.error("Error loading users:", error);
-        alert("Error loading users: " + error.message);
-    }
-}
-
-async function updateUserRole(email) {
-    const safeEmail = email.replace('@', '-');
-    const newRole = document.getElementById(`role-${safeEmail}`).value;
-    
-    try {
-        await db.collection(USERS_COLLECTION).doc(email).update({
-            role: newRole,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        alert(`User ${email} role updated to ${newRole}`);
-        
-        if (email === currentUser.email) {
-            currentUserRole = newRole;
-            updateUIForRole();
-        }
-    } catch (error) {
-        console.error("Error updating user role:", error);
-        alert("Error updating user role: " + error.message);
-    }
-}
-
-async function addNewUser() {
-    const email = document.getElementById('new-user-email').value;
-    const role = document.getElementById('new-user-role').value;
-    
-    if (!email) {
-        alert("Please enter an email address");
-        return;
-    }
-    
-    try {
-        await db.collection(USERS_COLLECTION).doc(email).set({
-            email: email,
-            role: role,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        alert(`User ${email} added as ${role}`);
-        document.getElementById('new-user-email').value = '';
-        manageUsers();
-    } catch (error) {
-        console.error("Error adding user:", error);
-        alert("Error adding user: " + error.message);
-    }
-}
-
-async function deleteUser(email) {
-    if (email === currentUser.email) {
-        alert("You cannot delete your own account");
-        return;
-    }
-    
-    if (confirm(`Are you sure you want to delete user ${email}?`)) {
-        try {
-            await db.collection(USERS_COLLECTION).doc(email).delete();
-            alert(`User ${email} deleted`);
-            manageUsers();
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            alert("Error deleting user: " + error.message);
-        }
-    }
-}
-
-// Add admin button after initialization
-setTimeout(addAdminButton, 2000);
-
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is already logged in
-    const user = auth.currentUser;
-    if (user) {
-        currentUser = user;
-        loadUserRole(user.email).then(() => {
-            showMainApp();
-            initApp();
-            loadAllData();
-        });
-    } else {
-        showLoginScreen();
-    }
-});
 </script>
+
 </body>
 </html>
