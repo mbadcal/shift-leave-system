@@ -2719,7 +2719,7 @@
 
      <script>
 // ==================== FIREBASE CONFIGURATION ====================
-// REPLACE THESE VALUES WITH YOUR ACTUAL FIREBASE CONFIG
+// Replace these values with your actual Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyBsZb_05bhHF7Mu5qPlZMgl3Ekpi2Citiw",
     authDomain: "phc-shift.firebaseapp.com",
@@ -2748,140 +2748,93 @@ const ROLES = {
 // Current user state
 let currentUser = null;
 let currentUserRole = ROLES.VIEWER;
-let isInitialized = false;
 
-// Staff name abbreviations
-const staffAbbreviations = {
-    "Sreejith": "SKS",
-    "Sajeev": "SJV", 
-    "Umesh": "UMU",
-    "Rajesh": "MR",
-    "ANEESH": "AMR"
-};
-
-// Data storage with Firebase sync
-let shiftData = {
-    days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-    shifts: {
-        "Sunday": {
-            "Sreejith": "Obituary duty 5pm-1:30am",
-            "Sajeev": "5pm-1:30am",
-            "Umesh": "5pm-1:30am",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "7:00pm-3:30am"
-        },
-        "Monday": {
-            "Sreejith": "Obituary duty 5pm-1:30am",
-            "Sajeev": "Off-operator",
-            "Umesh": "5pm-1:30am",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "7:00pm-3:30am"
-        },
-        "Tuesday": {
-            "Sreejith": "5pm-1:30am",
-            "Sajeev": "Obituary duty 5pm-1:30am",
-            "Umesh": "Off-operator",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "7:00pm-3:30am"
-        },
-        "Wednesday": {
-            "Sreejith": "Off-operator",
-            "Sajeev": "5pm-1:30am",
-            "Umesh": "Obituary duty 5pm-1:30am",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "Off-operator"
-        },
-        "Thursday": {
-            "Sreejith": "Obituary duty 5pm-1:30am",
-            "Sajeev": "4pm-12:30pm",
-            "Umesh": "5pm-1:30am",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "7:00pm-3:30am"
-        },
-        "Friday": {
-            "Sreejith": "5pm-1:30am",
-            "Sajeev": "Obituary duty 5pm-1:30am",
-            "Umesh": "7pm-3:30pm",
-            "Rajesh": "Off-operator",
-            "ANEESH": "7:00pm-3:30am"
-        },
-        "Saturday": {
-            "Sreejith": "4pm-12:30pm",
-            "Sajeev": "5pm-1:30am",
-            "Umesh": "Obituary duty 5pm-1:30am",
-            "Rajesh": "7pm-3:30pm",
-            "ANEESH": "7:00pm-3:30am"
-        }
-    }
-};
-
-// Data storage variables
-let leaveData = {};
-let leaveRequests = [];
-let offDutyEntries = {};
-let onDutyEntries = {};
-let extraHoursData = {};
-let coffData = { balances: {}, history: [], pending: [] };
-let holidays = {};
-let skeletonShifts = {};
-let otData = { monthly: {} };
-let lateEntries = { entries: [] };
-
-// Attendance report navigation state
-let currentAttendancePeriod = 0;
-let currentAttendanceStartDate = null;
-let currentAttendanceEndDate = null;
-
-// Initialize COFF data structure
-if (!coffData.balances) {
-    coffData.balances = {
-        "Sreejith": 0,
-        "Sajeev": 0,
-        "Umesh": 0,
-        "Rajesh": 0,
-        "ANEESH": 0
-    };
+// Initialize the application
+function initApp() {
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    updateStats();
+    renderStaffList();
+    renderWeekView();
+    renderMonthView();
+    renderTodayView();
+    updateWeekTitle();
+    updateMonthTitle();
+    updateDayTitle();
+    
+    // Set default dates for modals
+    const todayStr = formatDateForInput(new Date());
+    document.getElementById('leaveFromDate').value = todayStr;
+    document.getElementById('leaveToDate').value = todayStr;
+    document.getElementById('obituaryDate').value = todayStr;
+    document.getElementById('offDutyDate').value = todayStr;
+    document.getElementById('effectiveDate').value = todayStr;
+    document.getElementById('cancelOffDutyDate').value = todayStr;
+    document.getElementById('coffFromDate').value = todayStr;
+    document.getElementById('coffToDate').value = todayStr;
+    document.getElementById('holidayDate').value = todayStr;
+    document.getElementById('skeletonDate').value = todayStr;
+    document.getElementById('cancelFromDate').value = todayStr;
+    document.getElementById('cancelToDate').value = todayStr;
+    document.getElementById('extraHoursDate').value = todayStr;
+    document.getElementById('onDutyDate').value = todayStr;
+    document.getElementById('lateEntryDate').value = todayStr;
+    
+    // Populate off-duty staff dropdown
+    updateOffDutyStaffOptions();
+    
+    // Initialize COFF tab
+    renderCOFFSummary();
+    renderCOFFHistory();
+    
+    // Initialize approvals tab
+    renderApprovals();
+    
+    // Calculate OT for skeleton shifts
+    calculateSkeletonOT();
+    
+    // Calculate COFF balances on init
+    calculateCOFFBalances();
 }
-if (!coffData.history) coffData.history = [];
-if (!coffData.pending) coffData.pending = [];
-if (!otData.monthly) otData.monthly = {};
-if (!lateEntries.entries) lateEntries.entries = [];
 
-// View state
-let currentWeekStart = new Date();
-currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
-let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
-let currentDayView = new Date();
+// Fix date format for input fields
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
-// For approval modal
-let currentApprovalRequestId = null;
-let currentApprovalAction = null;
+// Format date for display
+function formatDateForDisplay(date) {
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric',
+        weekday: 'short'
+    });
+}
 
-// Get current date
-const today = new Date();
-const currentDateStr = today.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-});
+// Show login screen
+function showLoginScreen() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('user-info-bar').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.body.style.overflow = 'hidden';
+}
 
-// ==================== FIREBASE AUTHENTICATION FUNCTIONS ====================
-
-// Initialize authentication state listener
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        // User is signed in
-        currentUser = user;
-        await loadUserRole(user.email);
-        showMainApp();
-        loadAllData();
-    } else {
-        // No user is signed in
-        showLoginScreen();
-    }
-});
+// Show main application
+function showMainApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('user-info-bar').style.display = 'block';
+    document.querySelector('.container').style.display = 'block';
+    document.body.style.overflow = 'auto';
+}
 
 // Load user role from Firestore
 async function loadUserRole(email) {
@@ -2910,28 +2863,17 @@ function updateUIForRole() {
     const isAdmin = currentUserRole === ROLES.ADMIN;
     const isViewer = currentUserRole === ROLES.VIEWER;
     
-    // Update user info bar
-    document.getElementById('current-user-email').textContent = currentUser.email;
-    document.getElementById('user-role-badge').textContent = isAdmin ? 'ADMIN' : 'VIEWER';
-    document.getElementById('user-role-badge').style.background = isAdmin ? '#27ae60' : '#3498db';
+    if (currentUser) {
+        document.getElementById('current-user-email').textContent = currentUser.email;
+        document.getElementById('user-role-badge').textContent = isAdmin ? 'ADMIN' : 'VIEWER';
+        document.getElementById('user-role-badge').style.background = isAdmin ? '#27ae60' : '#3498db';
+    }
     
     // Show/hide controls based on role
     const controls = document.querySelector('.controls');
     if (controls) {
-        if (isViewer) {
-            controls.style.display = 'none';
-        } else {
-            controls.style.display = 'flex';
-        }
+        controls.style.display = isViewer ? 'none' : 'flex';
     }
-    
-    // Update modal buttons
-    const modalButtons = document.querySelectorAll('.controls button');
-    modalButtons.forEach(button => {
-        button.disabled = isViewer;
-        button.style.opacity = isViewer ? '0.5' : '1';
-        button.style.cursor = isViewer ? 'not-allowed' : 'pointer';
-    });
 }
 
 // Login function
@@ -2948,7 +2890,15 @@ function login() {
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
+            // Signed in successfully
+            currentUser = userCredential.user;
             errorDiv.style.display = 'none';
+            return loadUserRole(currentUser.email);
+        })
+        .then(() => {
+            showMainApp();
+            initApp();
+            loadAllData();
         })
         .catch((error) => {
             errorDiv.textContent = error.message;
@@ -2970,38 +2920,84 @@ function logout() {
         });
 }
 
-// Show login screen
-function showLoginScreen() {
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('user-info-bar').style.display = 'none';
-    document.querySelector('.container').style.display = 'none';
-    document.body.style.overflow = 'hidden';
-}
+// Initialize authentication state listener
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // User is signed in
+        currentUser = user;
+        try {
+            await loadUserRole(user.email);
+            showMainApp();
+            initApp();
+            await loadAllData();
+        } catch (error) {
+            console.error("Error in auth state change:", error);
+            showLoginScreen();
+        }
+    } else {
+        // No user is signed in
+        showLoginScreen();
+    }
+});
 
-// Show main application
-function showMainApp() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('user-info-bar').style.display = 'block';
-    document.querySelector('.container').style.display = 'block';
-    document.body.style.overflow = 'auto';
+// Load all data from Firebase
+async function loadAllData() {
+    try {
+        // Load shift data
+        const shiftDoc = await db.collection(SHIFT_DATA_COLLECTION).doc('current').get();
+        if (shiftDoc.exists) {
+            const data = shiftDoc.data();
+            // Keep the original shifts structure and only update if needed
+            if (data.shifts) {
+                shiftData.shifts = data.shifts;
+            }
+        }
+        
+        // Load leave data
+        const leaveDoc = await db.collection(LEAVE_DATA_COLLECTION).doc('data').get();
+        if (leaveDoc.exists) {
+            const data = leaveDoc.data();
+            leaveData = data.leaveData || {};
+            leaveRequests = data.leaveRequests || [];
+            offDutyEntries = data.offDutyEntries || {};
+            onDutyEntries = data.onDutyEntries || {};
+            extraHoursData = data.extraHoursData || {};
+            coffData = data.coffData || { balances: {}, history: [], pending: [] };
+            holidays = data.holidays || {};
+            skeletonShifts = data.skeletonShifts || {};
+            otData = data.otData || { monthly: {} };
+            lateEntries = data.lateEntries || { entries: [] };
+        }
+        
+        // Refresh views with loaded data
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        renderApprovals();
+        renderCOFFSummary();
+        renderCOFFHistory();
+        
+        console.log("Data loaded successfully from Firebase");
+    } catch (error) {
+        console.error("Error loading from Firebase:", error);
+        // Continue with default/local data
+    }
 }
-
-// ==================== FIREBASE DATA SYNC FUNCTIONS ====================
 
 // Save all data to Firebase
 async function saveAllData() {
-    if (!currentUser || currentUserRole !== ROLES.ADMIN) {
-        console.warn("Only admin can save data");
+    if (!currentUser) {
+        console.warn("User not logged in, cannot save to Firebase");
         return;
     }
     
     try {
         // Save shift data
         await db.collection(SHIFT_DATA_COLLECTION).doc('current').set({
-            ...shiftData,
+            shifts: shiftData.shifts,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
             updatedBy: currentUser.email
-        });
+        }, { merge: true });
         
         // Save leave data
         await db.collection(LEAVE_DATA_COLLECTION).doc('data').set({
@@ -3017,14 +3013,11 @@ async function saveAllData() {
             lateEntries: lateEntries,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
             updatedBy: currentUser.email
-        });
+        }, { merge: true });
         
         console.log("All data saved to Firebase");
-        saveToLocalStorage(); // Backup to localStorage
     } catch (error) {
         console.error("Error saving to Firebase:", error);
-        saveToLocalStorage(); // Fallback to localStorage
-        alert("Saved locally. Firebase error: " + error.message);
     }
 }
 
@@ -6675,12 +6668,18 @@ setTimeout(addAdminButton, 2000);
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Show login screen initially
-    showLoginScreen();
-    
-    // For testing only - remove in production
-    // document.getElementById('login-email').value = 'admin@example.com';
-    // document.getElementById('login-password').value = 'password123';
+    // Check if user is already logged in
+    const user = auth.currentUser;
+    if (user) {
+        currentUser = user;
+        loadUserRole(user.email).then(() => {
+            showMainApp();
+            initApp();
+            loadAllData();
+        });
+    } else {
+        showLoginScreen();
+    }
 });
 </script>
 </body>
