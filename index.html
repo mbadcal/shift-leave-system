@@ -4,33 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shift & Leave Management System</title>
-
-<!-- Firebase SDKs -->
+    <!-- Add these BEFORE your existing styles -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-<!-- Firebase Configuration -->
-<script>
-// Your Firebase configuration - REPLACE WITH YOUR ACTUAL CONFIG
-const firebaseConfig = {
-    apiKey: "AIzaSyBsZb_05bhHF7Mu5qPlZMgl3Ekpi2Citiw",
-    authDomain: "phc-shift.firebaseapp.com",
-    projectId: "phc-shift",
-    storageBucket: "phc-shift.firebasestorage.app",
-    messagingSenderId: "426348959034",
-    appId: "1:426348959034:web:2936bf71ff1aae92caac03",
-    measurementId: "G-W2GSMLFT9J"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Initialize services
-const auth = firebase.auth();
-const db = firebase.firestore();
-</script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -2050,37 +2028,137 @@ const db = firebase.firestore();
     outline-offset: 2px;
 }
 
-/* Role-based visibility */
-.admin-only {
-    display: flex !important;
+/* ========== LOGIN & AUTH STYLES ========== */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-/* When body has viewer class, hide admin-only elements */
-body.viewer .admin-only {
-    display: none !important;
-}
-
-/* Viewer message - hidden by default */
-.viewer-message {
-    display: none;
-    padding: 15px;
-    background: #fff9e6;
-    border-radius: 8px;
+.login-header i {
     margin-bottom: 15px;
-    border-left: 4px solid #f39c12;
-    font-size: 0.9em;
 }
 
-/* Show viewer message when body has viewer class */
-body.viewer .viewer-message {
-    display: block;
+#loginModal .modal-content {
+    animation: slideIn 0.3s ease;
+    border-radius: 12px;
+    padding: 30px;
+}
+
+.loading-spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* User Profile Styles */
+#userProfile {
+    transition: all 0.3s;
+}
+
+#userProfile:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#userProfileDropdown {
+    animation: fadeIn 0.2s ease;
+    border: 1px solid #e0e0e0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Role-based styling */
+.admin-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+.viewer-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #userProfileSection {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    #userProfile {
+        justify-content: center;
+    }
+    
+    h1 {
+        text-align: center;
+        width: 100%;
+    }
 }
 
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📅 Shift & Leave Management System</h1>
+<div class="container">
+    <!-- NEW HEADER WITH USER PROFILE -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <h1 style="margin: 0; color: #2c3e50; flex: 1;">📅 Shift & Leave Management System</h1>
+        
+        <div id="userProfileSection" style="display: none;">
+            <div id="userProfile" style="display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 8px 15px; border-radius: 20px; cursor: pointer; border: 1px solid #e0e0e0; transition: all 0.3s;">
+                <i class="fas fa-user-circle" style="font-size: 1.5em; color: #3498db;"></i>
+                <div>
+                    <div id="userName" style="font-weight: bold; font-size: 0.9em;"></div>
+                    <div id="userRole" style="font-size: 0.75em; color: #666;"></div>
+                </div>
+                <i class="fas fa-chevron-down" style="font-size: 0.8em; color: #666;"></i>
+            </div>
+        </div>
+    </div>
         
         <div class="stats-bar">
             <div class="stat-card today-highlight">
@@ -2106,36 +2184,42 @@ body.viewer .viewer-message {
             <div class="tab" onclick="switchTab('approvals')">Approvals</div>
             <div class="tab" onclick="switchTab('coff')">Comp-off</div>
             <div class="tab" onclick="switchTab('reports')">Reports</div>
-            <div class="tab" onclick="showProfile()" id="profileTab" style="display: none;">👤 Profile</div>
-            <div class="tab" onclick="showAdminManagement()" id="adminManagementTab" style="display: none;">👑 Admin</div>
         </div>
         
         <!-- Dashboard Tab -->
-        <div id="dashboard-tab" class="tab-content active">
-            <div class="view-toggle">
-                <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
-                <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
-                <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
-            </div>
-            
-            <div class="controls admin-only" style="display: none;">
-                <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
-                <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
-                <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
-                <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
-                <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
-                <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
-                <button onclick="openLateEntryModal()">⏰ Late Entry</button>
-                <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
-                <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
-                <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
-                <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
-                <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
-            </div>
-            
-            <div class="staff-list" id="staff-list">
-                <!-- Staff list will be populated by JavaScript -->
-            </div>
+<div id="dashboard-tab" class="tab-content active">
+    <div class="view-toggle">
+        <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
+        <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
+        <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
+    </div>
+    
+    <!-- ADMIN CONTROLS (Only shown to admins) -->
+    <div class="controls" id="adminControls" style="display: none;">
+        <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
+        <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
+        <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
+        <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
+        <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
+        <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
+        <button onclick="openLateEntryModal()">⏰ Late Entry</button>
+        <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
+        <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
+        <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
+        <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
+        <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
+    </div>
+    
+    <!-- VIEWER CONTROLS (Only shown to viewers) -->
+    <div class="controls" id="viewerControls" style="display: none;">
+        <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
+        <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
+        <button onclick="generateAttendancePeriodReport()">📋 Generate Report</button>
+    </div>
+    
+    <div class="staff-list" id="staff-list">
+        <!-- Staff list will be populated by JavaScript -->
+    </div>
             
             <!-- Today View -->
             <div id="todayView" class="day-view">
@@ -2219,16 +2303,16 @@ body.viewer .viewer-message {
         </div>
         
         <!-- Reports Tab -->
-<div id="reports-tab" class="tab-content">
-    <h2>📊 Reports</h2>
-    <div class="controls">
-        <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
-        <button onclick="generateOnDutyReport()">📊 On Duty/Extra Hours</button>
-        <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
-        <button onclick="generateCOFFReport()">🔄 COFF Report</button>
-        <button onclick="generateOTReport()">💰 OT Report</button>
-        <button onclick="exportAllData()">💾 Export All Data</button>
-    </div>
+        <div id="reports-tab" class="tab-content">
+            <h2>📊 Reports</h2>
+            <div class="controls">
+                <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
+                <button onclick="generateOnDutyReport()">📊 On Duty/Extra Hours</button>
+                <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
+                <button onclick="generateCOFFReport()">🔄 COFF Report</button>
+                <button onclick="generateOTReport()">💰 OT Report</button>
+                <button onclick="exportAllData()">💾 Export All Data</button>
+            </div>
             
             <!-- Navigation for attendance report -->
             <div id="attendance-nav">
@@ -2750,7 +2834,29 @@ body.viewer .viewer-message {
         </div>
     </div>
 
-    <script>
+   <script>
+// ==================== FIREBASE CONFIGURATION ====================
+// 🔴 REPLACE THESE WITH YOUR ACTUAL FIREBASE CONFIG VALUES
+const firebaseConfig = {
+    apiKey: "AIzaSyBsZb_05bhHF7Mu5qPlZMgl3Ekpi2Citiw",
+    authDomain: "phc-shift.firebaseapp.com",
+    projectId: "phc-shift",
+    storageBucket: "phc-shift.firebasestorage.app",
+    messagingSenderId: "426348959034",
+    appId: "1:426348959034:web:2936bf71ff1aae92caac03"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ==================== GLOBAL VARIABLES ====================
+let currentUser = null;
+let userRole = 'viewer'; // 'admin' or 'viewer'
+let isLoading = false;
 
 // Staff name abbreviations
 const staffAbbreviations = {
@@ -2761,22 +2867,72 @@ const staffAbbreviations = {
     "ANEESH": "AMR"
 };
 
-// Global variables - WILL BE LOADED FROM FIRESTORE
-let shiftData = null;
-let leaveData = null;
-let leaveRequests = null;
-let offDutyEntries = null;
-let onDutyEntries = null;
-let extraHoursData = null;
-let coffData = null;
-let holidays = null;
-let skeletonShifts = null;
-let otData = null;
-let lateEntries = null;
+// Shift data structure
+const shiftData = {
+    days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    shifts: {
+        "Sunday": {
+            "Sreejith": "Obituary duty 5pm-1:30am",
+            "Sajeev": "5pm-1:30am",
+            "Umesh": "5pm-1:30am",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "7:00pm-3:30am"
+        },
+        "Monday": {
+            "Sreejith": "Obituary duty 5pm-1:30am",
+            "Sajeev": "Off-operator",
+            "Umesh": "5pm-1:30am",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "7:00pm-3:30am"
+        },
+        "Tuesday": {
+            "Sreejith": "5pm-1:30am",
+            "Sajeev": "Obituary duty 5pm-1:30am",
+            "Umesh": "Off-operator",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "7:00pm-3:30am"
+        },
+        "Wednesday": {
+            "Sreejith": "Off-operator",
+            "Sajeev": "5pm-1:30am",
+            "Umesh": "Obituary duty 5pm-1:30am",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "Off-operator"
+        },
+        "Thursday": {
+            "Sreejith": "Obituary duty 5pm-1:30am",
+            "Sajeev": "4pm-12:30pm",
+            "Umesh": "5pm-1:30am",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "7:00pm-3:30am"
+        },
+        "Friday": {
+            "Sreejith": "5pm-1:30am",
+            "Sajeev": "Obituary duty 5pm-1:30am",
+            "Umesh": "7pm-3:30pm",
+            "Rajesh": "Off-operator",
+            "ANEESH": "7:00pm-3:30am"
+        },
+        "Saturday": {
+            "Sreejith": "4pm-12:30pm",
+            "Sajeev": "5pm-1:30am",
+            "Umesh": "Obituary duty 5pm-1:30am",
+            "Rajesh": "7pm-3:30pm",
+            "ANEESH": "7:00pm-3:30am"
+        }
+    }
+};
 
-let currentUser = null;
-let currentUserRole = 'viewer';
-let currentUserData = null;
+// Data storage - Initialize empty (will load from Firestore)
+let leaveRequests = [];
+let offDutyEntries = {};
+let onDutyEntries = {};
+let extraHoursData = {};
+let coffData = { balances: {}, history: [], pending: [] };
+let holidays = {};
+let skeletonShifts = {};
+let otData = { monthly: {} };
+let lateEntries = { entries: [] };
 
 // Attendance report navigation state
 let currentAttendancePeriod = 0;
@@ -2803,75 +2959,391 @@ const currentDateStr = today.toLocaleDateString('en-US', {
     day: 'numeric' 
 });
 
-// Initialize the application with Firebase
-async function initApp() {
-    // Check authentication state
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            // User is signed in
-            currentUser = user;
-            await loadUserData(user.uid);
-            
-            // Show user info and hide auth modal
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('profileTab').style.display = 'block';
-            
-            // Show admin tab if user is admin
-            if (currentUserRole === 'admin') {
-                document.getElementById('adminManagementTab').style.display = 'block';
-            }
-            
-            // Load data from Firestore
-            await loadAllData();
-            
-            // Initialize UI
-            document.getElementById('current-date').textContent = currentDateStr;
-            updateStats();
-            renderStaffList();
-            renderWeekView();
-            renderMonthView();
-            renderTodayView();
-            updateWeekTitle();
-            updateMonthTitle();
-            updateDayTitle();
-            
-            // Set default dates for modals
-            setDefaultDates();
-            
-            // Initialize COFF tab
-            renderCOFFSummary();
-            renderCOFFHistory();
-            
-            // Initialize approvals tab
-            renderApprovals();
-            
-            // Calculate OT for skeleton shifts
-            calculateSkeletonOT();
-            
-            // Calculate COFF balances on init
-            calculateCOFFBalances();
-            
-            // Add touch event listeners
-            initTouchEvents();
-            
-            // Update UI based on role
-            updateUIForRole();
-            
+// ==================== AUTHENTICATION FUNCTIONS ====================
+function showLoading(show) {
+    isLoading = show;
+    const spinner = document.getElementById('loadingSpinner');
+    if (show) {
+        document.body.style.cursor = 'wait';
+        if (spinner) spinner.style.display = 'flex';
+    } else {
+        document.body.style.cursor = 'default';
+        if (spinner) spinner.style.display = 'none';
+    }
+}
+
+function showLoginScreen() {
+    document.getElementById('loginModal').style.display = 'flex';
+    document.getElementById('userProfileSection').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('userProfileDropdown').style.display = 'none';
+}
+
+function showMainApp() {
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('userProfileSection').style.display = 'flex';
+    document.querySelector('.container').style.display = 'block';
+    
+    updateUserProfile();
+    setupRoleBasedUI();
+}
+
+function loginUser() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+    const errorDiv = document.getElementById('loginError');
+    
+    if (!email || !password) {
+        errorDiv.textContent = 'Please enter email and password';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    errorDiv.style.display = 'none';
+    showLoading(true);
+    
+    const persistence = rememberMe ? 
+        firebase.auth.Auth.Persistence.LOCAL : 
+        firebase.auth.Auth.Persistence.SESSION;
+    
+    auth.setPersistence(persistence)
+        .then(() => auth.signInWithEmailAndPassword(email, password))
+        .then((userCredential) => {
+            currentUser = userCredential.user;
+            return getUserRole(currentUser.uid);
+        })
+        .then((role) => {
+            userRole = role;
+            initializeApp();
+            showMainApp();
+        })
+        .catch((error) => {
+            console.error('Login error:', error);
+            errorDiv.textContent = getLoginErrorMessage(error.code);
+            errorDiv.style.display = 'block';
+            showLoading(false);
+        });
+}
+
+function getLoginErrorMessage(errorCode) {
+    const messages = {
+        'auth/invalid-email': 'Invalid email address',
+        'auth/user-disabled': 'Account is disabled',
+        'auth/user-not-found': 'No account found with this email',
+        'auth/wrong-password': 'Incorrect password',
+        'auth/too-many-requests': 'Too many attempts. Try again later',
+        'auth/network-request-failed': 'Network error. Check your connection'
+    };
+    return messages[errorCode] || 'Login failed. Please try again';
+}
+
+async function getUserRole(userId) {
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+            return userDoc.data().role || 'viewer';
         } else {
-            // No user is signed in, show auth modal
-            document.getElementById('authModal').style.display = 'flex';
-            document.getElementById('profileTab').style.display = 'none';
-            document.getElementById('adminManagementTab').style.display = 'none';
-            showLoginTab();
+            // Create user document if it doesn't exist
+            await db.collection('users').doc(userId).set({
+                email: currentUser.email,
+                role: 'viewer',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                name: currentUser.email.split('@')[0]
+            });
+            return 'viewer';
         }
+    } catch (error) {
+        console.error('Error getting user role:', error);
+        return 'viewer';
+    }
+}
+
+function logoutUser() {
+    showLoading(true);
+    auth.signOut().then(() => {
+        currentUser = null;
+        userRole = 'viewer';
+        showLoginScreen();
+        showLoading(false);
+    }).catch((error) => {
+        console.error('Logout error:', error);
+        showLoading(false);
     });
 }
+
+function updateUserProfile() {
+    if (!currentUser) return;
     
-// Set default dates for modals
-function setDefaultDates() {
+    const userName = document.getElementById('userName');
+    const userRoleElement = document.getElementById('userRole');
+    
+    // Extract name from email
+    const emailName = currentUser.email.split('@')[0];
+    const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    
+    userName.textContent = formattedName;
+    userRoleElement.textContent = userRole === 'admin' ? 'Administrator' : 'Viewer';
+    userRoleElement.style.color = userRole === 'admin' ? '#e74c3c' : '#3498db';
+    
+    // Add click event for profile dropdown
+    document.getElementById('userProfile').onclick = toggleUserDropdown;
+}
+
+function toggleUserDropdown() {
+    const dropdown = document.getElementById('userProfileDropdown');
+    if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+    } else {
+        updateUserDropdownContent();
+        dropdown.style.display = 'block';
+    }
+}
+
+function updateUserDropdownContent() {
+    const content = document.getElementById('userProfileContent');
+    const roleColor = userRole === 'admin' ? '#e74c3c' : '#3498db';
+    
+    content.innerHTML = `
+        <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; color: #2c3e50; font-size: 0.9em;">${currentUser.email}</div>
+            <div style="margin-top: 5px;">
+                <span style="background: ${roleColor}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; font-weight: bold;">
+                    ${userRole.toUpperCase()}
+                </span>
+            </div>
+        </div>
+        <div style="border-top: 1px solid #eee; padding-top: 10px;">
+            <button onclick="logoutUser()" style="width: 100%; background: #f8f9fa; border: 1px solid #ddd; padding: 8px; border-radius: 5px; cursor: pointer; color: #e74c3c; font-size: 0.9em;">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    `;
+}
+
+function setupRoleBasedUI() {
+    const adminControls = document.getElementById('adminControls');
+    const viewerControls = document.getElementById('viewerControls');
+    
+    if (userRole === 'admin') {
+        if (adminControls) {
+            adminControls.style.display = 'flex';
+            adminControls.style.marginBottom = '20px';
+        }
+        if (viewerControls) viewerControls.style.display = 'none';
+    } else {
+        if (adminControls) adminControls.style.display = 'none';
+        if (viewerControls) {
+            viewerControls.style.display = 'flex';
+            viewerControls.style.marginBottom = '20px';
+        }
+    }
+}
+
+// ==================== FIRESTORE DATA FUNCTIONS ====================
+async function loadAllData() {
+    try {
+        showLoading(true);
+        
+        // Load all data in parallel
+        await Promise.all([
+            loadLeaveRequests(),
+            loadOffDutyEntries(),
+            loadOnDutyEntries(),
+            loadExtraHours(),
+            loadCOFFData(),
+            loadHolidays(),
+            loadSkeletonShifts(),
+            loadLateEntries()
+        ]);
+        
+        console.log('All data loaded from Firestore');
+        showLoading(false);
+        return true;
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showLoading(false);
+        return false;
+    }
+}
+
+async function loadLeaveRequests() {
+    try {
+        const snapshot = await db.collection('leaveRequests')
+            .where('status', '!=', 'cancelled')
+            .orderBy('date', 'desc')
+            .limit(200)
+            .get();
+        
+        leaveRequests = [];
+        snapshot.forEach(doc => {
+            leaveRequests.push({ id: doc.id, ...doc.data() });
+        });
+    } catch (error) {
+        console.error('Error loading leave requests:', error);
+    }
+}
+
+async function loadOffDutyEntries() {
+    try {
+        const snapshot = await db.collection('offDutyEntries').get();
+        offDutyEntries = {};
+        snapshot.forEach(doc => {
+            offDutyEntries[doc.id] = doc.data();
+        });
+    } catch (error) {
+        console.error('Error loading off-duty entries:', error);
+    }
+}
+
+async function loadOnDutyEntries() {
+    try {
+        const snapshot = await db.collection('onDutyEntries').get();
+        onDutyEntries = {};
+        snapshot.forEach(doc => {
+            onDutyEntries[doc.id] = doc.data();
+        });
+    } catch (error) {
+        console.error('Error loading on-duty entries:', error);
+    }
+}
+
+async function loadExtraHours() {
+    try {
+        const snapshot = await db.collection('extraHours').get();
+        extraHoursData = {};
+        snapshot.forEach(doc => {
+            extraHoursData[doc.id] = doc.data();
+        });
+    } catch (error) {
+        console.error('Error loading extra hours:', error);
+    }
+}
+
+async function loadCOFFData() {
+    try {
+        // Load balances
+        const balancesSnapshot = await db.collection('coffBalances').get();
+        coffData.balances = {};
+        balancesSnapshot.forEach(doc => {
+            coffData.balances[doc.id] = doc.data().balance || 0;
+        });
+        
+        // Load history
+        const historySnapshot = await db.collection('coffHistory')
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .get();
+        
+        coffData.history = [];
+        historySnapshot.forEach(doc => {
+            coffData.history.push({ id: doc.id, ...doc.data() });
+        });
+    } catch (error) {
+        console.error('Error loading COFF data:', error);
+    }
+}
+
+async function loadHolidays() {
+    try {
+        const snapshot = await db.collection('holidays').get();
+        holidays = {};
+        snapshot.forEach(doc => {
+            holidays[doc.id] = doc.data();
+        });
+    } catch (error) {
+        console.error('Error loading holidays:', error);
+    }
+}
+
+async function loadSkeletonShifts() {
+    try {
+        const snapshot = await db.collection('skeletonShifts').get();
+        skeletonShifts = {};
+        snapshot.forEach(doc => {
+            skeletonShifts[doc.id] = doc.data();
+        });
+    } catch (error) {
+        console.error('Error loading skeleton shifts:', error);
+    }
+}
+
+async function loadLateEntries() {
+    try {
+        const snapshot = await db.collection('lateEntries')
+            .orderBy('entryDate', 'desc')
+            .limit(100)
+            .get();
+        
+        lateEntries.entries = [];
+        snapshot.forEach(doc => {
+            lateEntries.entries.push({ id: doc.id, ...doc.data() });
+        });
+    } catch (error) {
+        console.error('Error loading late entries:', error);
+    }
+}
+
+async function saveData(collection, documentId, data) {
+    if (!currentUser) {
+        throw new Error('User must be logged in to save data');
+    }
+    
+    try {
+        const dataWithMetadata = {
+            ...data,
+            lastModified: firebase.firestore.FieldValue.serverTimestamp(),
+            modifiedBy: currentUser.email,
+            modifiedByUid: currentUser.uid,
+            userRole: userRole
+        };
+        
+        await db.collection(collection).doc(documentId).set(dataWithMetadata, { merge: true });
+        return true;
+    } catch (error) {
+        console.error(`Error saving to ${collection}:`, error);
+        throw error;
+    }
+}
+
+async function deleteData(collection, documentId) {
+    if (!currentUser || userRole !== 'admin') {
+        throw new Error('Only administrators can delete data');
+    }
+    
+    try {
+        await db.collection(collection).doc(documentId).delete();
+        return true;
+    } catch (error) {
+        console.error(`Error deleting from ${collection}:`, error);
+        throw error;
+    }
+}
+
+// ==================== YOUR EXISTING APPLICATION FUNCTIONS ====================
+// Initialize the application
+async function initializeApp() {
+    if (!currentUser) {
+        showLoginScreen();
+        return;
+    }
+    
+    document.getElementById('current-date').textContent = currentDateStr;
+    
+    // Load data from Firestore
+    await loadAllData();
+    
+    updateStats();
+    renderStaffList();
+    renderWeekView();
+    renderMonthView();
+    renderTodayView();
+    updateWeekTitle();
+    updateMonthTitle();
+    updateDayTitle();
+    
+    // Set default dates for modals
     const todayStr = formatDateForInput(today);
-    
-    // Set dates for all modals
     const dateInputs = [
         'leaveFromDate', 'leaveToDate', 'obituaryDate', 'offDutyDate',
         'effectiveDate', 'cancelOffDutyDate', 'coffFromDate', 'coffToDate',
@@ -2881,51 +3353,19 @@ function setDefaultDates() {
     
     dateInputs.forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-            element.value = todayStr;
-        }
-    });
-}
-// Initialize touch events for mobile
-function initTouchEvents() {
-    // Make buttons more touch-friendly
-    const buttons = document.querySelectorAll('button, .tab, .day-cell');
-    buttons.forEach(button => {
-        button.addEventListener('touchstart', function() {
-            this.style.transform = 'scale(0.98)';
-        });
-        button.addEventListener('touchend', function() {
-            this.style.transform = '';
-        });
+        if (element) element.value = todayStr;
     });
     
-    // Prevent zoom on input focus for mobile
-    document.addEventListener('touchstart', function(event) {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
-            event.target.style.fontSize = '16px';
-        }
-    });
+    // Initialize UI components
+    updateOffDutyStaffOptions();
+    renderCOFFSummary();
+    renderCOFFHistory();
+    renderApprovals();
+    calculateSkeletonOT();
+    calculateCOFFBalances();
+    initTouchEvents();
 }
 
-// Fix date format for input fields
-function formatDateForInput(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Format date for display
-function formatDateForDisplay(date) {
-    return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric',
-        weekday: 'short'
-    });
-}
-
-// Update statistics
 function updateStats() {
     const pendingCount = leaveRequests.filter(req => req.status === 'pending').length;
     document.getElementById('pending-count').textContent = pendingCount;
@@ -2937,7 +3377,6 @@ function updateStats() {
     document.getElementById('coff-balance').textContent = totalCoffBalance.toFixed(1) + ' days';
 }
 
-// Render staff list
 function renderStaffList() {
     const staffList = document.getElementById('staff-list');
     const staff = [
@@ -2960,7 +3399,6 @@ function renderStaffList() {
     });
 }
 
-// Render today view
 function renderTodayView() {
     const container = document.getElementById('todayViewContainer');
     const date = currentDayView;
@@ -3101,7 +3539,6 @@ function renderTodayView() {
     container.innerHTML = html;
 }
 
-// Render week view (7 days starting from current week start)
 function renderWeekView() {
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
@@ -3340,7 +3777,6 @@ function renderWeekView() {
     }
 }
 
-// Render month view - FIXED TO INCLUDE ANEESH
 function renderMonthView() {
     const monthGrid = document.getElementById('monthGrid');
     monthGrid.innerHTML = '';
@@ -3397,7 +3833,7 @@ function renderMonthView() {
         }
         
         // Get all staff data for this day - INCLUDING ANEESH
-        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"]; // Fixed to include ANEESH
+        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
         let availableOperators = 0;
         let leaveList = [];
         let offDutyList = [];
@@ -3554,7 +3990,6 @@ function renderMonthView() {
     }
 }
 
-// Show day details modal
 function showDayDetails(date) {
     const dateKey = formatDateForInput(date);
     const dayIndex = date.getDay();
@@ -3725,7 +4160,6 @@ function showDayDetails(date) {
     document.getElementById('dayDetailsModal').style.display = 'flex';
 }
 
-// Switch between tabs
 function switchTab(tabName) {
     // Update tabs
     const tabs = document.querySelectorAll('.tab');
@@ -3751,7 +4185,6 @@ function switchTab(tabName) {
     }
 }
 
-// Switch between views (Today, Week, Month)
 function switchView(viewType) {
     // Update buttons
     document.getElementById('viewTodayBtn').classList.remove('active');
@@ -3950,23 +4383,23 @@ function openSkeletonModal() {
     document.getElementById('skeletonActionBtn').textContent = 'Add Skeleton Shift';
     document.getElementById('skeletonActionBtn').className = '';
     
-// Populate staff exclusion list
-const excludeList = document.getElementById('skeletonExcludeList');
-excludeList.innerHTML = '';
-
-const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-staffList.forEach(staff => {
-    const item = document.createElement('div');
-    item.className = 'checkbox-item';
-    item.innerHTML = `
-        <label class="checkbox-option">
-            <input type="checkbox" id="exclude_${staff}" value="${staff}">
-            <span class="checkbox-custom"></span>
-            <span class="checkbox-label">${staffAbbreviations[staff]} (${staff})</span>
-        </label>
-    `;
-    excludeList.appendChild(item);
-});
+    // Populate staff exclusion list
+    const excludeList = document.getElementById('skeletonExcludeList');
+    excludeList.innerHTML = '';
+    
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    staffList.forEach(staff => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML = `
+            <label class="checkbox-option">
+                <input type="checkbox" id="exclude_${staff}" value="${staff}">
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label">${staffAbbreviations[staff]} (${staff})</span>
+            </label>
+        `;
+        excludeList.appendChild(item);
+    });
     
     checkExistingSkeleton();
 }
@@ -4273,8 +4706,6 @@ function generateLeaveReport() {
     html += '</tbody></table>';
     container.innerHTML = html;
 }
-// Add this button to the Reports tab controls section in your HTML:
-// <button onclick="generateOnDutyReport()">📊 On Duty/Extra Hours</button>
 
 function generateOnDutyReport() {
     // Hide attendance navigation for On Duty report
@@ -4500,202 +4931,6 @@ function generateOnDutyReport() {
     container.innerHTML = html;
 }
 
-// Helper function to show month details
-function showMonthDetails(monthKey) {
-    const allEntries = [];
-    Object.values(onDutyEntries).forEach(entry => {
-        const entryMonth = entry.date.substring(0, 7); // YYYY-MM
-        if (entryMonth === monthKey) {
-            allEntries.push({
-                type: 'On Duty',
-                ...entry
-            });
-        }
-    });
-    
-    Object.values(extraHoursData).forEach(entry => {
-        const entryDate = new Date(entry.entryDate || entry.date);
-        const entryMonth = `${entryDate.getFullYear()}-${(entryDate.getMonth() + 1).toString().padStart(2, '0')}`;
-        if (entryMonth === monthKey && entry.type !== 'Off-Duty Working') {
-            // Check if already included as On Duty
-            const isInOnDuty = Object.values(onDutyEntries).some(od => 
-                od.staff === entry.staff && od.date === entry.date && od.type === 'extra'
-            );
-            
-            if (!isInOnDuty) {
-                allEntries.push({
-                    type: 'Extra Hours',
-                    ...entry
-                });
-            }
-        }
-    });
-    
-    if (allEntries.length === 0) {
-        alert('No entries found for this month');
-        return;
-    }
-    
-    // Sort by date
-    allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    let detailsHTML = '<h3>Month Details</h3>';
-    detailsHTML += `<h4>${new Date(monthKey + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h4>`;
-    detailsHTML += `<p><strong>Total Entries:</strong> ${allEntries.length}</p>`;
-    
-    detailsHTML += '<div style="overflow-x: auto;">';
-    detailsHTML += '<table style="min-width: 800px;">';
-    detailsHTML += '<thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Hours</th><th>Details</th><th>Reason</th></tr></thead><tbody>';
-    
-    allEntries.forEach(entry => {
-        const abbrev = staffAbbreviations[entry.staff];
-        const hours = entry.type === 'On Duty' ? 
-            (entry.type === 'extra' ? `8 + ${entry.hours}h` : '8h') : 
-            `${entry.hours}h`;
-        
-        detailsHTML += `
-            <tr>
-                <td>${entry.date}</td>
-                <td>${abbrev} (${entry.staff})</td>
-                <td>${entry.type}</td>
-                <td>${hours}</td>
-                <td>${entry.regularShift || '-'}</td>
-                <td>${entry.reason || '-'}</td>
-            </tr>
-        `;
-    });
-    
-    detailsHTML += '</tbody></table></div>';
-    
-    // Create a modal to show the details
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 90%; max-height: 80%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>Month Details</h3>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                        style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
-                    Close
-                </button>
-            </div>
-            ${detailsHTML}
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// Helper function to show staff details
-function showStaffOnDutyDetails(staff) {
-    const allEntries = [];
-    const abbrev = staffAbbreviations[staff];
-    
-    // Get On Duty entries for this staff
-    Object.values(onDutyEntries).forEach(entry => {
-        if (entry.staff === staff) {
-            allEntries.push({
-                type: 'On Duty',
-                ...entry
-            });
-        }
-    });
-    
-    // Get Extra Hours entries for this staff
-    Object.values(extraHoursData).forEach(entry => {
-        if (entry.staff === staff && entry.type !== 'Off-Duty Working') {
-            // Check if already included as On Duty
-            const isInOnDuty = Object.values(onDutyEntries).some(od => 
-                od.staff === staff && od.date === entry.date && od.type === 'extra'
-            );
-            
-            if (!isInOnDuty) {
-                allEntries.push({
-                    type: 'Extra Hours',
-                    ...entry
-                });
-            }
-        }
-    });
-    
-    if (allEntries.length === 0) {
-        alert(`No On Duty or Extra Hours entries found for ${abbrev} (${staff})`);
-        return;
-    }
-    
-    // Sort by date (newest first)
-    allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    // Calculate totals
-    let totalOnDutyDays = 0;
-    let totalHours = 0;
-    let totalExtraHours = 0;
-    
-    allEntries.forEach(entry => {
-        if (entry.type === 'On Duty') {
-            totalOnDutyDays++;
-            totalHours += 8; // Regular shift hours
-            if (entry.type === 'extra') {
-                totalExtraHours += entry.hours;
-                totalHours += entry.hours;
-            }
-        } else {
-            totalExtraHours += entry.hours;
-            totalHours += entry.hours;
-        }
-    });
-    
-    let detailsHTML = '<h3>Staff Details</h3>';
-    detailsHTML += `<h4>${abbrev} (${staff})</h4>`;
-    detailsHTML += `<p><strong>Total On Duty Days:</strong> ${totalOnDutyDays}</p>`;
-    detailsHTML += `<p><strong>Total Extra Hours:</strong> ${totalExtraHours.toFixed(1)} hours</p>`;
-    detailsHTML += `<p><strong>Total Hours:</strong> ${totalHours.toFixed(1)} hours</p>`;
-    detailsHTML += `<p><strong>Average Hours per On Duty Day:</strong> ${totalOnDutyDays > 0 ? (totalHours / totalOnDutyDays).toFixed(1) : 0} hours</p>`;
-    
-    detailsHTML += '<div style="overflow-x: auto; margin-top: 20px;">';
-    detailsHTML += '<table style="min-width: 800px;">';
-    detailsHTML += '<thead><tr><th>Date</th><th>Type</th><th>Regular Shift</th><th>Extra Hours</th><th>Total Hours</th><th>Reason</th></tr></thead><tbody>';
-    
-    allEntries.forEach(entry => {
-        const extraHoursDisplay = entry.type === 'extra' ? `${entry.hours}h` : '-';
-        const totalHoursForEntry = entry.type === 'On Duty' ? 
-            (entry.type === 'extra' ? 8 + entry.hours : 8) : 
-            entry.hours;
-        
-        detailsHTML += `
-            <tr>
-                <td>${entry.date}</td>
-                <td>${entry.type}</td>
-                <td>${entry.regularShift || '-'}</td>
-                <td>${extraHoursDisplay}</td>
-                <td>${totalHoursForEntry}h</td>
-                <td>${entry.reason || '-'}</td>
-            </tr>
-        `;
-    });
-    
-    detailsHTML += '</tbody></table></div>';
-    
-    // Create a modal to show the details
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 90%; max-height: 80%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>Staff Details</h3>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                        style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
-                    Close
-                </button>
-            </div>
-            ${detailsHTML}
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
 function generateCOFFReport() {
     // Hide attendance navigation for COFF report
     document.getElementById('attendance-nav').style.display = 'none';
@@ -4803,7 +5038,6 @@ function exportAllData() {
     
     const allData = {
         shiftData: shiftData,
-        leaveData: leaveData,
         leaveRequests: leaveRequests,
         offDutyEntries: offDutyEntries,
         onDutyEntries: onDutyEntries,
@@ -4827,6 +5061,43 @@ function exportAllData() {
     linkElement.click();
     
     alert('All data exported successfully!');
+}
+
+// Leave functions
+function checkLeaveEligibility() {
+    const staff = document.getElementById('leaveStaff').value;
+    const fromDate = new Date(document.getElementById('leaveFromDate').value);
+    const toDate = new Date(document.getElementById('leaveToDate').value);
+    const errorDiv = document.getElementById('leaveEligibilityError');
+    
+    // Check date range
+    if (fromDate > toDate) {
+        errorDiv.textContent = 'To date must be after From date';
+        errorDiv.style.display = 'block';
+        return false;
+    }
+    
+    // Check for overlapping leaves
+    const dateRange = getDatesInRange(fromDate, toDate);
+    for (const date of dateRange) {
+        const dateKey = formatDateForInput(date);
+        if (checkIfOnLeave(staff, date)) {
+            errorDiv.textContent = `${staff} already has leave on ${dateKey}`;
+            errorDiv.style.display = 'block';
+            return false;
+        }
+    }
+    
+    errorDiv.style.display = 'none';
+    return true;
+}
+
+function updateLeaveToDate() {
+    const fromDate = document.getElementById('leaveFromDate').value;
+    if (fromDate) {
+        document.getElementById('leaveToDate').value = fromDate;
+        document.getElementById('leaveToDate').min = fromDate;
+    }
 }
 
 // Load shift edit grid
@@ -4941,7 +5212,7 @@ function updateAvailableStaff() {
     });
 }
 
-function transferObituaryDuty() {
+async function transferObituaryDuty() {
     const date = document.getElementById('obituaryDate').value;
     const transferFrom = document.getElementById('transferFromStaff').value;
     const transferTo = document.getElementById('transferToStaff').value;
@@ -4971,15 +5242,26 @@ function transferObituaryDuty() {
     shiftData.shifts[dayName][transferFrom] = toCurrentShift; // Give transferFrom the shift of transferTo
     shiftData.shifts[dayName][transferTo] = "Obituary duty 5pm-1:30am"; // Give transferTo obituary duty
     
-    saveAllData();
-    
-    alert(`Obituary duty transferred from ${fromAbbrev} (${transferFrom}) to ${toAbbrev} (${transferTo}) on ${date}${reason ? `\nReason: ${reason}` : ''}`);
-    closeModal('editObituaryModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
+    // Save to Firestore
+    try {
+        await saveData('system', 'shiftSchedule', {
+            shifts: shiftData.shifts,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.email,
+            change: `Obituary duty transfer from ${fromAbbrev} to ${toAbbrev} on ${date}`
+        });
+        
+        alert(`Obituary duty transferred from ${fromAbbrev} (${transferFrom}) to ${toAbbrev} (${transferTo}) on ${date}${reason ? `\nReason: ${reason}` : ''}`);
+        closeModal('editObituaryModal');
+        
+        // Refresh views
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+    } catch (error) {
+        console.error('Error transferring obituary duty:', error);
+        alert('Error transferring duty: ' + error.message);
+    }
 }
 
 // On Duty Functions
@@ -4992,66 +5274,6 @@ function toggleExtraHours() {
     } else {
         extraHoursSection.style.display = 'none';
     }
-}
-
-function saveOnDuty() {
-    const staff = document.getElementById('onDutyStaff').value;
-    const date = document.getElementById('onDutyDate').value;
-    const onDutyType = document.querySelector('input[name="onDutyType"]:checked').value;
-    const extraHours = onDutyType === 'extra' ? parseFloat(document.getElementById('onDutyExtraHours').value) : 0;
-    const reason = document.getElementById('onDutyReason').value;
-    const abbrev = staffAbbreviations[staff];
-    
-    if (!staff || !date || !reason) {
-        alert('Please fill all required fields');
-        return;
-    }
-    
-    const dateKey = date;
-    const dateObj = new Date(date);
-    const dayIndex = dateObj.getDay();
-    const dayName = shiftData.days[dayIndex];
-    const regularShift = shiftData.shifts[dayName][staff] || 'Not Scheduled';
-    
-    // Save to onDutyEntries
-    onDutyEntries[dateKey] = {
-        staff: staff,
-        date: date,
-        type: onDutyType,
-        hours: extraHours,
-        reason: reason,
-        regularShift: regularShift,
-        entryDate: new Date().toISOString()
-    };
-    
-    // If extra hours, add to extraHoursData for COFF calculation
-    if (onDutyType === 'extra' && extraHours > 0) {
-        extraHoursData[dateKey] = {
-            staff: staff,
-            hours: extraHours,
-            reason: `On Duty (OD): ${reason}`,
-            entryDate: new Date().toISOString(),
-            coffCalculated: false,
-            type: 'On Duty (Extra Hours)'
-        };
-    }
-    
-    saveAllData();
-    
-    // Recalculate COFF balances if extra hours
-    if (onDutyType === 'extra') {
-        calculateCOFFBalances();
-    }
-    
-    const typeText = onDutyType === 'regular' ? 'On Duty (Regular Shift)' : `On Duty with ${extraHours} extra hours`;
-    alert(`${typeText} saved for ${abbrev} (${staff}) on ${date}\nReason: ${reason}`);
-    closeModal('onDutyModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-    updateStats();
 }
 
 // Late Entry Functions
@@ -5146,7 +5368,7 @@ function toggleCOFFRequirement() {
     }
 }
 
-function saveLateEntry() {
+async function saveLateEntry() {
     const staff = document.getElementById('lateEntryStaff').value;
     const date = document.getElementById('lateEntryDate').value;
     const actualTime = document.getElementById('actualTime').value;
@@ -5186,7 +5408,7 @@ function saveLateEntry() {
     
     // Create late entry record
     const lateEntry = {
-        id: Date.now(),
+        id: `late_${date}_${staff}_${Date.now()}`,
         staff: staff,
         date: date,
         actualTime: actualTime,
@@ -5195,44 +5417,58 @@ function saveLateEntry() {
         coffHoursRequired: coffHoursRequired,
         regularizedFromCOFF: regularizedFromCOFF,
         reason: reason,
-        entryDate: new Date().toISOString()
+        entryDate: new Date().toISOString(),
+        enteredBy: currentUser.email
     };
     
-    // Add to late entries
-    lateEntries.entries.push(lateEntry);
-    
-    // Deduct COFF if regularization is required
-    if (regularizedFromCOFF) {
-        coffData.balances[staff] = (coffData.balances[staff] || 0) - (coffHoursRequired / 8);
+    try {
+        // Save late entry
+        await saveData('lateEntries', lateEntry.id, lateEntry);
+        lateEntries.entries.push(lateEntry);
         
-        // Add to COFF history
-        coffData.history.push({
-            id: Date.now(),
-            staff: staff,
-            date: date,
-            type: 'Late Entry Regularization',
-            hours: -coffHoursRequired,
-            coffUsed: coffHoursRequired / 8,
-            balanceAfter: coffData.balances[staff],
-            timestamp: new Date().toISOString(),
-            reason: `Late entry: ${reason} (${delayMinutes} minutes late)`
-        });
+        // Deduct COFF if regularization is required
+        if (regularizedFromCOFF) {
+            coffData.balances[staff] = (coffData.balances[staff] || 0) - (coffHoursRequired / 8);
+            
+            // Add to COFF history
+            const historyId = `coff_late_${date}_${staff}_${Date.now()}`;
+            await saveData('coffHistory', historyId, {
+                staff: staff,
+                date: date,
+                type: 'Late Entry Regularization',
+                hours: -coffHoursRequired,
+                coffUsed: coffHoursRequired / 8,
+                balanceAfter: coffData.balances[staff],
+                timestamp: new Date().toISOString(),
+                reason: `Late entry: ${reason} (${delayMinutes} minutes late)`,
+                processedBy: currentUser.email
+            });
+            
+            // Update COFF balance in Firestore
+            await saveData('coffBalances', staff, {
+                balance: coffData.balances[staff],
+                lastUpdated: new Date().toISOString(),
+                updatedBy: currentUser.email
+            });
+        }
+        
+        const regularizationText = regularizedFromCOFF ? 
+            `Regularized using ${coffHoursRequired} hours (${(coffHoursRequired/8).toFixed(1)} days) COFF` : 
+            'Approved without COFF regularization';
+        
+        alert(`Late entry recorded for ${abbrev} (${staff}) on ${date}\nDelay: ${delayMinutes} minutes\n${regularizationText}`);
+        closeModal('lateEntryModal');
+        
+        // Refresh views
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        updateStats();
+        
+    } catch (error) {
+        console.error('Error saving late entry:', error);
+        alert('Error saving late entry: ' + error.message);
     }
-    
-    saveAllData();
-    updateStats();
-    
-    const regularizationText = regularizedFromCOFF ? 
-        `Regularized using ${coffHoursRequired} hours (${(coffHoursRequired/8).toFixed(1)} days) COFF` : 
-        'Approved without COFF regularization';
-    
-    alert(`Late entry recorded for ${abbrev} (${staff}) on ${date}\nDelay: ${delayMinutes} minutes\n${regularizationText}`);
-    closeModal('lateEntryModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
 }
 
 // Off-duty staff options
@@ -5317,196 +5553,6 @@ function updateOffDutyStaffOptions() {
     staffSelect.disabled = false;
 }
 
-// Save off-duty entry
-function saveOffDutyEntry() {
-    const staffSelect = document.getElementById('offDutyStaff');
-    const staff = staffSelect.value;
-    const date = document.getElementById('offDutyDate').value;
-    const shift = document.getElementById('offDutyShift').value;
-    const reason = document.getElementById('offDutyReason').value;
-    const abbrev = staffAbbreviations[staff];
-    
-    // Check if a valid staff is selected
-    if (!staff || staff === '') {
-        alert('Please select a staff member from the dropdown list.');
-        return;
-    }
-    
-    const dateKey = date;
-    offDutyEntries[dateKey] = {
-        staff: staff,
-        shift: shift,
-        reason: reason,
-        entryDate: new Date().toISOString()
-    };
-    
-    // IMPORTANT: Also add to extraHoursData for COFF calculation
-    // Calculate hours from shift string (approximation)
-    let hoursWorked = 8; // Default assumption
-    
-    if (shift.includes('5pm-1:30am')) hoursWorked = 8; // 8 hours
-    if (shift.includes('4pm-12:30pm')) hoursWorked = 8; // Actually 8 hours (overnight)
-    if (shift.includes('7pm-3:30pm')) hoursWorked = 8; // Actually 8 hours
-    if (shift.includes('7:00pm-3:30am')) hoursWorked = 8; // 8 hours
-    
-    // Add to extra hours for COFF calculation
-    extraHoursData[dateKey] = {
-        staff: staff,
-        hours: hoursWorked,
-        reason: `Off-duty working: ${reason || 'Coverage'}`,
-        entryDate: new Date().toISOString(),
-        coffCalculated: false,
-        type: 'Off-Duty Working'
-    };
-    
-    saveAllData();
-    
-    // Recalculate COFF balances
-    calculateCOFFBalances();
-    
-    alert(`Off-duty working entry saved for ${abbrev} (${staff}) on ${date}. ${hoursWorked} hours added for COFF calculation.`);
-    closeModal('offDutyModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-    updateStats();
-}
-
-// Save extra hours
-function saveExtraHours() {
-    const staff = document.getElementById('extraHoursStaff').value;
-    const date = document.getElementById('extraHoursDate').value;
-    const hours = parseFloat(document.getElementById('extraHours').value);
-    const reason = document.getElementById('extraHoursReason').value;
-    const abbrev = staffAbbreviations[staff];
-    
-    if (!staff || !date || !hours || !reason) {
-        alert('Please fill all required fields');
-        return;
-    }
-    
-    const dateKey = date;
-    
-    // Check if there's already an extra hours entry for this staff on this date
-    const existingEntry = extraHoursData[dateKey];
-    if (existingEntry && existingEntry.staff === staff) {
-        if (confirm(`${abbrev} already has ${existingEntry.hours} extra hours on ${date}. Add ${hours} more hours?`)) {
-            // Add to existing hours
-            existingEntry.hours += hours;
-            existingEntry.reason += `; Additional: ${reason}`;
-            existingEntry.entryDate = new Date().toISOString();
-            existingEntry.coffCalculated = false; // Reset to recalculate COFF
-        } else {
-            return;
-        }
-    } else {
-        // Create new entry
-        extraHoursData[dateKey] = {
-            staff: staff,
-            hours: hours,
-            reason: reason,
-            entryDate: new Date().toISOString(),
-            coffCalculated: false,
-            type: 'Extra Hours'
-        };
-    }
-    
-    // Recalculate COFF balances
-    calculateCOFFBalances();
-    
-    saveAllData();
-    updateStats();
-    
-    alert(`Extra hours saved for ${abbrev} (${staff}) on ${date}: ${hours} hours`);
-    closeModal('extraHoursModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-}
-
-// Leave functions
-function checkLeaveEligibility() {
-    const staff = document.getElementById('leaveStaff').value;
-    const fromDate = new Date(document.getElementById('leaveFromDate').value);
-    const toDate = new Date(document.getElementById('leaveToDate').value);
-    const errorDiv = document.getElementById('leaveEligibilityError');
-    
-    // Check date range
-    if (fromDate > toDate) {
-        errorDiv.textContent = 'To date must be after From date';
-        errorDiv.style.display = 'block';
-        return false;
-    }
-    
-    // Check for overlapping leaves
-    const dateRange = getDatesInRange(fromDate, toDate);
-    for (const date of dateRange) {
-        const dateKey = formatDateForInput(date);
-        if (checkIfOnLeave(staff, date)) {
-            errorDiv.textContent = `${staff} already has leave on ${dateKey}`;
-            errorDiv.style.display = 'block';
-            return false;
-        }
-    }
-    
-    errorDiv.style.display = 'none';
-    return true;
-}
-
-function updateLeaveToDate() {
-    const fromDate = document.getElementById('leaveFromDate').value;
-    if (fromDate) {
-        document.getElementById('leaveToDate').value = fromDate;
-        document.getElementById('leaveToDate').min = fromDate;
-    }
-}
-
-function submitLeave() {
-    if (!checkLeaveEligibility()) {
-        return;
-    }
-    
-    const staff = document.getElementById('leaveStaff').value;
-    const fromDate = new Date(document.getElementById('leaveFromDate').value);
-    const toDate = new Date(document.getElementById('leaveToDate').value);
-    const type = document.getElementById('leaveType').value; // full or half
-    
-    const dateRange = getDatesInRange(fromDate, toDate);
-    const leaveTypeText = type === 'full' ? 'Full Day Leave' : 'Half Day Leave';
-    
-    dateRange.forEach(date => {
-        const dateKey = formatDateForInput(date);
-        const leaveRequest = {
-            id: Date.now() + Math.random(),
-            staff: staff,
-            date: dateKey,
-            type: leaveTypeText,
-            reason: '',
-            status: 'pending',
-            requestedAt: new Date().toISOString(),
-            isCOFF: false
-        };
-        
-        leaveRequests.push(leaveRequest);
-    });
-    
-    saveAllData();
-    updateStats();
-    
-    alert(`Leave request submitted for ${staff} from ${formatDateForInput(fromDate)} to ${formatDateForInput(toDate)}`);
-    closeModal('leaveModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-    renderApprovals();
-}
-
 // Load leaves for staff in cancel modal
 function loadLeaveForStaff() {
     const staff = document.getElementById('cancelLeaveStaff').value;
@@ -5571,152 +5617,9 @@ function loadLeaveForStaff() {
         <div class="button-group" style="margin-top: 20px;">
             <button onclick="cancelSelectedLeaves()" class="btn-danger" style="padding: 12px 24px; font-size: 1em; font-weight: bold;">Cancel Selected Leaves</button>
         </div>
-        
-        <style>
-            .leave-cancel-checkbox:checked {
-                accent-color: #e74c3c;
-            }
-            
-            .leave-cancel-item:hover {
-                background-color: #f0f5ff !important;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                transition: all 0.3s ease;
-            }
-            
-            .leave-cancel-checkbox {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 22px !important;
-                height: 22px !important;
-                border: 2px solid #95a5a6;
-                border-radius: 4px;
-                background-color: white;
-                position: relative;
-                cursor: pointer;
-                margin: 0 !important;
-            }
-            
-            .leave-cancel-checkbox:checked {
-                background-color: #e74c3c;
-                border-color: #e74c3c;
-            }
-            
-            .leave-cancel-checkbox:checked::after {
-                content: '✓';
-                position: absolute;
-                color: white;
-                font-size: 14px;
-                font-weight: bold;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
-     /* Role-based visibility */
-.admin-only {
-    display: flex !important;
-}
-
-.viewer .admin-only {
-    display: none !important;
-}
-
-.viewer-message {
-    display: none;
-    padding: 15px;
-    background: #fff9e6;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border-left: 4px solid #f39c12;
-    font-size: 0.9em;
-}
-
-.viewer .viewer-message {
-    display: block;
-}       
-            
-        </style>
     `;
     
     container.innerHTML = html;
-}
-// UPDATED: Cancel selected leaves function with COFF restoration and view refresh
-function cancelSelectedLeaves() {
-    const checkboxes = document.querySelectorAll('#leaveListContainer input[type="checkbox"]:checked');
-    if (checkboxes.length === 0) {
-        alert('Please select at least one leave to cancel.');
-        return;
-    }
-    
-    if (confirm(`Cancel ${checkboxes.length} selected leave(s)?`)) {
-        let cancelledCOFFLeaves = 0;
-        
-        checkboxes.forEach(checkbox => {
-            const requestId = checkbox.value;
-            const requestIndex = leaveRequests.findIndex(req => req.id == requestId);
-            if (requestIndex !== -1) {
-                const request = leaveRequests[requestIndex];
-                
-                // Store whether it's a COFF leave before cancelling
-                const isCOFFLeave = request.isCOFF;
-                const staff = request.staff;
-                const dateKey = request.date;
-                
-                // Cancel the leave
-                leaveRequests[requestIndex].status = 'cancelled';
-                leaveRequests[requestIndex].cancelledAt = new Date().toISOString();
-                
-                // Remove from leaveData if it's there
-                if (leaveData[dateKey]) {
-                    const staffIndex = leaveData[dateKey].indexOf(staff);
-                    if (staffIndex !== -1) {
-                        leaveData[dateKey].splice(staffIndex, 1);
-                    }
-                }
-                
-                // If it's a COFF leave, restore the COFF balance
-                if (isCOFFLeave && request.status === 'approved') {
-                    coffData.balances[staff] = (coffData.balances[staff] || 0) + 1;
-                    cancelledCOFFLeaves++;
-                    
-                    // Add to COFF history for tracking
-                    coffData.history.push({
-                        id: Date.now(),
-                        staff: staff,
-                        date: dateKey,
-                        type: 'COFF Restored (Cancelled Leave)',
-                        hours: 8,
-                        coffEarned: 1,
-                        balanceAfter: coffData.balances[staff],
-                        timestamp: new Date().toISOString(),
-                        reason: `COFF restored due to cancelled leave on ${dateKey}`
-                    });
-                }
-            }
-        });
-        
-        saveAllData();
-        updateStats();
-        
-        // Recalculate COFF balances to ensure everything is up to date
-        calculateCOFFBalances();
-        
-        // Show success message with COFF restoration info
-        let successMsg = `${checkboxes.length} leave(s) cancelled successfully.`;
-        if (cancelledCOFFLeaves > 0) {
-            successMsg += `\n${cancelledCOFFLeaves} COFF day(s) restored to respective staff.`;
-        }
-        alert(successMsg);
-        
-        // Refresh ALL views
-        loadLeaveForStaff(); // Refresh the cancel modal list
-        renderWeekView();
-        renderMonthView();
-        renderTodayView();
-        renderApprovals(); // Update approvals tab
-        renderCOFFSummary(); // Update COFF summary
-        renderCOFFHistory(); // Update COFF history
-    }
 }
 
 function cancelSingleLeave(requestId) {
@@ -5726,31 +5629,23 @@ function cancelSingleLeave(requestId) {
             leaveRequests[requestIndex].status = 'cancelled';
             leaveRequests[requestIndex].cancelledAt = new Date().toISOString();
             
-            // Remove from leaveData
-            const dateKey = leaveRequests[requestIndex].date;
-            const staff = leaveRequests[requestIndex].staff;
+            // Update in Firestore
+            saveData('leaveRequests', requestId, leaveRequests[requestIndex]);
             
-            if (leaveData[dateKey]) {
-                const staffIndex = leaveData[dateKey].indexOf(staff);
-                if (staffIndex !== -1) {
-                    leaveData[dateKey].splice(staffIndex, 1);
-                }
-            }
+            alert('Leave cancelled successfully!');
             
-            saveAllData();
-            updateStats();
+            // Refresh views
             renderApprovals();
             renderWeekView();
             renderMonthView();
             renderTodayView();
-            
-            alert('Leave cancelled successfully!');
+            updateStats();
         }
     }
 }
 
 // Edit shift functions
-function saveShiftEdit() {
+async function saveShiftEdit() {
     const effectiveDate = document.getElementById('effectiveDate').value;
     const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
     const days = shiftData.days;
@@ -5764,13 +5659,26 @@ function saveShiftEdit() {
         });
     });
     
-    alert(`Shift schedule updated effective from ${effectiveDate}`);
-    closeModal('editShiftModal');
-    
-    // Refresh views
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
+    try {
+        // Save to Firestore
+        await saveData('system', 'shiftSchedule', {
+            shifts: shiftData.shifts,
+            effectiveDate: effectiveDate,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.email
+        });
+        
+        alert(`Shift schedule updated effective from ${effectiveDate}`);
+        closeModal('editShiftModal');
+        
+        // Refresh views
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+    } catch (error) {
+        console.error('Error saving shift edit:', error);
+        alert('Error saving shift changes: ' + error.message);
+    }
 }
 
 function loadOffDutyForDate() {
@@ -5800,23 +5708,36 @@ function loadOffDutyForDate() {
     `;
 }
 
-function cancelOffDutyEntry(dateKey) {
+async function cancelOffDutyEntry(dateKey) {
     if (confirm('Cancel this off-duty working entry?')) {
-        delete offDutyEntries[dateKey];
-        // Also remove from extraHoursData if it exists
-        if (extraHoursData[dateKey]) {
-            delete extraHoursData[dateKey];
+        try {
+            // Delete from Firestore
+            await deleteData('offDutyEntries', dateKey);
+            
+            // Also remove from extraHoursData if it exists
+            const extraHoursId = `${dateKey}_${offDutyEntries[dateKey].staff}_offduty`;
+            if (extraHoursData[extraHoursId]) {
+                await deleteData('extraHours', extraHoursId);
+                delete extraHoursData[extraHoursId];
+            }
+            
+            // Delete from local data
+            delete offDutyEntries[dateKey];
+            
+            // Recalculate COFF balances
+            await calculateCOFFBalances();
+            
+            alert('Off-duty working entry cancelled.');
+            closeModal('cancelOffDutyModal');
+            
+            // Refresh views
+            renderWeekView();
+            renderMonthView();
+            renderTodayView();
+        } catch (error) {
+            console.error('Error cancelling off-duty entry:', error);
+            alert('Error: ' + error.message);
         }
-        saveAllData();
-        // Recalculate COFF balances
-        calculateCOFFBalances();
-        alert('Off-duty working entry cancelled.');
-        closeModal('cancelOffDutyModal');
-        
-        // Refresh views
-        renderWeekView();
-        renderMonthView();
-        renderTodayView();
     }
 }
 
@@ -5839,7 +5760,7 @@ function updateCoffToDate() {
     }
 }
 
-function submitCOFF() {
+async function submitCOFF() {
     const staff = document.getElementById('coffStaff').value;
     const fromDate = new Date(document.getElementById('coffFromDate').value);
     const toDate = new Date(document.getElementById('coffToDate').value);
@@ -5864,135 +5785,297 @@ function submitCOFF() {
     
     // Create COFF request
     const dateRange = getDatesInRange(fromDate, toDate);
-    dateRange.forEach(date => {
-        const dateKey = formatDateForInput(date);
-        const leaveRequest = {
-            id: Date.now() + Math.random(),
-            staff: staff,
-            date: dateKey,
-            type: 'Compensatory Off (COFF)',
-            reason: reason,
-            status: 'pending',
-            requestedAt: new Date().toISOString(),
-            isCOFF: true
-        };
+    
+    try {
+        const batch = db.batch();
+        const newRequests = [];
         
-        leaveRequests.push(leaveRequest);
-        coffData.pending.push(dateKey);
-    });
-    
-    saveAllData();
-    updateStats();
-    
-    alert(`COFF request submitted for ${abbrev} (${staff}) from ${formatDateForInput(fromDate)} to ${formatDateForInput(toDate)}`);
-    closeModal('applyCOFFModal');
-    
-    // Refresh approvals tab
-    if (document.getElementById('approvals-tab').classList.contains('active')) {
-        renderApprovals();
+        dateRange.forEach(date => {
+            const dateKey = formatDateForInput(date);
+            const leaveId = `coff_${dateKey}_${staff}_${Date.now()}`;
+            
+            const leaveRequest = {
+                id: leaveId,
+                staff: staff,
+                date: dateKey,
+                type: 'Compensatory Off (COFF)',
+                reason: reason,
+                status: 'pending',
+                requestedAt: new Date().toISOString(),
+                isCOFF: true,
+                requestedBy: currentUser.email,
+                requestedByUid: currentUser.uid
+            };
+            
+            const leaveRef = db.collection('leaveRequests').doc(leaveId);
+            batch.set(leaveRef, leaveRequest);
+            newRequests.push(leaveRequest);
+        });
+        
+        await batch.commit();
+        
+        // Update local array
+        leaveRequests.push(...newRequests);
+        
+        alert(`COFF request submitted for ${abbrev} (${staff}) from ${formatDateForInput(fromDate)} to ${formatDateForInput(toDate)}`);
+        closeModal('applyCOFFModal');
+        
+        // Refresh approvals tab
+        if (document.getElementById('approvals-tab').classList.contains('active')) {
+            renderApprovals();
+        }
+        
+        updateStats();
+        
+    } catch (error) {
+        console.error('Error submitting COFF:', error);
+        alert('Error submitting COFF request: ' + error.message);
     }
 }
 
-// Calculate COFF balances including off-duty working
-function calculateCOFFBalances() {
-    // Reset balances
-    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-    staffList.forEach(staff => {
-        coffData.balances[staff] = 0;
-    });
+function checkExistingHoliday() {
+    const date = document.getElementById('holidayDate').value;
+    const existingInfo = document.getElementById('existingHolidayInfo');
+    const actionBtn = document.getElementById('holidayActionBtn');
     
-    // Clear history for fresh calculation
-    coffData.history = [];
+    if (holidays[date]) {
+        existingInfo.innerHTML = `
+            <strong>Existing Holiday:</strong> ${holidays[date].name}<br>
+            <small>Added on: ${new Date(holidays[date].addedDate || holidays[date].entryDate).toLocaleDateString()}</small>
+        `;
+        existingInfo.style.display = 'block';
+        actionBtn.textContent = 'Update Holiday';
+        actionBtn.className = 'btn-warning';
+    } else {
+        existingInfo.style.display = 'none';
+        actionBtn.textContent = 'Add Holiday';
+        actionBtn.className = '';
+    }
+}
+
+async function saveHoliday() {
+    const name = document.getElementById('holidayName').value;
+    const date = document.getElementById('holidayDate').value;
     
-    // Calculate COFF from extra hours (8 hours = 1 day COFF)
-    Object.entries(extraHoursData).forEach(([dateKey, entry]) => {
-        if (!entry.coffCalculated) {
-            const staff = entry.staff;
-            const coffDays = entry.hours / 8; // 8 hours = 1 day COFF
-            coffData.balances[staff] = (coffData.balances[staff] || 0) + coffDays;
-            
-            // Add to history
-            coffData.history.push({
-                id: Date.now(),
-                staff: staff,
-                date: dateKey,
-                type: entry.type || 'Extra Hours',
-                hours: entry.hours,
-                coffEarned: coffDays,
-                balanceAfter: coffData.balances[staff],
-                timestamp: new Date().toISOString(),
-                reason: entry.reason
-            });
-            
-            // Mark as calculated
-            entry.coffCalculated = true;
-        }
-    });
-    
-    // Deduct used COFF
-    leaveRequests.forEach(request => {
-        if (request.isCOFF && request.status === 'approved') {
-            coffData.balances[request.staff] = (coffData.balances[request.staff] || 0) - 1;
-            
-            // Add to history
-            coffData.history.push({
-                id: Date.now(),
-                staff: request.staff,
-                date: request.date,
-                type: 'COFF Used',
-                hours: -8,
-                coffUsed: 1,
-                balanceAfter: coffData.balances[request.staff],
-                timestamp: new Date().toISOString(),
-                reason: request.reason
-            });
-        }
-    });
-    
-    // Deduct COFF used for late entry regularization
-    if (lateEntries.entries) {
-        lateEntries.entries.forEach(entry => {
-            if (entry.regularizedFromCOFF) {
-                coffData.balances[entry.staff] = (coffData.balances[entry.staff] || 0) - (entry.coffHoursRequired/8);
-                
-                // Add to history
-                coffData.history.push({
-                    id: Date.now(),
-                    staff: entry.staff,
-                    date: entry.date,
-                    type: 'Late Entry Regularization',
-                    hours: -entry.coffHoursRequired,
-                    coffUsed: entry.coffHoursRequired/8,
-                    balanceAfter: coffData.balances[entry.staff],
-                    timestamp: new Date().toISOString(),
-                    reason: entry.reason
-                });
-            }
-        });
+    if (!name || !date) {
+        alert('Please enter holiday name and date');
+        return;
     }
     
-    saveAllData();
-    updateStats();
+    try {
+        await saveData('holidays', date, {
+            name: name,
+            date: date,
+            addedDate: new Date().toISOString(),
+            addedBy: currentUser.email,
+            addedByUid: currentUser.uid
+        });
+        
+        holidays[date] = {
+            name: name,
+            date: date,
+            addedDate: new Date().toISOString()
+        };
+        
+        alert(`Holiday "${name}" saved for ${date}`);
+        closeModal('holidayModal');
+        
+        // Refresh views
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        
+    } catch (error) {
+        console.error('Error saving holiday:', error);
+        alert('Error saving holiday: ' + error.message);
+    }
+}
+
+function checkExistingSkeleton() {
+    const date = document.getElementById('skeletonDate').value;
+    const existingInfo = document.getElementById('existingSkeletonInfo');
+    const actionBtn = document.getElementById('skeletonActionBtn');
+    
+    if (skeletonShifts[date]) {
+        existingInfo.innerHTML = `
+            <strong>Existing Skeleton Shift:</strong> ${skeletonShifts[date].hours} hours<br>
+            <small>Reason: ${skeletonShifts[date].reason || 'No reason provided'}</small><br>
+            <small>Added on: ${new Date(skeletonShifts[date].entryDate).toLocaleDateString()}</small>
+        `;
+        existingInfo.style.display = 'block';
+        actionBtn.textContent = 'Update Skeleton Shift';
+        actionBtn.className = 'btn-warning';
+    } else {
+        existingInfo.style.display = 'none';
+        actionBtn.textContent = 'Add Skeleton Shift';
+        actionBtn.className = '';
+    }
+}
+
+async function saveSkeletonShift() {
+    const date = document.getElementById('skeletonDate').value;
+    const hours = document.getElementById('skeletonHours').value;
+    const reason = document.getElementById('skeletonReason').value;
+    
+    if (!date || !hours) {
+        alert('Please select date and hours');
+        return;
+    }
+    
+    // Get excluded staff
+    const excludedStaff = [];
+    const checkboxes = document.querySelectorAll('#skeletonExcludeList input[type="checkbox"]:checked');
+    checkboxes.forEach(checkbox => {
+        excludedStaff.push(checkbox.value);
+    });
+    
+    try {
+        await saveData('skeletonShifts', date, {
+            hours: hours,
+            reason: reason,
+            excludedStaff: excludedStaff,
+            entryDate: new Date().toISOString(),
+            addedBy: currentUser.email,
+            addedByUid: currentUser.uid
+        });
+        
+        skeletonShifts[date] = {
+            hours: hours,
+            reason: reason,
+            excludedStaff: excludedStaff,
+            entryDate: new Date().toISOString()
+        };
+        
+        alert(`Skeleton shift of ${hours} hours saved for ${date}`);
+        closeModal('skeletonModal');
+        
+        // Refresh views
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        
+    } catch (error) {
+        console.error('Error saving skeleton shift:', error);
+        alert('Error saving skeleton shift: ' + error.message);
+    }
+}
+
+// Helper functions
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatDateForDisplay(date) {
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric',
+        weekday: 'short'
+    });
+}
+
+function getDatesInRange(startDate, endDate) {
+    const dates = [];
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return dates;
+}
+
+function checkIfOnLeave(staff, date) {
+    const dateKey = formatDateForInput(date);
+    return leaveRequests.some(request => 
+        request.staff === staff && 
+        request.date === dateKey && 
+        (request.status === 'approved' || request.status === 'pending')
+    );
+}
+
+function checkOffDutyWorking(staff, date) {
+    const dateKey = formatDateForInput(date);
+    return offDutyEntries[dateKey] && offDutyEntries[dateKey].staff === staff;
+}
+
+function checkOnDuty(staff, date) {
+    const dateKey = formatDateForInput(date);
+    return onDutyEntries[dateKey] && onDutyEntries[dateKey].staff === staff;
+}
+
+function checkExtraHours(staff, date) {
+    const dateKey = formatDateForInput(date);
+    // Check all extra hours entries for this staff on this date
+    return Object.values(extraHoursData).some(entry => 
+        entry.staff === staff && 
+        entry.date === dateKey
+    );
+}
+
+function getLeaveStatus(staff, date) {
+    const dateKey = formatDateForInput(date);
+    const request = leaveRequests.find(req => 
+        req.staff === staff && 
+        req.date === dateKey
+    );
+    return request ? request.status : null;
+}
+
+function checkLateEntry(staff, date) {
+    const dateKey = formatDateForInput(date);
+    return lateEntries.entries.some(entry => 
+        entry.staff === staff && 
+        entry.date === dateKey
+    );
+}
+
+function getLateEntry(staff, date) {
+    const dateKey = formatDateForInput(date);
+    return lateEntries.entries.find(entry => 
+        entry.staff === staff && 
+        entry.date === dateKey
+    );
+}
+
+function getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry) {
+    if (hasLateEntry) return 'status-late-entry';
+    if (leaveStatus === 'pending') return 'status-leave-pending';
+    if (leaveStatus === 'approved') return 'status-leave-approved';
+    if (leaveStatus === 'rejected') return 'status-leave-rejected';
+    if (isOffDutyWorking) return 'status-off-duty-working';
+    if (isOnDuty) return 'status-on-duty';
+    if (hasExtraHours) return 'status-extra-hours';
+    if (shift && shift.includes('Obituary')) return 'status-obituary';
+    if (shift && shift.includes('Off')) return 'status-off';
+    return 'status-available';
+}
+
+function calculateSkeletonOT() {
+    // Calculate OT for skeleton shifts
+    // This is a placeholder - implement your skeleton OT calculation logic
+    console.log('Calculating skeleton OT...');
 }
 
 function renderCOFFSummary() {
     const container = document.getElementById('coff-summary-container');
-    let html = '<div class="coff-summary"><h3>COFF Balances</h3>';
+    let html = '<div class="coff-summary">';
     
     const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
     staffList.forEach(staff => {
         const balance = coffData.balances[staff] || 0;
         const abbrev = staffAbbreviations[staff];
-        
-        // Calculate hours breakdown
-        const extraHoursEntries = Object.values(extraHoursData).filter(entry => entry.staff === staff);
-        const totalHours = extraHoursEntries.reduce((sum, entry) => sum + entry.hours, 0);
+        const status = balance >= 1 ? 'Eligible for COFF' : 'Not eligible';
+        const statusColor = balance >= 1 ? '#27ae60' : '#e74c3c';
         
         html += `
-            <div style="margin-bottom: 10px; padding: 10px; background: #f0f7ff; border-radius: 5px;">
-                <strong>${abbrev} (${staff}):</strong> ${balance.toFixed(1)} days (${(balance * 8).toFixed(1)} hours)<br>
-                <small>Total extra hours: ${totalHours.toFixed(1)} hours from ${extraHoursEntries.length} entries</small>
-                ${balance >= 1 ? '<div style="color: #27ae60; margin-top: 5px;">✓ Eligible for COFF</div>' : ''}
+            <div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                <strong>${abbrev} (${staff}):</strong> ${balance.toFixed(1)} days
+                <span style="color: ${statusColor}; font-size: 0.9em; margin-left: 10px;">${status}</span>
             </div>
         `;
     });
@@ -6009,24 +6092,13 @@ function renderCOFFHistory() {
         return;
     }
     
-    let html = '<h3>COFF History</h3><table>';
-    html += `
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Staff</th>
-                <th>Type</th>
-                <th>Hours</th>
-                <th>COFF Days</th>
-                <th>Balance After</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
+    let html = '<h4>Recent COFF History</h4>';
+    html += '<div style="overflow-x: auto;">';
+    html += '<table><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Hours</th><th>COFF Days</th><th>Balance After</th><th>Reason</th></tr></thead><tbody>';
     
-    // Show recent 20 entries
-    const recentHistory = [...coffData.history].reverse().slice(0, 20);
+    // Show last 20 entries
+    const recentHistory = [...coffData.history].slice(0, 20);
+    
     recentHistory.forEach(entry => {
         const abbrev = staffAbbreviations[entry.staff];
         const hoursDisplay = entry.hours > 0 ? `+${entry.hours}` : entry.hours;
@@ -6046,1335 +6118,272 @@ function renderCOFFHistory() {
         `;
     });
     
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     container.innerHTML = html;
 }
 
-function viewCOFFSummary() {
-    renderCOFFSummary();
-    renderCOFFHistory();
-}
-
-// Holiday functions
-function checkExistingHoliday() {
-    const dateStr = document.getElementById('holidayDate').value;
-    const infoDiv = document.getElementById('existingHolidayInfo');
-    const actionBtn = document.getElementById('holidayActionBtn');
-    
-    if (!dateStr) {
-        infoDiv.style.display = 'none';
-        actionBtn.textContent = 'Add Holiday';
-        return;
-    }
-    
-    const existingHoliday = holidays[dateStr];
-    if (existingHoliday) {
-        infoDiv.style.display = 'block';
-        infoDiv.innerHTML = `
-            <strong>Existing Holiday:</strong> ${existingHoliday.name}<br>
-            <small>Click "Remove Holiday" to delete this holiday</small>
-        `;
-        actionBtn.textContent = 'Remove Holiday';
-        actionBtn.className = 'btn-danger';
-        document.getElementById('holidayName').value = existingHoliday.name;
-    } else {
-        infoDiv.style.display = 'none';
-        actionBtn.textContent = 'Add Holiday';
-        actionBtn.className = '';
-    }
-}
-
-function saveHoliday() {
-    const date = document.getElementById('holidayDate').value;
-    const name = document.getElementById('holidayName').value;
-    const actionBtn = document.getElementById('holidayActionBtn');
-    
-    if (!date || !name) {
-        alert('Please fill all required fields');
-        return;
-    }
-    
-    if (actionBtn.textContent === 'Remove Holiday') {
-        // Remove holiday
-        if (confirm(`Remove holiday "${holidays[date].name}" on ${date}?`)) {
-            delete holidays[date];
-            saveAllData();
-            alert(`Holiday removed from ${date}`);
-            closeModal('holidayModal');
-            renderWeekView();
-            renderMonthView();
-            renderTodayView();
-        }
-    } else {
-        // Add holiday
-        holidays[date] = {
-            name: name,
-            addedAt: new Date().toISOString()
-        };
-        
-        saveAllData();
-        alert(`Holiday "${name}" added for ${date}`);
-        closeModal('holidayModal');
-        renderWeekView();
-        renderMonthView();
-        renderTodayView();
-    }
-}
-
-// Skeleton shift functions
-function checkExistingSkeleton() {
-    const dateStr = document.getElementById('skeletonDate').value;
-    const infoDiv = document.getElementById('existingSkeletonInfo');
-    const actionBtn = document.getElementById('skeletonActionBtn');
-    
-    if (!dateStr) {
-        infoDiv.style.display = 'none';
-        actionBtn.textContent = 'Add Skeleton Shift';
-        return;
-    }
-    
-    const existingSkeleton = skeletonShifts[dateStr];
-    if (existingSkeleton) {
-        infoDiv.style.display = 'block';
-        let excludedStr = existingSkeleton.excludedEmployees ? existingSkeleton.excludedEmployees.map(s => staffAbbreviations[s]).join(', ') : 'None';
-        infoDiv.innerHTML = `
-            <strong>Existing Skeleton Shift:</strong> ${existingSkeleton.hours} hours<br>
-            <strong>Excluded Employees:</strong> ${excludedStr}<br>
-            <strong>Reason:</strong> ${existingSkeleton.reason}<br>
-            <small>Click "Remove Skeleton Shift" to delete this entry</small>
-        `;
-        actionBtn.textContent = 'Remove Skeleton Shift';
-        actionBtn.className = 'btn-danger';
-        document.getElementById('skeletonHours').value = existingSkeleton.hours;
-        document.getElementById('skeletonReason').value = existingSkeleton.reason;
-        
-// Check excluded employees
-if (existingSkeleton.excludedEmployees) {
-    existingSkeleton.excludedEmployees.forEach(staff => {
-        const checkbox = document.getElementById(`exclude_${staff}`);
-        if (checkbox) {
-            checkbox.checked = true;
-            // Also update the visual state by triggering change
-            checkbox.dispatchEvent(new Event('change'));
-        }
-    });
-}
-    } else {
-        infoDiv.style.display = 'none';
-        actionBtn.textContent = 'Add Skeleton Shift';
-        actionBtn.className = '';
-    }
-}
-
-function saveSkeletonShift() {
-    const date = document.getElementById('skeletonDate').value;
-    const hours = parseInt(document.getElementById('skeletonHours').value);
-    const reason = document.getElementById('skeletonReason').value;
-    const actionBtn = document.getElementById('skeletonActionBtn');
-    
-    if (!date || !hours || !reason) {
-        alert('Please fill all required fields');
-        return;
-    }
-    
-    // Get excluded employees
-    const excludedEmployees = [];
-    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-    staffList.forEach(staff => {
-        const checkbox = document.getElementById(`exclude_${staff}`);
-        if (checkbox && checkbox.checked) {
-            excludedEmployees.push(staff);
-        }
-    });
-    
-    if (actionBtn.textContent === 'Remove Skeleton Shift') {
-        // Remove skeleton shift
-        if (confirm(`Remove skeleton shift (${skeletonShifts[date].hours} hours) on ${date}?`)) {
-            delete skeletonShifts[date];
-            saveAllData();
-            
-            // Recalculate OT
-            calculateSkeletonOT();
-            
-            alert(`Skeleton shift removed from ${date}`);
-            closeModal('skeletonModal');
-            renderWeekView();
-            renderMonthView();
-            renderTodayView();
-        }
-    } else {
-        // Add skeleton shift
-        skeletonShifts[date] = {
-            date: date,
-            hours: hours,
-            reason: reason,
-            excludedEmployees: excludedEmployees
-        };
-        
-        saveAllData();
-        
-        // Calculate OT for skeleton shift
-        calculateSkeletonOT();
-        
-        const excludedAbbrevs = excludedEmployees.map(s => staffAbbreviations[s]).join(', ');
-        alert(`Skeleton shift (${hours} hours) added for ${date}. Excluded employees: ${excludedEmployees.length > 0 ? excludedAbbrevs : 'None'}`);
-        closeModal('skeletonModal');
-        renderWeekView();
-        renderMonthView();
-        renderTodayView();
-    }
-}
-
-function calculateSkeletonOT() {
-    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-    
-    // Reset OT data for all months
-    otData.monthly = {};
-    
-    // Calculate OT for each skeleton shift
-    Object.entries(skeletonShifts).forEach(([dateStr, skeleton]) => {
-        const date = new Date(dateStr);
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
-        
-        // Initialize OT data for this month
-        if (!otData.monthly[monthKey]) {
-            otData.monthly[monthKey] = {};
-            staffList.forEach(staff => {
-                otData.monthly[monthKey][staff] = 0;
-            });
-        }
-        
-        // Find staff who worked on skeleton shift day
-        const dayIndex = date.getDay();
-        const dayName = shiftData.days[dayIndex];
-        
-        staffList.forEach(staff => {
-            // Check if staff is excluded from OT for this skeleton shift
-            if (skeleton.excludedEmployees && skeleton.excludedEmployees.includes(staff)) {
-                return; // Skip excluded employees
-            }
-            
-            const shift = shiftData.shifts[dayName][staff];
-            const isOnLeave = checkIfOnLeave(staff, date);
-            const isOffDutyWorking = checkOffDutyWorking(staff, date);
-            const isOnDuty = checkOnDuty(staff, date);
-            const hasLateEntry = checkLateEntry(staff, date);
-            
-            // If staff worked (not off and not on leave), add OT hours
-            if (shift && !shift.includes('Off') && !isOnLeave && !isOffDutyWorking && !isOnDuty && !hasLateEntry) {
-                otData.monthly[monthKey][staff] += skeleton.hours;
-            }
-        });
-    });
-    
-    saveAllData();
-}
-
-// Approval functions with reason provision
-function showApprovalReasonModal(requestId, action) {
-    currentApprovalRequestId = requestId;
-    currentApprovalAction = action;
-    
-    document.getElementById('approvalReason').value = '';
-    
-    if (action === 'approve') {
-        document.getElementById('approveWithReasonBtn').style.display = 'inline-block';
-        document.getElementById('rejectWithReasonBtn').style.display = 'none';
-    } else {
-        document.getElementById('approveWithReasonBtn').style.display = 'none';
-        document.getElementById('rejectWithReasonBtn').style.display = 'inline-block';
-    }
-    
-    openModal('approvalReasonModal');
-}
-
-function approveLeaveWithReason() {
-    const requestId = currentApprovalRequestId;
-    const reason = document.getElementById('approvalReason').value;
-    
-    const requestIndex = leaveRequests.findIndex(req => req.id == requestId);
-    if (requestIndex === -1) {
-        alert('Request not found');
-        closeModal('approvalReasonModal');
-        return;
-    }
-    
-    const request = leaveRequests[requestIndex];
-    const abbrev = staffAbbreviations[request.staff];
-    
-    // For COFF requests, check balance first
-    if (request.isCOFF) {
-        const balance = coffData.balances[request.staff] || 0;
-        if (balance < 1) {
-            alert(`Cannot approve COFF request for ${abbrev} (${request.staff}). Insufficient balance: ${balance.toFixed(1)} days.`);
-            closeModal('approvalReasonModal');
-            return;
-        }
-    }
-    
-    request.status = 'approved';
-    request.approvedAt = new Date().toISOString();
-    request.approvalReason = reason;
-    
-    // Add to leave data
-    const dateKey = request.date;
-    if (!leaveData[dateKey]) {
-        leaveData[dateKey] = [];
-    }
-    if (!leaveData[dateKey].includes(request.staff)) {
-        leaveData[dateKey].push(request.staff);
-    }
-    
-    // If it's a COFF request, deduct from balance
-    if (request.isCOFF) {
-        coffData.balances[request.staff] = (coffData.balances[request.staff] || 0) - 1;
-        
-        // Add to COFF history
-        coffData.history.push({
-            id: Date.now(),
-            staff: request.staff,
-            date: request.date,
-            type: 'COFF Used',
-            status: 'approved',
-            balanceAfter: coffData.balances[request.staff],
-            timestamp: new Date().toISOString(),
-            reason: reason
-        });
-    }
-    
-    saveAllData();
-    
-    updateStats();
-    renderApprovals();
-    renderWeekView();
-    renderMonthView();
-    renderTodayView();
-    
-    closeModal('approvalReasonModal');
-    alert(`Leave approved for ${abbrev} (${request.staff}) on ${request.date}`);
-}
-
-function rejectLeaveWithReason() {
-    const requestId = currentApprovalRequestId;
-    const reason = document.getElementById('approvalReason').value;
-    
-    const requestIndex = leaveRequests.findIndex(req => req.id == requestId);
-    if (requestIndex === -1) {
-        alert('Request not found');
-        closeModal('approvalReasonModal');
-        return;
-    }
-    
-    const request = leaveRequests[requestIndex];
-    const abbrev = staffAbbreviations[request.staff];
-    
-    request.status = 'rejected';
-    request.rejectedAt = new Date().toISOString();
-    request.approvalReason = reason;
-    
-    saveAllData();
-    
-    updateStats();
-    renderApprovals();
-    
-    closeModal('approvalReasonModal');
-    alert(`Leave rejected for ${abbrev} (${request.staff}) on ${request.date}`);
-}
-
-// UPDATED: Render approvals with cancelled leaves section
 function renderApprovals() {
-    // Clear approvals tab content first
-    const approvalsTab = document.getElementById('approvals-tab');
-    
-    // Remove existing sections if they exist
-    const existingSections = approvalsTab.querySelectorAll('h2, .approval-list, p');
-    existingSections.forEach(section => section.remove());
+    const pendingContainer = document.getElementById('pending-approvals-container');
+    const approvedContainer = document.getElementById('approved-leaves-container');
+    const rejectedContainer = document.getElementById('rejected-leaves-container');
     
     // Pending approvals
-    const pendingContainer = document.getElementById('pending-approvals-container');
     const pendingRequests = leaveRequests.filter(req => req.status === 'pending');
-    
     if (pendingRequests.length === 0) {
-        pendingContainer.innerHTML = '<p>No pending approvals</p>';
+        pendingContainer.innerHTML = '<p>No pending approvals.</p>';
     } else {
-        pendingContainer.innerHTML = '<div class="approval-list">';
-        
-        pendingRequests.forEach((request) => {
+        let html = '<div class="approval-list">';
+        pendingRequests.forEach(request => {
             const abbrev = staffAbbreviations[request.staff];
-            const item = document.createElement('div');
-            item.className = 'approval-item';
-            item.innerHTML = `
-                <div class="approval-header">
-                    <div>
-                        <strong>${abbrev} (${request.staff})</strong>
-                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                            Date: ${request.date} | Type: ${request.type}
+            html += `
+                <div class="approval-item">
+                    <div class="approval-header">
+                        <div>
+                            <strong>${abbrev} (${request.staff})</strong><br>
+                            <small>${request.date} - ${request.type}</small>
                         </div>
-                        ${request.reason ? `<div style="margin-top: 5px;"><strong>Reason:</strong> ${request.reason}</div>` : ''}
+                        <div>
+                            ${request.isCOFF ? '<span class="badge obituary-badge">COFF</span>' : ''}
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #f39c12;">
-                        Pending
+                    ${request.reason ? `<p>${request.reason}</p>` : ''}
+                    <div class="approval-actions">
+                        <button class="btn-success" onclick="approveLeave('${request.id}')">Approve</button>
+                        <button class="btn-danger" onclick="rejectLeave('${request.id}')">Reject</button>
                     </div>
-                </div>
-                <div class="approval-actions">
-                    <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
-                    <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
-                    ${request.isCOFF ? 
-                        `<button class="btn-warning" onclick="checkCOFFEligibility('${request.staff}', '${request.id}')">Check COFF</button>` : 
-                        ''}
                 </div>
             `;
-            pendingContainer.querySelector('.approval-list').appendChild(item);
         });
-        
-        pendingContainer.innerHTML += '</div>';
+        html += '</div>';
+        pendingContainer.innerHTML = html;
     }
     
     // Approved leaves
-    const approvedContainer = document.getElementById('approved-leaves-container');
     const approvedRequests = leaveRequests.filter(req => req.status === 'approved');
-    
     if (approvedRequests.length === 0) {
-        approvedContainer.innerHTML = '<p>No approved leaves</p>';
+        approvedContainer.innerHTML = '<p>No approved leaves.</p>';
     } else {
-        approvedContainer.innerHTML = '<div class="approval-list">';
-        
-        approvedRequests.slice(0, 20).forEach(request => {
+        let html = '<div class="approval-list">';
+        approvedRequests.slice(0, 10).forEach(request => {
             const abbrev = staffAbbreviations[request.staff];
-            const item = document.createElement('div');
-            item.className = 'approval-item approved';
-            item.innerHTML = `
-                <div class="approval-header">
-                    <div>
-                        <strong>${abbrev} (${request.staff})</strong>
-                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                            Date: ${request.date} | Type: ${request.type}
+            html += `
+                <div class="approval-item approved">
+                    <div class="approval-header">
+                        <div>
+                            <strong>${abbrev} (${request.staff})</strong><br>
+                            <small>${request.date} - ${request.type}</small>
                         </div>
-                        ${request.reason ? `<div style="margin-top: 5px;"><strong>Reason:</strong> ${request.reason}</div>` : ''}
-                        ${request.approvalReason ? `<div style="margin-top: 5px;"><strong>Approval Reason:</strong> ${request.approvalReason}</div>` : ''}
+                        <div>
+                            ${request.isCOFF ? '<span class="badge obituary-badge">COFF</span>' : ''}
+                            <button class="btn-danger" onclick="cancelSingleLeave('${request.id}')" style="padding: 4px 8px; font-size: 0.8em;">Cancel</button>
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #27ae60;">
-                        Approved
-                    </div>
+                    ${request.reason ? `<p>${request.reason}</p>` : ''}
                 </div>
-                ${!request.isCOFF ? `<div class="approval-actions">
-                    <button class="btn-danger" onclick="cancelSingleLeave('${request.id}')">Cancel Leave</button>
-                </div>` : ''}
             `;
-            approvedContainer.querySelector('.approval-list').appendChild(item);
         });
-        
-        approvedContainer.innerHTML += '</div>';
+        html += '</div>';
+        approvedContainer.innerHTML = html;
     }
     
     // Rejected leaves
-    const rejectedContainer = document.getElementById('rejected-leaves-container');
     const rejectedRequests = leaveRequests.filter(req => req.status === 'rejected');
-    
     if (rejectedRequests.length === 0) {
-        rejectedContainer.innerHTML = '<p>No rejected leaves</p>';
+        rejectedContainer.innerHTML = '<p>No rejected leaves.</p>';
     } else {
-        rejectedContainer.innerHTML = '<div class="approval-list">';
-        
-        rejectedRequests.slice(0, 20).forEach(request => {
+        let html = '<div class="approval-list">';
+        rejectedRequests.slice(0, 10).forEach(request => {
             const abbrev = staffAbbreviations[request.staff];
-            const item = document.createElement('div');
-            item.className = 'approval-item rejected';
-            item.innerHTML = `
-                <div class="approval-header">
-                    <div>
-                        <strong>${abbrev} (${request.staff})</strong>
-                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                            Date: ${request.date} | Type: ${request.type}
+            html += `
+                <div class="approval-item rejected">
+                    <div class="approval-header">
+                        <div>
+                            <strong>${abbrev} (${request.staff})</strong><br>
+                            <small>${request.date} - ${request.type}</small>
                         </div>
-                        ${request.reason ? `<div style="margin-top: 5px;"><strong>Reason:</strong> ${request.reason}</div>` : ''}
-                        ${request.approvalReason ? `<div style="margin-top: 5px;"><strong>Rejection Reason:</strong> ${request.approvalReason}</div>` : ''}
                     </div>
-                    <div style="font-size: 0.9em; color: #e74c3c;">
-                        Rejected
-                    </div>
+                    ${request.reason ? `<p>${request.reason}</p>` : ''}
                 </div>
             `;
-            rejectedContainer.querySelector('.approval-list').appendChild(item);
         });
-        
-        rejectedContainer.innerHTML += '</div>';
-    }
-    
-    // NEW: Cancelled leaves section
-    const cancelledContainer = document.createElement('div');
-    cancelledContainer.innerHTML = '<h2>🗑️ Cancelled Leaves</h2>';
-    const cancelledRequests = leaveRequests.filter(req => req.status === 'cancelled');
-    
-    if (cancelledRequests.length === 0) {
-        cancelledContainer.innerHTML += '<p>No cancelled leaves</p>';
-    } else {
-        const cancelledList = document.createElement('div');
-        cancelledList.className = 'approval-list';
-        
-        cancelledRequests.slice(0, 20).forEach(request => {
-            const abbrev = staffAbbreviations[request.staff];
-            const item = document.createElement('div');
-            item.className = 'approval-item';
-            item.style.borderLeftColor = '#95a5a6';
-            item.style.backgroundColor = '#f8f9fa';
-            
-            item.innerHTML = `
-                <div class="approval-header">
-                    <div>
-                        <strong>${abbrev} (${request.staff})</strong>
-                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                            Date: ${request.date} | Type: ${request.type} ${request.isCOFF ? '(COFF)' : ''}
-                        </div>
-                        ${request.reason ? `<div style="margin-top: 5px;"><strong>Reason:</strong> ${request.reason}</div>` : ''}
-                        <div style="margin-top: 5px; font-size: 0.85em; color: #95a5a6;">
-                            Cancelled on: ${request.cancelledAt ? new Date(request.cancelledAt).toLocaleDateString() : 'N/A'}
-                        </div>
-                    </div>
-                    <div style="font-size: 0.9em; color: #95a5a6;">
-                        Cancelled
-                    </div>
-                </div>
-            `;
-            cancelledList.appendChild(item);
-        });
-        cancelledContainer.appendChild(cancelledList);
-    }
-    
-    // Add this cancelled container to the approvals tab
-    approvalsTab.appendChild(cancelledContainer);
-}
-
-function checkCOFFEligibility(staff, requestId) {
-    const balance = coffData.balances[staff] || 0;
-    const abbrev = staffAbbreviations[staff];
-    if (balance >= 1) {
-        alert(`${abbrev} (${staff}) has sufficient COFF balance: ${balance.toFixed(1)} days\nYou can approve this request.`);
-    } else {
-        alert(`${abbrev} (${staff}) has insufficient COFF balance: ${balance.toFixed(1)} days\nRequired: 1 day (8 hours)`);
+        html += '</div>';
+        rejectedContainer.innerHTML = html;
     }
 }
 
-// Helper functions
-function checkIfOnLeave(staff, date) {
-    const dateKey = formatDateForInput(date);
+async function approveLeave(leaveId) {
+    if (!confirm('Approve this leave request?')) return;
     
-    // Check leaveData first (approved leaves)
-    if (leaveData[dateKey] && leaveData[dateKey].includes(staff)) {
-        return true;
-    }
-    
-    // Also check pending leave requests that are for this date
-    const pendingLeave = leaveRequests.find(req => 
-        req.staff === staff && 
-        req.date === dateKey && 
-        req.status === 'approved'
-    );
-    
-    return pendingLeave !== undefined;
-}
-
-function checkOffDutyWorking(staff, date) {
-    const dateKey = formatDateForInput(date);
-    return offDutyEntries[dateKey] && offDutyEntries[dateKey].staff === staff;
-}
-
-function checkOnDuty(staff, date) {
-    const dateKey = formatDateForInput(date);
-    return onDutyEntries[dateKey] && onDutyEntries[dateKey].staff === staff;
-}
-
-function checkExtraHours(staff, date) {
-    const dateKey = formatDateForInput(date);
-    const extra = extraHoursData[dateKey];
-    return extra && extra.staff === staff;
-}
-
-function getLeaveStatus(staff, date) {
-    const dateKey = formatDateForInput(date);
-    
-    // First check approved leaves
-    if (leaveData[dateKey] && leaveData[dateKey].includes(staff)) {
-        return 'approved';
-    }
-    
-    // Then check leave requests
-    const request = leaveRequests.find(req => 
-        req.staff === staff && 
-        req.date === dateKey
-    );
-    
-    return request ? request.status : null;
-}
-
-function checkLateEntry(staff, date) {
-    const dateKey = formatDateForInput(date);
-    if (!lateEntries.entries) return false;
-    return lateEntries.entries.some(entry => entry.staff === staff && entry.date === dateKey);
-}
-
-function getLateEntry(staff, date) {
-    const dateKey = formatDateForInput(date);
-    if (!lateEntries.entries) return null;
-    return lateEntries.entries.find(entry => entry.staff === staff && entry.date === dateKey);
-}
-
-function getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry) {
-    if (hasLateEntry) return 'status-late-entry';
-    if (leaveStatus === 'pending') return 'status-leave-pending';
-    if (leaveStatus === 'approved') return 'status-leave-approved';
-    if (leaveStatus === 'rejected') return 'status-leave-rejected';
-    if (isOffDutyWorking) return 'status-off-duty-working';
-    if (isOnDuty) return 'status-on-duty';
-    if (hasExtraHours) return 'status-extra-hours';
-    if (shift && shift.includes('Obituary')) return 'status-obituary';
-    if (shift && shift.includes('Off')) return 'status-off';
-    return 'status-available';
-}
-
-function getDatesInRange(startDate, endDate) {
-    const dates = [];
-    const currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        dates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return dates;
-}
-
-function saveAllData() {
-    localStorage.setItem('leaveData', JSON.stringify(leaveData));
-    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-    localStorage.setItem('offDutyEntries', JSON.stringify(offDutyEntries));
-    localStorage.setItem('onDutyEntries', JSON.stringify(onDutyEntries));
-    localStorage.setItem('extraHoursData', JSON.stringify(extraHoursData));
-    localStorage.setItem('coffData', JSON.stringify(coffData));
-    localStorage.setItem('holidays', JSON.stringify(holidays));
-    localStorage.setItem('skeletonShifts', JSON.stringify(skeletonShifts));
-    localStorage.setItem('otData', JSON.stringify(otData));
-    localStorage.setItem('lateEntries', JSON.stringify(lateEntries));
-}
-
-// Initialize app on load
-window.onload = initApp;
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modals = document.getElementsByClassName('modal');
-    for (let modal of modals) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(event) {
-    // Escape key closes modals
-    if (event.key === 'Escape') {
-        const modals = document.getElementsByClassName('modal');
-        for (let modal of modals) {
-            if (modal.style.display === 'flex') {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-    }
-    
-    // Ctrl+S saves all data
-    if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        saveAllData();
-        alert('All data saved!');
-    }
-});
-
-// Handle touch events for better mobile experience
-document.addEventListener('touchstart', function() {}, {passive: true});
-
-// ============ FIREBASE FUNCTIONS ============
-
-// Load user data from Firestore
-async function loadUserData(uid) {
     try {
-        const userDoc = await db.collection('users').doc(uid).get();
-        if (userDoc.exists) {
-            currentUserData = userDoc.data();
-            currentUserRole = currentUserData.role || 'viewer';
-            
-            // Update last login
-            await db.collection('users').doc(uid).update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        await saveData('leaveRequests', leaveId, {
+            status: 'approved',
+            approvedAt: new Date().toISOString(),
+            approvedBy: currentUser.email,
+            approvedByUid: currentUser.uid
+        });
+        
+        // Update local copy
+        const requestIndex = leaveRequests.findIndex(req => req.id === leaveId);
+        if (requestIndex !== -1) {
+            leaveRequests[requestIndex].status = 'approved';
+            leaveRequests[requestIndex].approvedAt = new Date().toISOString();
+            leaveRequests[requestIndex].approvedBy = currentUser.email;
+        }
+        
+        alert('Leave approved successfully!');
+        renderApprovals();
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        updateStats();
+        
+    } catch (error) {
+        console.error('Error approving leave:', error);
+        alert('Error approving leave: ' + error.message);
+    }
+}
+
+async function rejectLeave(leaveId) {
+    if (!confirm('Reject this leave request?')) return;
+    
+    try {
+        await saveData('leaveRequests', leaveId, {
+            status: 'rejected',
+            rejectedAt: new Date().toISOString(),
+            rejectedBy: currentUser.email,
+            rejectedByUid: currentUser.uid
+        });
+        
+        // Update local copy
+        const requestIndex = leaveRequests.findIndex(req => req.id === leaveId);
+        if (requestIndex !== -1) {
+            leaveRequests[requestIndex].status = 'rejected';
+            leaveRequests[requestIndex].rejectedAt = new Date().toISOString();
+            leaveRequests[requestIndex].rejectedBy = currentUser.email;
+        }
+        
+        alert('Leave rejected.');
+        renderApprovals();
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+        updateStats();
+        
+    } catch (error) {
+        console.error('Error rejecting leave:', error);
+        alert('Error rejecting leave: ' + error.message);
+    }
+}
+
+function approveLeaveWithReason() {
+    // Placeholder - implement if needed
+    console.log('Approve with reason');
+}
+
+function rejectLeaveWithReason() {
+    // Placeholder - implement if needed
+    console.log('Reject with reason');
+}
+
+function initTouchEvents() {
+    // Make buttons more touch-friendly
+    const buttons = document.querySelectorAll('button, .tab, .day-cell');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        button.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    });
+    
+    // Prevent zoom on input focus for mobile
+    document.addEventListener('touchstart', function(event) {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
+            event.target.style.fontSize = '16px';
+        }
+    });
+}
+
+// ==================== AUTH STATE LISTENER ====================
+// This runs automatically when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is already logged in
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            getUserRole(user.uid).then((role) => {
+                userRole = role;
+                initializeApp();
+                showMainApp();
             });
         } else {
-            // Create user document if it doesn't exist
-            await db.collection('users').doc(uid).set({
-                email: currentUser.email,
-                name: currentUser.displayName || currentUser.email.split('@')[0],
-                role: 'viewer',
-                status: 'active',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            currentUserRole = 'viewer';
+            showLoginScreen();
         }
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        currentUserRole = 'viewer';
-    }
-}
-
-// Load all data from Firestore
-async function loadAllData() {
-    try {
-        // Load shift data
-        const shiftDoc = await db.collection('systemData').doc('shiftData').get();
-        if (shiftDoc.exists) {
-            shiftData = shiftDoc.data();
-        } else {
-            // Initialize with default data (use your existing shiftData)
-            // This should be your original shiftData object
-            await saveDataToFirestore('shiftData', shiftData);
+    });
+    
+    // Close user dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('userProfileDropdown');
+        const profile = document.getElementById('userProfile');
+        
+        if (dropdown && dropdown.style.display === 'block' && 
+            !dropdown.contains(event.target) && 
+            !profile.contains(event.target)) {
+            dropdown.style.display = 'none';
         }
-
-        // Load other data collections
-        const collections = [
-            'leaveData', 'leaveRequests', 'offDutyEntries', 'onDutyEntries',
-            'extraHoursData', 'coffData', 'holidays', 'skeletonShifts',
-            'otData', 'lateEntries'
-        ];
-
-        for (const collection of collections) {
-            const doc = await db.collection('systemData').doc(collection).get();
-            if (doc.exists) {
-                window[collection] = doc.data();
-            } else {
-                // Use localStorage data if exists, otherwise default
-                const localStorageData = JSON.parse(localStorage.getItem(collection)) || getDefaultData(collection);
-                window[collection] = localStorageData;
-                await saveDataToFirestore(collection, window[collection]);
-            }
-        }
-
-        // Initialize COFF data structure if needed
-        if (!coffData.balances) {
-            coffData.balances = {
-                "Sreejith": 0,
-                "Sajeev": 0,
-                "Umesh": 0,
-                "Rajesh": 0,
-                "ANEESH": 0
-            };
-        }
-        if (!coffData.history) coffData.history = [];
-        if (!coffData.pending) coffData.pending = [];
-        
-        if (!otData.monthly) otData.monthly = {};
-        if (!lateEntries.entries) lateEntries.entries = [];
-
-    } catch (error) {
-        console.error('Error loading data:', error);
-        // Fallback to localStorage
-        loadFromLocalStorage();
-    }
-}
-
-// Get default data structure
-function getDefaultData(collectionName) {
-    switch(collectionName) {
-        case 'leaveData': return {};
-        case 'leaveRequests': return [];
-        case 'offDutyEntries': return {};
-        case 'onDutyEntries': return {};
-        case 'extraHoursData': return {};
-        case 'coffData': return { balances: {}, history: [], pending: [] };
-        case 'holidays': return {};
-        case 'skeletonShifts': return {};
-        case 'otData': return { monthly: {} };
-        case 'lateEntries': return { entries: [] };
-        default: return {};
-    }
-}
-
-// Fallback to localStorage if Firestore fails
-function loadFromLocalStorage() {
-    shiftData = JSON.parse(localStorage.getItem('shiftData')) || shiftData;
-    leaveData = JSON.parse(localStorage.getItem('leaveData')) || {};
-    leaveRequests = JSON.parse(localStorage.getItem('leaveRequests')) || [];
-    offDutyEntries = JSON.parse(localStorage.getItem('offDutyEntries')) || {};
-    onDutyEntries = JSON.parse(localStorage.getItem('onDutyEntries')) || {};
-    extraHoursData = JSON.parse(localStorage.getItem('extraHoursData')) || {};
-    coffData = JSON.parse(localStorage.getItem('coffData')) || {};
-    holidays = JSON.parse(localStorage.getItem('holidays')) || {};
-    skeletonShifts = JSON.parse(localStorage.getItem('skeletonShifts')) || {};
-    otData = JSON.parse(localStorage.getItem('otData')) || {};
-    lateEntries = JSON.parse(localStorage.getItem('lateEntries')) || { entries: [] };
-}
-
-// Save data to Firestore
-async function saveDataToFirestore(collection, data) {
-    try {
-        if (currentUserRole !== 'admin') {
-            console.log('Viewer cannot save data');
-            return;
-        }
-        
-        await db.collection('systemData').doc(collection).set(data, { merge: true });
-        
-        // Also save to localStorage as backup
-        localStorage.setItem(collection, JSON.stringify(data));
-        
-    } catch (error) {
-        console.error('Error saving data:', error);
-        // Fallback to localStorage
-        localStorage.setItem(collection, JSON.stringify(data));
-    }
-}
-
-// Modified saveAllData function
-async function saveAllData() {
-    if (currentUserRole !== 'admin') {
-        alert('You do not have permission to modify data. Please contact an administrator.');
-        return false;
-    }
-    
-    try {
-        // Save all data collections
-        const collections = [
-            { name: 'shiftData', data: shiftData },
-            { name: 'leaveData', data: leaveData },
-            { name: 'leaveRequests', data: leaveRequests },
-            { name: 'offDutyEntries', data: offDutyEntries },
-            { name: 'onDutyEntries', data: onDutyEntries },
-            { name: 'extraHoursData', data: extraHoursData },
-            { name: 'coffData', data: coffData },
-            { name: 'holidays', data: holidays },
-            { name: 'skeletonShifts', data: skeletonShifts },
-            { name: 'otData', data: otData },
-            { name: 'lateEntries', data: lateEntries }
-        ];
-        
-        for (const collection of collections) {
-            await saveDataToFirestore(collection.name, collection.data);
-        }
-        
-        console.log('All data saved successfully');
-    } catch (error) {
-        console.error('Error saving all data:', error);
-        // Fallback to localStorage
-        saveToLocalStorage();
-    }
-}
-
-// Fallback save to localStorage
-function saveToLocalStorage() {
-    localStorage.setItem('shiftData', JSON.stringify(shiftData));
-    localStorage.setItem('leaveData', JSON.stringify(leaveData));
-    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-    localStorage.setItem('offDutyEntries', JSON.stringify(offDutyEntries));
-    localStorage.setItem('onDutyEntries', JSON.stringify(onDutyEntries));
-    localStorage.setItem('extraHoursData', JSON.stringify(extraHoursData));
-    localStorage.setItem('coffData', JSON.stringify(coffData));
-    localStorage.setItem('holidays', JSON.stringify(holidays));
-    localStorage.setItem('skeletonShifts', JSON.stringify(skeletonShifts));
-    localStorage.setItem('otData', JSON.stringify(otData));
-    localStorage.setItem('lateEntries', JSON.stringify(lateEntries));
-}
-
-// Authentication Functions
-function showLoginTab() {
-    document.getElementById('loginTab').classList.add('active');
-    document.getElementById('registerTab').classList.remove('active');
-    document.getElementById('adminApprovalTab').classList.remove('active');
-}
-
-function showRegisterTab() {
-    document.getElementById('loginTab').classList.remove('active');
-    document.getElementById('registerTab').classList.add('active');
-    document.getElementById('adminApprovalTab').classList.remove('active');
-}
-
-function showAdminApprovalTab() {
-    document.getElementById('loginTab').classList.remove('active');
-    document.getElementById('registerTab').classList.remove('active');
-    document.getElementById('adminApprovalTab').classList.add('active');
-}
-
-async function loginUser() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    
-    try {
-        errorDiv.style.display = 'none';
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        
-        // Check if user is approved
-        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            if (userData.status === 'pending') {
-                await auth.signOut();
-                errorDiv.textContent = 'Account pending admin approval. Please wait for approval or contact administrator.';
-                errorDiv.style.display = 'block';
-                showAdminApprovalTab();
-                return;
-            }
-            
-            if (userData.status === 'suspended') {
-                await auth.signOut();
-                errorDiv.textContent = 'Account suspended. Please contact administrator.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-        }
-        
-        // Login successful
-        errorDiv.style.display = 'none';
-        
-    } catch (error) {
-        errorDiv.textContent = getAuthErrorMessage(error.code);
-        errorDiv.style.display = 'block';
-    }
-}
-
-async function registerUser() {
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
-    const role = document.getElementById('registerRole').value;
-    const errorDiv = document.getElementById('registerError');
-    
-    // Validation
-    if (password !== confirmPassword) {
-        errorDiv.textContent = 'Passwords do not match';
-        errorDiv.style.display = 'block';
-        return;
-    }
-    
-    if (password.length < 6) {
-        errorDiv.textContent = 'Password must be at least 6 characters';
-        errorDiv.style.display = 'block';
-        return;
-    }
-    
-    try {
-        errorDiv.style.display = 'none';
-        
-        // Create user in Firebase Auth
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        
-        // Update profile with name
-        await userCredential.user.updateProfile({
-            displayName: name
-        });
-        
-        // Create user document in Firestore
-        const userStatus = role === 'admin' ? 'pending' : 'active';
-        
-        await db.collection('users').doc(userCredential.user.uid).set({
-            email: email,
-            name: name,
-            role: role,
-            status: userStatus,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // Send email verification
-        await userCredential.user.sendEmailVerification();
-        
-        // Auto-login for viewer, show approval notice for admin
-        if (role === 'admin') {
-            showAdminApprovalTab();
-        } else {
-            // Auto-login for viewer
-            alert('Registration successful! You can now login.');
-            showLoginTab();
-        }
-        
-    } catch (error) {
-        errorDiv.textContent = getAuthErrorMessage(error.code);
-        errorDiv.style.display = 'block';
-    }
-}
-
-function getAuthErrorMessage(errorCode) {
-    switch(errorCode) {
-        case 'auth/invalid-email':
-            return 'Invalid email address';
-        case 'auth/user-disabled':
-            return 'Account disabled';
-        case 'auth/user-not-found':
-            return 'User not found';
-        case 'auth/wrong-password':
-            return 'Incorrect password';
-        case 'auth/email-already-in-use':
-            return 'Email already in use';
-        case 'auth/weak-password':
-            return 'Password is too weak';
-        case 'auth/operation-not-allowed':
-            return 'Operation not allowed';
-        default:
-            return 'Authentication failed. Please try again.';
-    }
-}
-
-async function logoutUser() {
-    try {
-        await auth.signOut();
-        closeModal('profileModal');
-    } catch (error) {
-        console.error('Error signing out:', error);
-    }
-}
-
-function showProfile() {
-    if (!currentUser || !currentUserData) return;
-    
-    document.getElementById('profileName').textContent = currentUserData.name;
-    document.getElementById('profileEmail').textContent = currentUser.email;
-    document.getElementById('profileRole').textContent = currentUserRole.toUpperCase();
-    document.getElementById('profileStatus').textContent = currentUserData.status ? currentUserData.status.toUpperCase() : 'ACTIVE';
-    
-    if (currentUserData.lastLogin) {
-        const lastLogin = currentUserData.lastLogin.toDate ? 
-            currentUserData.lastLogin.toDate().toLocaleString() : 
-            'Not available';
-        document.getElementById('profileLastLogin').textContent = lastLogin;
-    }
-    
-    openModal('profileModal');
-}
-
-async function showAdminManagement() {
-    if (currentUserRole !== 'admin') return;
-    
-    openModal('adminManagementModal');
-    await loadPendingUsers();
-    await loadAllUsers();
-}
-
-async function loadPendingUsers() {
-    try {
-        const pendingUsersSnapshot = await db.collection('users')
-            .where('status', '==', 'pending')
-            .get();
-        
-        const container = document.getElementById('pendingUsersList');
-        if (pendingUsersSnapshot.empty) {
-            container.innerHTML = '<p>No pending user approvals</p>';
-            return;
-        }
-        
-        let html = '';
-        pendingUsersSnapshot.forEach(doc => {
-            const user = doc.data();
-            html += `
-                <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 5px; border: 1px solid #ddd;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${user.name}</strong><br>
-                            <small>${user.email}</small><br>
-                            <small>Role: ${user.role} | Registered: ${user.createdAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
-                        </div>
-                        <div>
-                            <button onclick="approveUser('${doc.id}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px; cursor: pointer;">Approve</button>
-                            <button onclick="rejectUser('${doc.id}')" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Reject</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading pending users:', error);
-    }
-}
-
-async function loadAllUsers() {
-    try {
-        const usersSnapshot = await db.collection('users').get();
-        
-        const container = document.getElementById('allUsersList');
-        if (usersSnapshot.empty) {
-            container.innerHTML = '<p>No users found</p>';
-            return;
-        }
-        
-        let html = '<table style="width: 100%;"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-        
-        usersSnapshot.forEach(doc => {
-            const user = doc.data();
-            const isCurrentUser = doc.id === currentUser.uid;
-            
-            html += `
-                <tr>
-                    <td>${user.name} ${isCurrentUser ? '(You)' : ''}</td>
-                    <td>${user.email}</td>
-                    <td>${user.role}</td>
-                    <td>${user.status || 'active'}</td>
-                    <td>
-                        ${!isCurrentUser ? `
-                            <select onchange="updateUserStatus('${doc.id}', this.value)" style="padding: 3px; font-size: 0.8em;">
-                                <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-                                <option value="suspended" ${user.status === 'suspended' ? 'selected' : ''}>Suspend</option>
-                                <option value="pending" ${user.status === 'pending' ? 'selected' : ''}>Pending</option>
-                            </select>
-                        ` : ''}
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading all users:', error);
-    }
-}
-
-async function approveUser(userId) {
-    if (!confirm('Approve this user?')) return;
-    
-    try {
-        await db.collection('users').doc(userId).update({
-            status: 'active',
-            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            approvedBy: currentUser.uid
-        });
-        
-        await loadPendingUsers();
-        await loadAllUsers();
-        
-        alert('User approved successfully');
-    } catch (error) {
-        console.error('Error approving user:', error);
-        alert('Error approving user');
-    }
-}
-
-async function rejectUser(userId) {
-    if (!confirm('Reject this user registration?')) return;
-    
-    try {
-        await db.collection('users').doc(userId).delete();
-        
-        await loadPendingUsers();
-        await loadAllUsers();
-        
-        alert('User rejected');
-    } catch (error) {
-        console.error('Error rejecting user:', error);
-        alert('Error rejecting user');
-    }
-}
-
-async function updateUserStatus(userId, status) {
-    try {
-        await db.collection('users').doc(userId).update({
-            status: status,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedBy: currentUser.uid
-        });
-        
-        await loadAllUsers();
-    } catch (error) {
-        console.error('Error updating user status:', error);
-        alert('Error updating user status');
-    }
-}
-
-// Update UI based on user role
-function updateUIForRole() {
-    if (currentUserRole === 'viewer') {
-        // Add viewer class to body (hides admin-only elements via CSS)
-        document.body.classList.add('viewer');
-        document.body.classList.remove('admin');
-    } else if (currentUserRole === 'admin') {
-        // Add admin class to body (shows admin-only elements via CSS)
-        document.body.classList.add('admin');
-        document.body.classList.remove('viewer');
-    }
-}
-
-// Real-time data updates
-function setupRealtimeUpdates() {
-    // Listen for changes in system data
-    db.collection('systemData').doc('shiftData')
-        .onSnapshot((doc) => {
-            if (doc.exists && currentUser) {
-                shiftData = doc.data();
-                renderWeekView();
-                renderMonthView();
-                renderTodayView();
-            }
-        });
-    
-    // Listen for leave requests
-    db.collection('systemData').doc('leaveRequests')
-        .onSnapshot((doc) => {
-            if (doc.exists && currentUser) {
-                leaveRequests = doc.data();
-                renderApprovals();
-                updateStats();
-            }
-        });
-}
-
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-    
-    // Setup real-time updates after authentication
-    setTimeout(() => {
-        if (currentUser) {
-            setupRealtimeUpdates();
-        }
-    }, 2000);
+    });
 });
-
-
 </script>
-
-<!-- Add these modals after ALL your existing modals -->
-
-<!-- Firebase Authentication Modal -->
-<div id="authModal" class="modal" style="display: flex;">
-    <div class="modal-content" style="max-width: 400px;">
-        <h3>🔐 Authentication Required</h3>
-        
-        <!-- Login Tab -->
-        <div id="loginTab" class="tab-content active">
-            <div class="form-group">
-                <label for="loginEmail">Email:</label>
-                <input type="email" id="loginEmail" placeholder="your.email@company.com" required>
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Password:</label>
-                <input type="password" id="loginPassword" placeholder="••••••••" required>
-            </div>
-            <div id="loginError" class="error-message" style="display: none;"></div>
-            <div class="button-group">
-                <button onclick="loginUser()" style="background: #3498db;">Login</button>
-                <button onclick="showRegisterTab()" class="btn-secondary">Create Account</button>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.85em; color: #666; text-align: center;">
-                <p>Demo Accounts:<br>
-                Admin: admin@example.com / admin123<br>
-                Viewer: viewer@example.com / viewer123</p>
-            </div>
+<!-- ========== LOGIN MODAL ========== -->
+<div id="loginModal" class="modal" style="display: flex;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="login-header" style="margin-bottom: 20px;">
+            <i class="fas fa-user-shield" style="font-size: 3em; color: #3498db; margin-bottom: 15px;"></i>
+            <h2 style="color: #2c3e50; margin-bottom: 5px;">Shift & Leave Management</h2>
+            <p style="color: #7f8c8d; font-size: 0.9em;">Secure Access Portal</p>
         </div>
         
-        <!-- Register Tab -->
-        <div id="registerTab" class="tab-content">
-            <div class="form-group">
-                <label for="registerName">Full Name:</label>
-                <input type="text" id="registerName" placeholder="John Doe" required>
-            </div>
-            <div class="form-group">
-                <label for="registerEmail">Email:</label>
-                <input type="email" id="registerEmail" placeholder="your.email@company.com" required>
-            </div>
-            <div class="form-group">
-                <label for="registerPassword">Password (min 6 chars):</label>
-                <input type="password" id="registerPassword" placeholder="••••••••" minlength="6" required>
-            </div>
-            <div class="form-group">
-                <label for="registerConfirmPassword">Confirm Password:</label>
-                <input type="password" id="registerConfirmPassword" placeholder="••••••••" minlength="6" required>
-            </div>
-            <div class="form-group">
-                <label for="registerRole">Role:</label>
-                <select id="registerRole">
-                    <option value="viewer">Viewer (Read-only access)</option>
-                    <option value="admin">Admin (Full access - requires approval)</option>
-                </select>
-            </div>
-            <div id="registerError" class="error-message" style="display: none;"></div>
-            <div class="button-group">
-                <button onclick="registerUser()" style="background: #2ecc71;">Register</button>
-                <button onclick="showLoginTab()" class="btn-secondary">Back to Login</button>
-            </div>
+        <div class="form-group">
+            <label for="loginEmail"><i class="fas fa-envelope"></i> Email Address</label>
+            <input type="email" id="loginEmail" placeholder="admin@company.com" autocomplete="email">
         </div>
         
-        <!-- Admin Approval Notice -->
-        <div id="adminApprovalTab" class="tab-content">
-            <div style="padding: 20px; text-align: center;">
-                <div style="font-size: 4em; margin-bottom: 20px;">⏳</div>
-                <h3>Admin Approval Required</h3>
-                <p>Your account has been created successfully but requires admin approval before you can access the system.</p>
-                <p>An email will be sent to you once your account is approved.</p>
-                <button onclick="showLoginTab()" class="btn-secondary" style="margin-top: 20px;">Back to Login</button>
-            </div>
+        <div class="form-group">
+            <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+        </div>
+        
+        <div class="form-group" style="text-align: left;">
+            <label>
+                <input type="checkbox" id="rememberMe">
+                <span style="font-size: 0.9em;">Remember me</span>
+            </label>
+        </div>
+        
+        <button onclick="loginUser()" style="width: 100%; padding: 12px; font-size: 1em; margin-top: 10px;">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+        
+        <div id="loginError" class="error-message" style="margin-top: 10px; display: none;"></div>
+        
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+            <p style="font-size: 0.85em; color: #7f8c8d;">
+                <i class="fas fa-info-circle"></i> Contact administrator for account access
+            </p>
         </div>
     </div>
 </div>
 
-<!-- User Profile Modal -->
-<div id="profileModal" class="modal">
-    <div class="modal-content" style="max-width: 400px;">
-        <h3>👤 User Profile</h3>
-        <div class="form-group">
-            <label>Name:</label>
-            <div style="padding: 8px 10px; background: #f8f9fa; border-radius: 5px;" id="profileName"></div>
-        </div>
-        <div class="form-group">
-            <label>Email:</label>
-            <div style="padding: 8px 10px; background: #f8f9fa; border-radius: 5px;" id="profileEmail"></div>
-        </div>
-        <div class="form-group">
-            <label>Role:</label>
-            <div style="padding: 8px 10px; background: #f8f9fa; border-radius: 5px;" id="profileRole"></div>
-        </div>
-        <div class="form-group">
-            <label>Status:</label>
-            <div style="padding: 8px 10px; background: #f8f9fa; border-radius: 5px;" id="profileStatus"></div>
-        </div>
-        <div class="form-group">
-            <label>Last Login:</label>
-            <div style="padding: 8px 10px; background: #f8f9fa; border-radius: 5px;" id="profileLastLogin"></div>
-        </div>
-        <div class="button-group">
-            <button onclick="logoutUser()" class="btn-danger">Logout</button>
-            <button onclick="closeModal('profileModal')" class="btn-secondary">Close</button>
-        </div>
-    </div>
+<!-- User Profile Dropdown -->
+<div id="userProfileDropdown" style="display: none; position: fixed; top: 70px; right: 20px; background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 15px; z-index: 1001; min-width: 200px; border: 1px solid #e0e0e0;">
+    <div id="userProfileContent"></div>
 </div>
 
-<!-- Admin Management Modal -->
-<div id="adminManagementModal" class="modal">
-    <div class="modal-content" style="max-width: 700px; max-height: 80vh;">
-        <h3>👑 Admin Management</h3>
-        
-        <!-- Pending Approvals Section -->
-        <div style="margin: 20px 0;">
-            <h4>Pending User Approvals</h4>
-            <div id="pendingUsersList" style="max-height: 300px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: 8px;">
-                <!-- Pending users will be loaded here -->
-            </div>
-        </div>
-        
-        <!-- User List Section -->
-        <div style="margin: 20px 0;">
-            <h4>All Users</h4>
-            <div id="allUsersList" style="max-height: 400px; overflow-y: auto;">
-                <!-- All users will be loaded here -->
-            </div>
-        </div>
-        
-        <div class="button-group">
-            <button onclick="closeModal('adminManagementModal')" class="btn-secondary">Close</button>
-        </div>
-    </div>
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="loading-spinner" style="display: none;">
+    <div class="spinner"></div>
+    <div style="margin-top: 15px; color: #3498db; font-weight: bold;">Loading...</div>
 </div>
-
 </body>
 </html>
