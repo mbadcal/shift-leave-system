@@ -2683,8 +2683,7 @@
 
         <div class="viewer-message" id="viewerMessage">
             <h3>👁️ Viewer Mode</h3>
-            <p>You're currently in viewer mode. Some features are restricted to administrators only.</p>
-            <p>To request additional permissions, please contact your system administrator.</p>
+
         </div>
 
         <div class="stats-bar">
@@ -2815,19 +2814,23 @@
         </div>
 
         <!-- Comp-off Tab -->
-        <div id="coff-tab" class="tab-content">
-            <h2>🔄 Comp-off Management</h2>
-            <div class="controls">
-                <button onclick="openApplyCOFFModal()">🔄 Apply for Comp-off</button>
-                <button onclick="viewCOFFSummary()">📊 View COFF Summary</button>
-            </div>
-            <div id="coff-summary-container">
-                <!-- COFF summary will be populated by JavaScript -->
-            </div>
-            <div id="coff-history-container">
-                <!-- COFF history will be populated by JavaScript -->
-            </div>
-        </div>
+<div id="coff-tab" class="tab-content">
+    <h2>🔄 Comp-off Management</h2>
+    <div class="controls">
+        <button onclick="openApplyCOFFModal()">🔄 Apply for Comp-off</button>
+        <button onclick="viewCOFFSummary()">📊 View COFF Summary</button>
+        <!-- Add these fix buttons -->
+        <button onclick="fixCOFFData()" class="btn-warning">🔧 Fix All COFF Data</button>
+        <button onclick="fixODCOFFData()" class="btn-warning">🔧 Fix OD COFF Only</button>
+        <button onclick="refreshCOFFData()" class="btn-secondary">🔄 Refresh COFF Data</button>
+    </div>
+    <div id="coff-summary-container">
+        <!-- COFF summary will be populated by JavaScript -->
+    </div>
+    <div id="coff-history-container">
+        <!-- COFF history will be populated by JavaScript -->
+    </div>
+</div>
 
         <!-- Reports Tab -->
         <div id="reports-tab" class="tab-content">
@@ -3122,7 +3125,7 @@
             </div>
             <div class="form-group">
                 <label for="offDutyReason">Reason (Optional):</label>
-                <input type="text" id="offDutyReason" placeholder="e.g., Emergency coverage, Project deadline">
+                <input type="text" id="offDutyReason" placeholder="e.g., Staff shortage , Extra work">
             </div>
             <div class="button-group">
                 <button onclick="saveOffDutyEntry()">Save Entry</button>
@@ -3838,15 +3841,29 @@
                 .onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
-                        shiftData = data;
-                        console.log('Shift data updated');
+                        console.log('Shift data updated from Firestore:', data);
+
+                        // Validate the data structure
+                        if (data.days && data.shifts) {
+                            shiftData = data;
+                            console.log('Shift data updated locally');
+                        } else {
+                            console.error('Invalid shift data structure received:', data);
+                            // Try to fix it
+                            fixShiftDataStructure();
+                        }
+
                         showUpdateIndicator();
                         updateAllViews();
+                    } else {
+                        console.warn('Shift data document does not exist in Firestore');
+                        // Document was deleted or doesn't exist
+                        showMissingDocumentWarning();
                     }
                 }, (error) => {
                     console.error('Error listening to shift data:', error);
+                    alert('Error connecting to shift data. Please refresh the page.');
                 });
-
             // Listen for leave requests
             unsubscribeListeners.leaveRequests = db.collection('leaveRequests')
                 .where('status', '!=', 'cancelled')
@@ -3915,12 +3932,18 @@
                     extraHoursData = {};
                     snapshot.forEach((doc) => {
                         const data = doc.data();
-                        extraHoursData[data.date] = data;
+                        const key = data.date + '_' + data.staff;
+                        extraHoursData[key] = data;
                     });
-                    console.log('Extra hours data updated');
-                    showUpdateIndicator();
+
+                    console.log('Extra hours data updated:', Object.values(extraHoursData).length, 'entries');
+
+                    // Recalculate COFF balances
                     calculateCOFFBalances();
+
+                    showUpdateIndicator();
                     updateAllViews();
+
                 }, (error) => {
                     console.error('Error listening to extra hours data:', error);
                 });
@@ -4316,33 +4339,156 @@
         }
 
         // ============== INITIALIZATION ==============
-        async function initializeFirestoreData() {
+         async function initializeFirestoreData() {
             console.log('Initializing Firestore data structure...');
 
             try {
-                // Check if shift data exists, create if not
+                // Check if shift data exists
                 const shiftDoc = await db.collection('shiftData').doc('current').get();
+
                 if (!shiftDoc.exists) {
+                    console.log('Creating shift data document...');
+
+                    // Create the document with our initial shift data
                     await db.collection('shiftData').doc('current').set({
-                        ...shiftData,
+                        days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                        shifts: {
+                            "Sunday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Monday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "Off-operator",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Tuesday": {
+                                "Sreejith": "5pm-1:30am",
+                                "Sajeev": "Obituary duty 5pm-1:30am",
+                                "Umesh": "Off-operator",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Wednesday": {
+                                "Sreejith": "Off-operator",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "Obituary duty 5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "Off-operator"
+                            },
+                            "Thursday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "4pm-12:30pm",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Friday": {
+                                "Sreejith": "5pm-1:30am",
+                                "Sajeev": "Obituary duty 5pm-1:30am",
+                                "Umesh": "7pm-3:30pm",
+                                "Rajesh": "Off-operator",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Saturday": {
+                                "Sreejith": "4pm-12:30pm",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "Obituary duty 5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            }
+                        },
                         createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
+                        updatedAt: new Date().toISOString(),
+                        lastUpdatedBy: 'system'
                     });
-                    console.log('Shift data initialized');
+
+                    console.log('Shift data document created successfully');
+
+                    // Also create the global shiftData object
+                    shiftData = {
+                        days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                        shifts: {
+                            "Sunday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Monday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "Off-operator",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Tuesday": {
+                                "Sreejith": "5pm-1:30am",
+                                "Sajeev": "Obituary duty 5pm-1:30am",
+                                "Umesh": "Off-operator",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Wednesday": {
+                                "Sreejith": "Off-operator",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "Obituary duty 5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "Off-operator"
+                            },
+                            "Thursday": {
+                                "Sreejith": "Obituary duty 5pm-1:30am",
+                                "Sajeev": "4pm-12:30pm",
+                                "Umesh": "5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Friday": {
+                                "Sreejith": "5pm-1:30am",
+                                "Sajeev": "Obituary duty 5pm-1:30am",
+                                "Umesh": "7pm-3:30pm",
+                                "Rajesh": "Off-operator",
+                                "ANEESH": "7:00pm-3:30am"
+                            },
+                            "Saturday": {
+                                "Sreejith": "4pm-12:30pm",
+                                "Sajeev": "5pm-1:30am",
+                                "Umesh": "Obituary duty 5pm-1:30am",
+                                "Rajesh": "7pm-3:30pm",
+                                "ANEESH": "7:00pm-3:30am"
+                            }
+                        }
+                    };
+
                 } else {
-                    // Load existing shift data
+                    // Document exists, load the data
                     const data = shiftDoc.data();
+                    console.log('Loaded shift data from Firestore:', data);
+
+                    // Update the global shiftData object
                     if (data.days && data.shifts) {
                         shiftData = data;
+                    } else {
+                        console.warn('Firestore data has unexpected structure, using defaults');
                     }
                 }
 
                 console.log('Firestore data initialization complete');
+
             } catch (error) {
                 console.error('Error initializing Firestore data:', error);
+                console.error('Error details:', error.message, error.stack);
+
+                // Show user-friendly error
+                alert('Error initializing data. Please refresh the page or contact administrator.\n\nError: ' + error.message);
             }
         }
-
         async function initApp() {
             // Check authentication state
             auth.onAuthStateChanged(async (user) => {
@@ -6016,60 +6162,369 @@
 
             const container = document.getElementById('report-container');
             let html = '<h3>COFF Report</h3>';
-            html += '<table><thead><tr><th>Staff</th><th>Balance</th><th>Status</th><th>Details</th></tr></thead><tbody>';
 
+            // Group extra hours by staff
+            const extraHoursByStaff = {};
             const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+
             staffList.forEach(staff => {
-                const balance = coffData.balances[staff] || 0;
-                const abbrev = staffAbbreviations[staff];
-                const status = balance >= 1 ? 'Eligible' : 'Not Eligible';
-                const statusClass = balance >= 1 ? 'style="color: #27ae60;"' : 'style="color: #e74c3c;"';
-
-                // Calculate hours breakdown
-                const extraHoursEntries = Object.values(extraHoursData).filter(entry => entry.staff === staff);
-                const totalHours = extraHoursEntries.reduce((sum, entry) => sum + entry.hours, 0);
-
-                html += `
-                            <tr>
-                                <td>${abbrev} (${staff})</td>
-                                <td>${balance.toFixed(1)} days (${(balance * 8).toFixed(1)} hours)</td>
-                                <td ${statusClass}>${status}</td>
-                                <td>${extraHoursEntries.length} extra duty entries (${totalHours} total hours)</td>
-                            </tr>
-                        `;
+                extraHoursByStaff[staff] = [];
             });
 
-            html += '</tbody></table>';
+            Object.values(extraHoursData).forEach(entry => {
+                if (entry && entry.staff) {
+                    extraHoursByStaff[entry.staff].push(entry);
+                }
+            });
 
-            // Add detailed COFF history
-            if (coffData.history.length > 0) {
-                html += '<h4>Detailed COFF History</h4><table><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Hours</th><th>COFF Days</th><th>Balance After</th><th>Reason</th></tr></thead><tbody>';
+            // Display COFF balances with extra hours breakdown
+            html += '<h4>Current COFF Balances</h4>';
+            html += '<div style="overflow-x: auto;">';
+            html += '<table style="min-width: 800px;">';
+            html += '<thead><tr><th>Staff</th><th>Total Extra Hours</th><th>COFF Earned</th><th>Current Balance</th><th>Status</th></tr></thead><tbody>';
 
-                const recentHistory = [...coffData.history].reverse().slice(0, 20);
-                recentHistory.forEach(entry => {
+            staffList.forEach(staff => {
+                const balance = coffData.balances[staff] || 0;
+                const extraHoursEntries = extraHoursByStaff[staff] || [];
+                const totalExtraHours = extraHoursEntries.reduce((sum, entry) => sum + (parseFloat(entry.hours) || 0), 0);
+                const coffEarned = totalExtraHours / 8;
+                const abbrev = staffAbbreviations[staff];
+
+                let status = '<span style="color: #e74c3c;">Not eligible</span>';
+                if (balance >= 1) {
+                    status = '<span style="color: #27ae60;">Eligible</span>';
+                } else if (balance >= 0.5) {
+                    status = '<span style="color: #f39c12;">Partial</span>';
+                }
+
+                html += `
+            <tr>
+                <td><strong>${abbrev} (${staff})</strong></td>
+                <td>${totalExtraHours.toFixed(1)} hours</td>
+                <td>${coffEarned.toFixed(2)} days</td>
+                <td><strong>${balance.toFixed(2)} days</strong><br><small>(${(balance * 8).toFixed(1)} hours)</small></td>
+                <td>${status}</td>
+            </tr>
+        `;
+            });
+
+            html += '</tbody></table></div>';
+
+            // Show detailed extra hours breakdown
+            html += '<h4 style="margin-top: 30px;">Extra Hours Breakdown</h4>';
+
+            staffList.forEach(staff => {
+                const extraHoursEntries = extraHoursByStaff[staff] || [];
+
+                if (extraHoursEntries.length > 0) {
+                    html += `<h5>${staffAbbreviations[staff]} (${staff}) - ${extraHoursEntries.length} entries</h5>`;
+                    html += '<div style="overflow-x: auto;">';
+                    html += '<table style="min-width: 800px; margin-bottom: 20px;">';
+                    html += '<thead><tr><th>Date</th><th>Hours</th><th>COFF Days</th><th>Reason</th><th>Entry Date</th></tr></thead><tbody>';
+
+                    // Sort by date descending
+                    extraHoursEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    extraHoursEntries.forEach(entry => {
+                        const coffDays = (parseFloat(entry.hours) || 0) / 8;
+                        html += `
+                    <tr>
+                        <td>${entry.date}</td>
+                        <td><strong>${entry.hours} hours</strong></td>
+                        <td>${coffDays.toFixed(2)} days</td>
+                        <td>${entry.reason || 'No reason provided'}</td>
+                        <td>${new Date(entry.entryDate).toLocaleDateString()}</td>
+                    </tr>
+                `;
+                    });
+
+                    html += '</tbody></table></div>';
+                }
+            });
+
+            // Show COFF history
+            if (coffData.history && coffData.history.length > 0) {
+                html += '<h4 style="margin-top: 30px;">COFF Transaction History</h4>';
+                html += '<div style="overflow-x: auto;">';
+                html += '<table style="min-width: 800px;">';
+                html += '<thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Hours</th><th>COFF Days</th><th>Balance After</th><th>Reason</th></tr></thead><tbody>';
+
+                // Sort by date descending
+                const sortedHistory = [...coffData.history].sort((a, b) =>
+                    new Date(b.transactionDate || b.date) - new Date(a.transactionDate || a.date)
+                );
+
+                // Show only last 50 entries
+                sortedHistory.slice(0, 50).forEach(entry => {
                     const abbrev = staffAbbreviations[entry.staff];
-                    const hoursDisplay = entry.hours > 0 ? `+${entry.hours}` : entry.hours;
-                    const coffDisplay = entry.coffEarned ? `+${entry.coffEarned.toFixed(2)}` :
-                        entry.coffUsed ? `-${entry.coffUsed.toFixed(2)}` : 'N/A';
+                    const hours = entry.hours || 0;
+                    const coffDisplay = entry.coffEarned ?
+                        `<span style="color: #27ae60;">+${entry.coffEarned.toFixed(2)}</span>` :
+                        entry.coffUsed ?
+                            `<span style="color: #e74c3c;">-${entry.coffUsed.toFixed(2)}</span>` :
+                            'N/A';
 
                     html += `
-                                <tr>
-                                    <td>${entry.date}</td>
-                                    <td>${abbrev} (${entry.staff})</td>
-                                    <td>${entry.type}</td>
-                                    <td>${hoursDisplay}</td>
-                                    <td>${coffDisplay}</td>
-                                    <td>${entry.balanceAfter ? entry.balanceAfter.toFixed(2) + ' days' : 'N/A'}</td>
-                                    <td>${entry.reason || ''}</td>
-                                </tr>
-                            `;
+                <tr>
+                    <td>${entry.date}</td>
+                    <td>${abbrev} (${entry.staff})</td>
+                    <td>${entry.type}</td>
+                    <td>${hours > 0 ? `${hours}h` : '-'}</td>
+                    <td>${coffDisplay}</td>
+                    <td>${entry.balanceAfter ? entry.balanceAfter.toFixed(2) + ' days' : 'N/A'}</td>
+                    <td>${entry.reason || ''}</td>
+                </tr>
+            `;
                 });
 
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
             }
 
             container.innerHTML = html;
         }
+async function fixCOFFData() {
+    if (!confirm('This will recalculate all COFF balances from extra hours AND OD data. Continue?')) {
+        return;
+    }
+    
+    try {
+        console.log('Fixing COFF data...');
+        
+        // Get all extra hours data
+        const extraHoursSnapshot = await db.collection('extraHoursData').get();
+        const allExtraHours = [];
+        extraHoursSnapshot.forEach(doc => {
+            allExtraHours.push(doc.data());
+        });
+        
+        // Get all On Duty entries with extra hours
+        const onDutySnapshot = await db.collection('onDutyEntries').get();
+        const allOnDuty = [];
+        onDutySnapshot.forEach(doc => {
+            allOnDuty.push(doc.data());
+        });
+        
+        // Get all off-duty entries
+        const offDutySnapshot = await db.collection('offDutyEntries').get();
+        const allOffDuty = [];
+        offDutySnapshot.forEach(doc => {
+            allOffDuty.push(doc.data());
+        });
+        
+        console.log('Found:', {
+            extraHours: allExtraHours.length,
+            onDuty: allOnDuty.length,
+            offDuty: allOffDuty.length
+        });
+        
+        // Calculate balances per staff
+        const balances = {};
+        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+        staffList.forEach(staff => {
+            balances[staff] = 0;
+        });
+        
+        // Process standalone extra hours
+        allExtraHours.forEach(entry => {
+            if (entry && entry.staff && entry.hours && entry.type !== 'Off-Duty Working') {
+                const hours = parseFloat(entry.hours) || 0;
+                const coffDays = hours / 8;
+                balances[entry.staff] += coffDays;
+                
+                console.log(`Extra hours: ${entry.staff} +${hours}h = +${coffDays.toFixed(2)} COFF days`);
+            }
+        });
+        
+        // Process On Duty extra hours
+        allOnDuty.forEach(entry => {
+            if (entry && entry.staff && entry.type === 'extra' && entry.hours) {
+                const extraHours = parseFloat(entry.hours) || 0;
+                const coffDays = extraHours / 8;
+                balances[entry.staff] += coffDays;
+                
+                console.log(`OD extra: ${entry.staff} +${extraHours}h = +${coffDays.toFixed(2)} COFF days`);
+            }
+        });
+        
+        // Process off-duty working
+        allOffDuty.forEach(entry => {
+            if (entry && entry.staff) {
+                // Off-duty working = 1 COFF day (8 hours)
+                balances[entry.staff] += 1;
+                console.log(`Off-duty: ${entry.staff} +1 COFF day`);
+            }
+        });
+        
+        // Save balances
+        for (const staff of staffList) {
+            const balance = balances[staff];
+            await db.collection('coffData').doc(`${staff}_balance`).set({
+                staff: staff,
+                type: 'balance',
+                balance: balance,
+                updatedAt: new Date().toISOString(),
+                lastCalculated: new Date().toISOString(),
+                sources: {
+                    extraHours: allExtraHours.filter(e => e.staff === staff && e.type !== 'Off-Duty Working').length,
+                    onDutyExtra: allOnDuty.filter(e => e.staff === staff && e.type === 'extra').length,
+                    offDuty: allOffDuty.filter(e => e.staff === staff).length
+                }
+            }, { merge: true });
+            
+            console.log(`Updated ${staff}: ${balance.toFixed(2)} COFF days`);
+        }
+        
+        // Create history entries for missing records
+        await createMissingCOFFHistory(allExtraHours, allOnDuty, allOffDuty);
+        
+        alert(`COFF data fixed successfully!\n\nBalances recalculated from:\n• ${allExtraHours.length} extra hours entries\n• ${allOnDuty.filter(e => e.type === 'extra').length} OD extra hours entries\n• ${allOffDuty.length} off-duty working entries`);
+        
+        // Refresh display
+        calculateCOFFBalances();
+        renderCOFFSummary();
+        
+    } catch (error) {
+        console.error('Error fixing COFF data:', error);
+        alert('Failed to fix COFF data: ' + error.message);
+    }
+}
+async function fixODCOFFData() {
+    if (!confirm('This will recalculate COFF balances from On Duty extra hours only. Continue?')) {
+        return;
+    }
+    
+    try {
+        console.log('Fixing OD COFF data...');
+        
+        // Get all On Duty entries
+        const snapshot = await db.collection('onDutyEntries').get();
+        const odEntries = [];
+        snapshot.forEach(doc => {
+            odEntries.push(doc.data());
+        });
+        
+        // Filter only entries with extra hours
+        const odExtraEntries = odEntries.filter(entry => 
+            entry && entry.staff && entry.type === 'extra' && entry.hours
+        );
+        
+        console.log(`Found ${odExtraEntries.length} OD entries with extra hours`);
+        
+        // Create COFF history entries for each
+        let createdCount = 0;
+        for (const entry of odExtraEntries) {
+            const coffEarned = parseFloat(entry.hours) / 8;
+            const historyId = `od_extra_${entry.date}_${entry.staff}`;
+            const historyDoc = await db.collection('coffData').doc(historyId).get();
+            
+            if (!historyDoc.exists) {
+                await db.collection('coffData').doc(historyId).set({
+                    staff: entry.staff,
+                    type: 'history',
+                    date: entry.date,
+                    hours: parseFloat(entry.hours),
+                    coffEarned: coffEarned,
+                    reason: `On Duty: ${entry.reason || 'No reason provided'}`,
+                    transactionDate: entry.entryDate || new Date().toISOString(),
+                    source: 'on-duty-extra',
+                    fixedAt: new Date().toISOString()
+                }, { merge: true });
+                createdCount++;
+                console.log(`Created COFF history for ${entry.staff}: ${entry.hours} hours on ${entry.date}`);
+            }
+        }
+        
+        alert(`OD COFF data fixed successfully!\n\nProcessed ${odExtraEntries.length} OD extra hours entries\nCreated ${createdCount} new COFF history records`);
+        
+        // Recalculate COFF balances
+        calculateCOFFBalances();
+        renderCOFFSummary();
+        
+    } catch (error) {
+        console.error('Error fixing OD COFF data:', error);
+        alert('Failed to fix OD COFF data: ' + error.message);
+    }
+}
+
+// Add this button to HTML:
+// <button onclick="fixODCOFFData()" class="btn-warning">🔧 Fix OD COFF Data</button>
+
+async function createMissingCOFFHistory(allExtraHours, allOnDuty, allOffDuty) {
+    console.log('Creating missing COFF history entries...');
+    
+    // Process extra hours
+    for (const entry of allExtraHours) {
+        if (entry && entry.staff && entry.hours && entry.date && entry.type !== 'Off-Duty Working') {
+            const coffEarned = parseFloat(entry.hours) / 8;
+            const historyId = `extra_${entry.date}_${entry.staff}`;
+            const historyDoc = await db.collection('coffData').doc(historyId).get();
+            
+            if (!historyDoc.exists) {
+                await db.collection('coffData').doc(historyId).set({
+                    staff: entry.staff,
+                    type: 'history',
+                    date: entry.date,
+                    hours: parseFloat(entry.hours),
+                    coffEarned: coffEarned,
+                    reason: entry.reason || 'Extra hours worked',
+                    transactionDate: entry.entryDate || new Date().toISOString(),
+                    source: 'extra-hours',
+                    createdDuringFix: true
+                }, { merge: true });
+                console.log(`Created history for extra hours: ${entry.staff} on ${entry.date}`);
+            }
+        }
+    }
+    
+    // Process OD extra hours
+    for (const entry of allOnDuty) {
+        if (entry && entry.staff && entry.type === 'extra' && entry.hours && entry.date) {
+            const coffEarned = parseFloat(entry.hours) / 8;
+            const historyId = `od_extra_${entry.date}_${entry.staff}`;
+            const historyDoc = await db.collection('coffData').doc(historyId).get();
+            
+            if (!historyDoc.exists) {
+                await db.collection('coffData').doc(historyId).set({
+                    staff: entry.staff,
+                    type: 'history',
+                    date: entry.date,
+                    hours: parseFloat(entry.hours),
+                    coffEarned: coffEarned,
+                    reason: `On Duty: ${entry.reason || 'No reason provided'}`,
+                    transactionDate: entry.entryDate || new Date().toISOString(),
+                    source: 'on-duty-extra',
+                    createdDuringFix: true
+                }, { merge: true });
+                console.log(`Created history for OD extra: ${entry.staff} on ${entry.date}`);
+            }
+        }
+    }
+    
+    // Process off-duty working
+    for (const entry of allOffDuty) {
+        if (entry && entry.staff && entry.date) {
+            const historyId = `offduty_${entry.date}_${entry.staff}`;
+            const historyDoc = await db.collection('coffData').doc(historyId).get();
+            
+            if (!historyDoc.exists) {
+                await db.collection('coffData').doc(historyId).set({
+                    staff: entry.staff,
+                    type: 'history',
+                    date: entry.date,
+                    hours: 8,
+                    coffEarned: 1,
+                    reason: `Off-duty working: ${entry.reason || 'No reason provided'}`,
+                    transactionDate: entry.entryDate || new Date().toISOString(),
+                    source: 'off-duty',
+                    createdDuringFix: true
+                }, { merge: true });
+                console.log(`Created history for off-duty: ${entry.staff} on ${entry.date}`);
+            }
+        }
+    }
+    
+    console.log('Missing COFF history entries created');
+}
 
         function generateOTReport() {
             // Hide attendance navigation for OT report
@@ -6734,7 +7189,7 @@
                 const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
 
                 staffList.forEach(staff => {
-                    const currentShift = shiftData.shifts[dayName][staff] || '';
+                    const currentShift = shiftData.shifts[dayName]?.[staff] || '';
 
                     const staffDiv = document.createElement('div');
                     staffDiv.className = 'edit-staff-shift';
@@ -6746,7 +7201,7 @@
                     <option value="4pm-12:30pm" ${currentShift === '4pm-12:30pm' ? 'selected' : ''}>4pm-12:30pm</option>
                     <option value="7pm-3:30pm" ${currentShift === '7pm-3:30pm' ? 'selected' : ''}>7pm-3:30pm</option>
                     <option value="7:00pm-3:30am" ${currentShift === '7:00pm-3:30am' ? 'selected' : ''}>7:00pm-3:30am</option>
-                    <option value="Obituary duty 5pm-1:30am" ${currentShift === 'Obituary duty 5pm-1:30am' ? 'selected' : ''}>Obituary duty 5pm-1:30am</option>
+                    <option value="Obituary duty 5pm-1:30am" ${currentShift === 'Obituary duty 5pm-1:30am' || currentShift.includes('Obituary duty') ? 'selected' : ''}>Obituary duty 5pm-1:30am</option>
                     <option value="Off" ${currentShift === 'Off' ? 'selected' : ''}>Off</option>
                     <option value="Off-operator" ${currentShift === 'Off-operator' ? 'selected' : ''}>Off-operator</option>
                 </select>
@@ -6765,6 +7220,12 @@
                 return;
             }
 
+            // Check if user has permission (admin only)
+            if (currentUserRole !== 'admin') {
+                alert('Only administrators can edit shifts.');
+                return;
+            }
+
             const startDate = new Date(effectiveDate);
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
@@ -6780,39 +7241,194 @@
 
                 const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
 
-                if (!updates[dayName]) {
-                    updates[dayName] = {};
-                }
-
                 staffList.forEach(staff => {
                     const select = document.getElementById(`shift_${dateKey}_${staff}`);
-                    if (select) {
-                        updates[dayName][staff] = select.value || shiftData.shifts[dayName][staff];
+                    if (select && select.value) {
+                        if (!updates[dayName]) {
+                            updates[dayName] = {};
+                        }
+                        updates[dayName][staff] = select.value;
                     }
                 });
             });
 
+            if (Object.keys(updates).length === 0) {
+                alert('No changes made to shifts');
+                return;
+            }
+
             try {
-                // Update in Firestore
-                await db.collection('shiftData').doc('current').update({
-                    [`shifts`]: updates,
+                console.log('Updating shifts with:', updates);
+
+                // Prepare the update data
+                const updateData = {
                     updatedAt: new Date().toISOString(),
                     lastUpdatedBy: currentUser.email
+                };
+
+                // Add shift updates
+                Object.keys(updates).forEach(dayName => {
+                    updateData[`shifts.${dayName}`] = updates[dayName];
                 });
+
+                console.log('Update data prepared:', updateData);
+
+                // Update in Firestore using set with merge: true
+                await db.collection('shiftData').doc('current').set({
+                    shifts: {
+                        ...shiftData.shifts,
+                        ...updates
+                    },
+                    updatedAt: new Date().toISOString(),
+                    lastUpdatedBy: currentUser.email
+                }, { merge: true });
+
+                // Also update local shiftData
+                shiftData.shifts = {
+                    ...shiftData.shifts,
+                    ...updates
+                };
 
                 alert('Shift schedule updated successfully');
                 closeModal('editShiftModal');
 
+                // Refresh the UI
+                updateAllViews();
+
             } catch (error) {
                 console.error('Error updating shifts:', error);
-                alert('Failed to update shifts. Please try again.');
+                console.error('Error details:', error.message, error.stack);
+
+                if (error.code === 'permission-denied') {
+                    alert('Permission denied. You may not have permission to edit shifts.\n\nPlease ensure:\n1. You are logged in as an administrator\n2. Firestore rules allow write access\n3. Your email is verified');
+                } else if (error.code === 'not-found') {
+                    // Document doesn't exist, create it
+                    try {
+                        await createOrUpdateShiftDocument(updates);
+                        alert('Shift schedule created and updated successfully');
+                        closeModal('editShiftModal');
+                        updateAllViews();
+                    } catch (createError) {
+                        console.error('Error creating shift document:', createError);
+                        alert('Failed to create shift document: ' + createError.message);
+                    }
+                } else {
+                    alert('Failed to update shifts: ' + error.message);
+                }
+            }
+        }
+
+        async function createOrUpdateShiftDocument(updates) {
+            // First, get current data or initialize
+            const shiftDoc = await db.collection('shiftData').doc('current').get();
+
+            if (shiftDoc.exists) {
+                // Update existing document
+                const currentData = shiftDoc.data();
+                const newShifts = {
+                    ...currentData.shifts,
+                    ...updates
+                };
+
+                await db.collection('shiftData').doc('current').update({
+                    shifts: newShifts,
+                    updatedAt: new Date().toISOString(),
+                    lastUpdatedBy: currentUser.email
+                });
+
+                // Update local data
+                shiftData.shifts = newShifts;
+            } else {
+                // Create new document with complete shift data
+                const newShifts = {
+                    "Sunday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Monday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "Off-operator",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Tuesday": {
+                        "Sreejith": "5pm-1:30am",
+                        "Sajeev": "Obituary duty 5pm-1:30am",
+                        "Umesh": "Off-operator",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Wednesday": {
+                        "Sreejith": "Off-operator",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "Obituary duty 5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "Off-operator"
+                    },
+                    "Thursday": {
+                        "Sreejith": "Obituary duty 5pm-1:30am",
+                        "Sajeev": "4pm-12:30pm",
+                        "Umesh": "5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Friday": {
+                        "Sreejith": "5pm-1:30am",
+                        "Sajeev": "Obituary duty 5pm-1:30am",
+                        "Umesh": "7pm-3:30pm",
+                        "Rajesh": "Off-operator",
+                        "ANEESH": "7:00pm-3:30am"
+                    },
+                    "Saturday": {
+                        "Sreejith": "4pm-12:30pm",
+                        "Sajeev": "5pm-1:30am",
+                        "Umesh": "Obituary duty 5pm-1:30am",
+                        "Rajesh": "7pm-3:30pm",
+                        "ANEESH": "7:00pm-3:30am"
+                    }
+                };
+
+                // Apply updates to the base data
+                Object.keys(updates).forEach(dayName => {
+                    if (newShifts[dayName]) {
+                        newShifts[dayName] = {
+                            ...newShifts[dayName],
+                            ...updates[dayName]
+                        };
+                    } else {
+                        newShifts[dayName] = updates[dayName];
+                    }
+                });
+
+                await db.collection('shiftData').doc('current').set({
+                    days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                    shifts: newShifts,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    lastUpdatedBy: currentUser.email
+                });
+
+                // Update local data
+                shiftData = {
+                    days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                    shifts: newShifts
+                };
             }
         }
 
         // ============== OBITUARY DUTY FUNCTIONS ==============
         async function loadCurrentObituaryDuty() {
             const date = document.getElementById('obituaryDate').value;
-            if (!date) return;
+            if (!date) {
+                // Set default to today
+                const today = new Date();
+                document.getElementById('obituaryDate').value = formatDateForInput(today);
+                return;
+            }
 
             const dateObj = new Date(date);
             const dayIndex = dateObj.getDay();
@@ -6829,59 +7445,67 @@
             // Find staff with obituary duty
             const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
             let obituaryStaff = null;
+            let obituaryShift = '';
 
             staffList.forEach(staff => {
                 const shift = shiftData.shifts[dayName][staff];
-                if (shift && shift.includes('Obituary')) {
+                if (shift && shift.includes('Obituary duty')) {
                     obituaryStaff = staff;
+                    obituaryShift = shift;
                 }
             });
 
             if (obituaryStaff) {
                 infoDiv.innerHTML = `
-                        <strong>Current Assignment:</strong> ${obituaryStaff}<br>
-                        <small>${dayName}, ${formatDateForDisplay(dateObj)}</small>
-                    `;
+            <strong>Current Assignment:</strong> ${obituaryStaff}<br>
+            <strong>Shift:</strong> ${obituaryShift}<br>
+            <small>${dayName}, ${formatDateForDisplay(dateObj)}</small>
+        `;
 
                 // Populate transfer from select
                 const optionFrom = document.createElement('option');
                 optionFrom.value = obituaryStaff;
-                optionFrom.textContent = `${obituaryStaff} (Current)`;
+                optionFrom.textContent = `${obituaryStaff} (Current - ${obituaryShift})`;
                 fromSelect.appendChild(optionFrom);
 
                 // Populate transfer to select
                 staffList.forEach(staff => {
                     if (staff !== obituaryStaff) {
+                        const shift = shiftData.shifts[dayName][staff] || 'No shift';
                         const optionTo = document.createElement('option');
                         optionTo.value = staff;
-                        optionTo.textContent = staff;
+                        optionTo.textContent = `${staff} (${shift})`;
                         toSelect.appendChild(optionTo);
                     }
                 });
             } else {
                 infoDiv.innerHTML = `
-                        <strong>No obituary duty assigned for this date</strong><br>
-                        <small>${dayName}, ${formatDateForDisplay(dateObj)}</small>
-                    `;
+            <strong>No obituary duty assigned for this date</strong><br>
+            <small>${dayName}, ${formatDateForDisplay(dateObj)}</small>
+            <div style="margin-top: 10px; color: #e74c3c;">
+                <small>Note: You can still transfer by selecting a staff member to assign obituary duty to.</small>
+            </div>
+        `;
 
                 // Populate transfer from select with all staff
                 staffList.forEach(staff => {
+                    const shift = shiftData.shifts[dayName][staff] || 'No shift';
                     const optionFrom = document.createElement('option');
                     optionFrom.value = staff;
-                    optionFrom.textContent = staff;
+                    optionFrom.textContent = `${staff} (${shift})`;
                     fromSelect.appendChild(optionFrom);
                 });
 
                 // Populate transfer to select with all staff
                 staffList.forEach(staff => {
+                    const shift = shiftData.shifts[dayName][staff] || 'No shift';
                     const optionTo = document.createElement('option');
                     optionTo.value = staff;
-                    optionTo.textContent = staff;
+                    optionTo.textContent = `${staff} (${shift})`;
                     toSelect.appendChild(optionTo);
                 });
             }
         }
-
         function updateAvailableStaff() {
             const fromStaff = document.getElementById('transferFromStaff').value;
             const toSelect = document.getElementById('transferToStaff');
@@ -6921,29 +7545,121 @@
             const dayName = shiftData.days[dayIndex];
 
             try {
-                // Update shift data
-                const updates = {};
-                updates[`shifts.${dayName}.${fromStaff}`] = firebase.firestore.FieldValue.delete();
-                updates[`shifts.${dayName}.${toStaff}`] = 'Obituary Duty';
+                console.log('Transferring obituary duty:', { date, dayName, fromStaff, toStaff });
 
-                await db.collection('shiftData').doc('current').update(updates);
+                // First, verify the document exists
+                const shiftDocRef = db.collection('shiftData').doc('current');
+                const shiftDoc = await shiftDocRef.get();
+
+                if (!shiftDoc.exists) {
+                    console.error('Shift data document not found in Firestore');
+                    alert('Shift data not found. The system needs to be initialized. Please contact administrator.');
+
+                    // Try to create the document
+                    await initializeFirestoreData();
+                    return;
+                }
+
+                // Get current data
+                const currentData = shiftDoc.data();
+                console.log('Current Firestore data:', currentData);
+
+                if (!currentData.shifts || !currentData.shifts[dayName]) {
+                    console.error('Invalid shift data structure');
+                    alert('Shift data structure is incorrect. Please refresh the page.');
+                    return;
+                }
+
+                // Update the shifts object
+                const updatedShifts = { ...currentData.shifts };
+
+                // Check if fromStaff has obituary duty
+                const currentShiftFrom = updatedShifts[dayName][fromStaff];
+                let newShiftFrom = currentShiftFrom;
+
+                if (currentShiftFrom && currentShiftFrom.includes('Obituary duty')) {
+                    // Remove "Obituary duty " prefix
+                    newShiftFrom = currentShiftFrom.replace('Obituary duty ', '');
+                    console.log(`Removing obituary duty from ${fromStaff}: ${currentShiftFrom} -> ${newShiftFrom}`);
+                } else {
+                    console.log(`${fromStaff} does not have obituary duty: ${currentShiftFrom}`);
+                }
+
+                // Update toStaff's shift
+                const currentShiftTo = updatedShifts[dayName][toStaff];
+                let newShiftTo = currentShiftTo;
+
+                if (currentShiftTo && !currentShiftTo.includes('Obituary duty')) {
+                    // Add "Obituary duty " prefix
+                    newShiftTo = 'Obituary duty ' + currentShiftTo;
+                    console.log(`Adding obituary duty to ${toStaff}: ${currentShiftTo} -> ${newShiftTo}`);
+                } else if (!currentShiftTo) {
+                    // If staff has no shift, assign default
+                    newShiftTo = 'Obituary duty 5pm-1:30am';
+                    console.log(`${toStaff} has no shift, assigning: ${newShiftTo}`);
+                } else {
+                    console.log(`${toStaff} already has: ${currentShiftTo}`);
+                }
+
+                // Update the shifts object
+                updatedShifts[dayName][fromStaff] = newShiftFrom;
+                updatedShifts[dayName][toStaff] = newShiftTo;
+
+                // Prepare update
+                const updateData = {
+                    shifts: updatedShifts,
+                    updatedAt: new Date().toISOString(),
+                    lastUpdatedBy: currentUser.email
+                };
+
+                console.log('Updating Firestore with:', updateData);
+
+                // Update Firestore
+                await shiftDocRef.update(updateData);
+
+                // Also update local shiftData object
+                shiftData.shifts = updatedShifts;
 
                 // Log the transfer
                 await db.collection('obituaryTransfers').add({
                     date: date,
+                    dayName: dayName,
                     fromStaff: fromStaff,
                     toStaff: toStaff,
+                    fromShift: currentShiftFrom,
+                    toShift: newShiftTo,
                     reason: reason,
                     transferredBy: currentUser.email,
                     transferredAt: new Date().toISOString()
                 });
 
+                console.log('Transfer successful');
                 alert('Obituary duty transferred successfully');
+
+                // Close modal and clear form
                 closeModal('editObituaryModal');
+                document.getElementById('obituaryReason').value = '';
+
+                // Refresh UI
+                loadCurrentObituaryDuty();
+                updateAllViews();
 
             } catch (error) {
                 console.error('Error transferring obituary duty:', error);
-                alert('Failed to transfer obituary duty. Please try again.');
+                console.error('Error details:', error.message, error.stack);
+
+                // More detailed error messages
+                if (error.code === 'permission-denied') {
+                    alert('Permission denied. You may not have permission to modify shift data.');
+                } else if (error.code === 'not-found') {
+                    alert('Document not found. Please refresh the page and try again.');
+                } else if (error.message.includes('No document to update')) {
+                    alert('No shift data document found. Please contact administrator.');
+                } else if (error.code === 'failed-precondition') {
+                    alert('Document was modified by another user. Please refresh and try again.');
+                } else {
+                    alert('Failed to transfer obituary duty: ' + error.message);
+                }
             }
         }
 
@@ -7079,49 +7795,73 @@
             extraHoursSection.style.display = isExtra ? 'block' : 'none';
         }
 
-        async function saveOnDuty() {
-            const staff = document.getElementById('onDutyStaff').value;
-            const date = document.getElementById('onDutyDate').value;
-            const onDutyType = document.querySelector('input[name="onDutyType"]:checked').value;
-            const extraHours = onDutyType === 'extra' ? document.getElementById('onDutyExtraHours').value : null;
-            const reason = document.getElementById('onDutyReason').value;
-
-            if (!staff || !date || !reason) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            try {
-                const entry = {
-                    staff: staff,
-                    date: date,
-                    type: onDutyType === 'extra' ? 'extra' : 'regular',
-                    reason: reason,
-                    enteredBy: currentUser.email,
-                    entryDate: new Date().toISOString()
-                };
-
-                if (onDutyType === 'extra') {
-                    entry.hours = parseFloat(extraHours);
-
-                    // Get regular shift for this day
-                    const dateObj = new Date(date);
-                    const dayIndex = dateObj.getDay();
-                    const dayName = shiftData.days[dayIndex];
-                    const shift = shiftData.shifts[dayName][staff];
-                    entry.regularShift = shift || 'Not specified';
-                }
-
-                await db.collection('onDutyEntries').doc(date + '_' + staff).set(entry);
-
-                alert('On Duty entry saved successfully');
-                closeModal('onDutyModal');
-
-            } catch (error) {
-                console.error('Error saving On Duty entry:', error);
-                alert('Failed to save On Duty entry. Please try again.');
-            }
+async function saveOnDuty() {
+    const staff = document.getElementById('onDutyStaff').value;
+    const date = document.getElementById('onDutyDate').value;
+    const onDutyType = document.querySelector('input[name="onDutyType"]:checked').value;
+    const extraHours = onDutyType === 'extra' ? document.getElementById('onDutyExtraHours').value : null;
+    const reason = document.getElementById('onDutyReason').value;
+    
+    if (!staff || !date || !reason) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const entry = {
+            staff: staff,
+            date: date,
+            type: onDutyType === 'extra' ? 'extra' : 'regular',
+            reason: reason,
+            enteredBy: currentUser.email,
+            entryDate: new Date().toISOString()
+        };
+        
+        if (onDutyType === 'extra') {
+            entry.hours = parseFloat(extraHours);
+            
+            // Get regular shift for this day
+            const dateObj = new Date(date);
+            const dayIndex = dateObj.getDay();
+            const dayName = shiftData.days[dayIndex];
+            const shift = shiftData.shifts[dayName][staff];
+            entry.regularShift = shift || 'Not specified';
+            
+            // Create COFF history entry for the extra hours
+            const coffEarned = parseFloat(extraHours) / 8;
+            await db.collection('coffData').add({
+                staff: staff,
+                type: 'history',
+                date: date,
+                hours: parseFloat(extraHours),
+                coffEarned: coffEarned,
+                reason: `On Duty extra hours: ${reason}`,
+                transactionDate: new Date().toISOString(),
+                enteredBy: currentUser.email,
+                source: 'on-duty-extra'
+            });
+            
+            console.log(`COFF entry created: ${coffEarned} days for ${extraHours} extra hours`);
         }
+        
+        await db.collection('onDutyEntries').doc(date + '_' + staff).set(entry);
+        
+        if (onDutyType === 'extra') {
+            alert(`On Duty with extra hours saved successfully!\n\n${extraHours} extra hours = ${(parseFloat(extraHours)/8).toFixed(2)} COFF days earned`);
+        } else {
+            alert('On Duty entry saved successfully');
+        }
+        
+        closeModal('onDutyModal');
+        
+        // Trigger COFF recalculation
+        calculateCOFFBalances();
+        
+    } catch (error) {
+        console.error('Error saving On Duty entry:', error);
+        alert('Failed to save On Duty entry. Please try again.\nError: ' + error.message);
+    }
+}
 
         // ============== LATE ENTRY FUNCTIONS ==============
         function updateRegularShiftTime() {
@@ -7318,24 +8058,49 @@
             }
 
             try {
-                await db.collection('extraHoursData').doc(date + '_' + staff).set({
+                const entry = {
                     staff: staff,
                     date: date,
                     hours: parseFloat(hours),
                     reason: reason,
                     enteredBy: currentUser.email,
-                    entryDate: new Date().toISOString()
+                    entryDate: new Date().toISOString(),
+                    type: 'extra-hours'
+                };
+
+                // Save to Firestore
+                const docId = `${date}_${staff}`;
+                await db.collection('extraHoursData').doc(docId).set(entry);
+
+                console.log('Extra hours saved:', entry);
+
+                // Also add to COFF history
+                const coffEarned = parseFloat(hours) / 8;
+                await db.collection('coffData').add({
+                    staff: staff,
+                    type: 'history',
+                    date: date,
+                    hours: parseFloat(hours),
+                    coffEarned: coffEarned,
+                    reason: `Extra hours: ${reason || 'No reason provided'}`,
+                    transactionDate: new Date().toISOString(),
+                    enteredBy: currentUser.email
                 });
 
-                alert('Extra hours entry saved successfully');
+                alert(`Extra hours saved successfully!\n\n${hours} hours = ${coffEarned.toFixed(2)} COFF days earned`);
                 closeModal('extraHoursModal');
+
+                // Clear form
+                document.getElementById('extraHoursReason').value = '';
+
+                // Trigger COFF recalculation
+                calculateCOFFBalances();
 
             } catch (error) {
                 console.error('Error saving extra hours:', error);
-                alert('Failed to save extra hours. Please try again.');
+                alert('Failed to save extra hours. Please try again.\nError: ' + error.message);
             }
         }
-
         // ============== COFF MANAGEMENT FUNCTIONS ==============
         function updateCOFFBalanceDisplay() {
             const staff = document.getElementById('coffStaff').value;
@@ -7420,54 +8185,132 @@
             switchTab('coff');
         }
 
-        function renderCOFFSummary() {
-            const container = document.getElementById('coff-summary-container');
-
-            let html = '<h3>COFF Balances</h3>';
-            html += '<div style="overflow-x: auto;">';
-            html += '<table><thead><tr><th>Staff</th><th>COFF Balance</th><th>Status</th><th>Last Updated</th></tr></thead><tbody>';
-
-            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-            staffList.forEach(staff => {
-                const balance = coffData.balances[staff] || 0;
-                const hours = balance * 8;
-                const abbrev = staffAbbreviations[staff];
-
-                let status = '<span style="color: #e74c3c;">Not eligible</span>';
-                if (balance >= 1) {
-                    status = '<span style="color: #27ae60;">Eligible</span>';
-                } else if (balance >= 0.5) {
-                    status = '<span style="color: #f39c12;">Partial</span>';
-                }
-
-                html += `
-                        <tr>
-                            <td>${abbrev} (${staff})</td>
-                            <td>${balance.toFixed(2)} days (${hours.toFixed(1)} hours)</td>
-                            <td>${status}</td>
-                            <td>${balance > 0 ? 'Recently' : 'N/A'}</td>
-                        </tr>
-                    `;
-            });
-
-            html += '</tbody></table></div>';
-
-            // Add COFF earning explanation
-            html += `
-                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                        <h4>How COFF is Earned:</h4>
-                        <ul>
-                            <li>Extra working hours (beyond regular shift): 8 hours = 1 COFF day</li>
-                            <li>Off-duty working: 8 hours = 1 COFF day</li>
-                            <li>Skeleton shift on off days: Variable based on hours</li>
-                            <li>Minimum COFF unit: 0.5 day (4 hours)</li>
-                        </ul>
-                    </div>
-                `;
-
-            container.innerHTML = html;
+function renderCOFFSummary() {
+    const container = document.getElementById('coff-summary-container');
+    
+    let html = '<h3>COFF Balances</h3>';
+    
+    // Calculate hours per staff from different sources
+    const extraHoursByStaff = {};
+    const odExtraHoursByStaff = {};
+    const offDutyByStaff = {};
+    
+    // Initialize
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    staffList.forEach(staff => {
+        extraHoursByStaff[staff] = 0;
+        odExtraHoursByStaff[staff] = 0;
+        offDutyByStaff[staff] = 0;
+    });
+    
+    // Count standalone extra hours
+    Object.values(extraHoursData).forEach(entry => {
+        if (entry && entry.staff && entry.hours && entry.type !== 'Off-Duty Working') {
+            const hours = parseFloat(entry.hours) || 0;
+            extraHoursByStaff[entry.staff] += hours;
         }
+    });
+    
+    // Count OD extra hours
+    Object.values(onDutyEntries).forEach(entry => {
+        if (entry && entry.staff && entry.type === 'extra' && entry.hours) {
+            const hours = parseFloat(entry.hours) || 0;
+            odExtraHoursByStaff[entry.staff] += hours;
+        }
+    });
+    
+    // Count off-duty working days
+    Object.values(offDutyEntries).forEach(entry => {
+        if (entry && entry.staff) {
+            offDutyByStaff[entry.staff] += 1;
+        }
+    });
+    
+    html += '<div style="overflow-x: auto;">';
+    html += '<table style="min-width: 1000px;">';
+    html += '<thead><tr><th>Staff</th><th>Extra Hours</th><th>OD Extra Hours</th><th>Off-Duty Days</th><th>Total COFF Earned</th><th>Current Balance</th><th>Status</th></tr></thead><tbody>';
+    
+    staffList.forEach(staff => {
+        const balance = coffData.balances[staff] || 0;
+        const extraHours = extraHoursByStaff[staff];
+        const odExtraHours = odExtraHoursByStaff[staff];
+        const offDutyDays = offDutyByStaff[staff];
+        const abbrev = staffAbbreviations[staff];
+        
+        // Calculate COFF earned from different sources
+        const extraHoursCoff = extraHours / 8;
+        const odExtraCoff = odExtraHours / 8;
+        const offDutyCoff = offDutyDays;
+        const totalCoffEarned = extraHoursCoff + odExtraCoff + offDutyCoff;
+        
+        let status = '<span style="color: #e74c3c;">Not eligible</span>';
+        let statusText = 'Not eligible';
+        if (balance >= 1) {
+            status = '<span style="color: #27ae60;">Eligible</span>';
+            statusText = 'Eligible';
+        } else if (balance >= 0.5) {
+            status = '<span style="color: #f39c12;">Partial</span>';
+            statusText = 'Partial (needs 0.5 more)';
+        }
+        
+        html += `
+            <tr>
+                <td><strong>${abbrev} (${staff})</strong></td>
+                <td>${extraHours.toFixed(1)} hours<br><small>${extraHoursCoff.toFixed(2)} days</small></td>
+                <td>${odExtraHours.toFixed(1)} hours<br><small>${odExtraCoff.toFixed(2)} days</small></td>
+                <td>${offDutyDays} days<br><small>${offDutyCoff.toFixed(2)} COFF days</small></td>
+                <td><strong>${totalCoffEarned.toFixed(2)} days</strong></td>
+                <td><strong>${balance.toFixed(2)} days</strong><br><small>(${(balance * 8).toFixed(1)} hours)</small></td>
+                <td>${status}<br><small>${statusText}</small></td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    
+    // Add breakdown of recent OD extra hours
+    html += '<h4 style="margin-top: 30px;">Recent On Duty (OD) Extra Hours</h4>';
+    
+    // Get recent OD extra hours (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentODExtra = Object.values(onDutyEntries)
+        .filter(entry => {
+            if (!entry || !entry.date || entry.type !== 'extra') return false;
+            const entryDate = new Date(entry.date);
+            return entryDate >= thirtyDaysAgo;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (recentODExtra.length > 0) {
+        html += '<div style="overflow-x: auto;">';
+        html += '<table style="min-width: 800px;">';
+        html += '<thead><tr><th>Date</th><th>Staff</th><th>Regular Shift</th><th>Extra Hours</th><th>COFF Earned</th><th>Reason</th></tr></thead><tbody>';
+        
+        recentODExtra.forEach(entry => {
+            const abbrev = staffAbbreviations[entry.staff];
+            const coffEarned = parseFloat(entry.hours) / 8;
+            
+            html += `
+                <tr>
+                    <td>${entry.date}</td>
+                    <td>${abbrev} (${entry.staff})</td>
+                    <td>${entry.regularShift || 'Not specified'}</td>
+                    <td><strong>${entry.hours} hours</strong></td>
+                    <td>${coffEarned.toFixed(2)} COFF days</td>
+                    <td>${entry.reason || 'No reason provided'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+    } else {
+        html += '<p>No On Duty extra hours recorded in the last 30 days.</p>';
+    }
+    
+    container.innerHTML = html;
+}
 
         function renderCOFFHistory() {
             const container = document.getElementById('coff-history-container');
@@ -7998,55 +8841,60 @@
 
         // ============== COFF BALANCE CALCULATION ==============
         function calculateCOFFBalances() {
-            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-            // Reset balances
-            staffList.forEach(staff => {
-                coffData.balances[staff] = 0;
-            });
-
-            // Calculate COFF from extra hours
-            Object.values(extraHoursData).forEach(entry => {
-                const staff = entry.staff;
-                const hours = parseFloat(entry.hours) || 0;
-                const coffDays = hours / 8; // 8 hours = 1 COFF day
-
-                if (coffDays > 0) {
-                    coffData.balances[staff] = (coffData.balances[staff] || 0) + coffDays;
-                }
-            });
-
-            // Calculate COFF from off-duty working
-            Object.values(offDutyEntries).forEach(entry => {
-                const staff = entry.staff;
-                // Off-duty working counts as 8 hours (full day) for COFF
-                coffData.balances[staff] = (coffData.balances[staff] || 0) + 1;
-            });
-
-            // Update stats
-            updateStats();
-
-            // Save updated balances to Firestore
-            saveCOFFBalances();
-        }
-
-        async function saveCOFFBalances() {
-            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-            try {
-                for (const staff of staffList) {
-                    const balance = coffData.balances[staff] || 0;
-                    await db.collection('coffData').doc(`${staff}_balance`).set({
-                        staff: staff,
-                        type: 'balance',
-                        balance: balance,
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true });
-                }
-            } catch (error) {
-                console.error('Error saving COFF balances:', error);
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    
+    // Initialize balances
+    const newBalances = {};
+    staffList.forEach(staff => {
+        newBalances[staff] = 0;
+    });
+    
+    // Calculate COFF from extra hours (standalone)
+    Object.values(extraHoursData).forEach(entry => {
+        if (entry && entry.staff && entry.hours && entry.type !== 'Off-Duty Working') {
+            const staff = entry.staff;
+            const hours = parseFloat(entry.hours) || 0;
+            const coffDays = hours / 8; // 8 hours = 1 COFF day
+            
+            if (coffDays > 0) {
+                newBalances[staff] = (newBalances[staff] || 0) + coffDays;
             }
         }
+    });
+    
+    // Calculate COFF from off-duty working
+    Object.values(offDutyEntries).forEach(entry => {
+        if (entry && entry.staff) {
+            const staff = entry.staff;
+            // Off-duty working counts as 8 hours (full day) for COFF
+            newBalances[staff] = (newBalances[staff] || 0) + 1;
+        }
+    });
+    
+    // Calculate COFF from On Duty (OD) with extra hours
+    Object.values(onDutyEntries).forEach(entry => {
+        if (entry && entry.staff && entry.type === 'extra' && entry.hours) {
+            const staff = entry.staff;
+            const extraHours = parseFloat(entry.hours) || 0;
+            const coffDays = extraHours / 8;
+            
+            if (coffDays > 0) {
+                newBalances[staff] = (newBalances[staff] || 0) + coffDays;
+            }
+        }
+    });
+    
+    // Update local COFF balances
+    coffData.balances = newBalances;
+    
+    console.log('COFF Balances calculated:', coffData.balances);
+    
+    // Update stats
+    updateStats();
+    
+    // Save to Firestore
+    saveCOFFBalances();
+}
 
         // ============== INITIALIZATION FUNCTIONS ==============
         function setDefaultDates() {
