@@ -5783,7 +5783,7 @@
                         totalDays++;
                         cellTitle = 'Off Duty';
                     } else if (isOffDutyWorking || isOnDuty || hasLateEntry) {
-                        attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
+                        attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">X</span>';
                         cellStyle = 'background-color: #e8f6ef;';
                         presentDays++;
                         totalDays++;
@@ -6297,7 +6297,7 @@ async function fixCOFFData() {
             allExtraHours.push(doc.data());
         });
         
-        // Get all On Duty entries with extra hours
+        // Get all On Duty entries
         const onDutySnapshot = await db.collection('onDutyEntries').get();
         const allOnDuty = [];
         onDutySnapshot.forEach(doc => {
@@ -6355,7 +6355,10 @@ async function fixCOFFData() {
             }
         });
         
-        // Save balances
+        // Update local coffData
+        coffData.balances = balances;
+        
+        // Save balances using direct Firestore calls (not saveCOFFBalances)
         for (const staff of staffList) {
             const balance = balances[staff];
             await db.collection('coffData').doc(`${staff}_balance`).set({
@@ -6364,11 +6367,7 @@ async function fixCOFFData() {
                 balance: balance,
                 updatedAt: new Date().toISOString(),
                 lastCalculated: new Date().toISOString(),
-                sources: {
-                    extraHours: allExtraHours.filter(e => e.staff === staff && e.type !== 'Off-Duty Working').length,
-                    onDutyExtra: allOnDuty.filter(e => e.staff === staff && e.type === 'extra').length,
-                    offDuty: allOffDuty.filter(e => e.staff === staff).length
-                }
+                calculatedBy: currentUser?.email || 'system'
             }, { merge: true });
             
             console.log(`Updated ${staff}: ${balance.toFixed(2)} COFF days`);
@@ -6380,7 +6379,7 @@ async function fixCOFFData() {
         alert(`COFF data fixed successfully!\n\nBalances recalculated from:\n• ${allExtraHours.length} extra hours entries\n• ${allOnDuty.filter(e => e.type === 'extra').length} OD extra hours entries\n• ${allOffDuty.length} off-duty working entries`);
         
         // Refresh display
-        calculateCOFFBalances();
+        updateStats(); // Update the stats display
         renderCOFFSummary();
         
     } catch (error) {
@@ -6434,9 +6433,46 @@ async function fixODCOFFData() {
             }
         }
         
-        alert(`OD COFF data fixed successfully!\n\nProcessed ${odExtraEntries.length} OD extra hours entries\nCreated ${createdCount} new COFF history records`);
+        // Also update the balance for each staff
+        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
         
-        // Recalculate COFF balances
+        // First get current balances
+        for (const staff of staffList) {
+            const odHours = odExtraEntries
+                .filter(e => e.staff === staff)
+                .reduce((sum, entry) => sum + (parseFloat(entry.hours) || 0), 0);
+            
+            const coffToAdd = odHours / 8;
+            
+            if (coffToAdd > 0) {
+                // Get current balance
+                const balanceDoc = await db.collection('coffData').doc(`${staff}_balance`).get();
+                let currentBalance = 0;
+                
+                if (balanceDoc.exists) {
+                    currentBalance = balanceDoc.data().balance || 0;
+                }
+                
+                const newBalance = currentBalance + coffToAdd;
+                
+                // Update balance
+                await db.collection('coffData').doc(`${staff}_balance`).set({
+                    staff: staff,
+                    type: 'balance',
+                    balance: newBalance,
+                    updatedAt: new Date().toISOString(),
+                    lastCalculated: new Date().toISOString(),
+                    odHoursAdded: odHours,
+                    odCoffAdded: coffToAdd
+                }, { merge: true });
+                
+                console.log(`Updated ${staff} balance: ${currentBalance.toFixed(2)} + ${coffToAdd.toFixed(2)} = ${newBalance.toFixed(2)} COFF days`);
+            }
+        }
+        
+        alert(`OD COFF data fixed successfully!\n\nProcessed ${odExtraEntries.length} OD extra hours entries\nCreated ${createdCount} new COFF history records\nUpdated COFF balances for all staff`);
+        
+        // Recalculate and refresh display
         calculateCOFFBalances();
         renderCOFFSummary();
         
@@ -6445,9 +6481,6 @@ async function fixODCOFFData() {
         alert('Failed to fix OD COFF data: ' + error.message);
     }
 }
-
-// Add this button to HTML:
-// <button onclick="fixODCOFFData()" class="btn-warning">🔧 Fix OD COFF Data</button>
 
 async function createMissingCOFFHistory(allExtraHours, allOnDuty, allOffDuty) {
     console.log('Creating missing COFF history entries...');
@@ -8840,7 +8873,9 @@ function renderCOFFSummary() {
         }
 
         // ============== COFF BALANCE CALCULATION ==============
-        function calculateCOFFBalances() {
+// Make sure you have this function defined BEFORE saveCOFFBalances
+
+function calculateCOFFBalances() {
     const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
     
     // Initialize balances
@@ -8892,8 +8927,40 @@ function renderCOFFSummary() {
     // Update stats
     updateStats();
     
-    // Save to Firestore
-    saveCOFFBalances();
+    // Return the balances for immediate use
+    return newBalances;
+}
+
+// Add this function BEFORE fixCOFFData() and fixODCOFFData() functions
+
+async function saveCOFFBalances() {
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    
+    try {
+        console.log('Saving COFF balances to Firestore...');
+        
+        for (const staff of staffList) {
+            const balance = coffData.balances[staff] || 0;
+            
+            await db.collection('coffData').doc(`${staff}_balance`).set({
+                staff: staff,
+                type: 'balance',
+                balance: balance,
+                updatedAt: new Date().toISOString(),
+                lastCalculated: new Date().toISOString(),
+                calculatedBy: currentUser?.email || 'system'
+            }, { merge: true });
+            
+            console.log(`Saved ${staff}: ${balance.toFixed(2)} COFF days`);
+        }
+        
+        console.log('COFF balances saved successfully');
+        return true;
+        
+    } catch (error) {
+        console.error('Error saving COFF balances:', error);
+        throw error; // Re-throw the error so it can be caught by the calling function
+    }
 }
 
         // ============== INITIALIZATION FUNCTIONS ==============
