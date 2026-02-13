@@ -5183,6 +5183,9 @@ async function initApp() {
 
             // Set up real-time listeners
             setupRealtimeListeners();
+
+            // Load coff from Firestore
+            await loadCOFFBalancesFromFirestore();
             
             // Load day messages from Firestore
             loadDayMessagesFromFirestore();
@@ -5280,35 +5283,63 @@ function cleanupListeners() {
         }
 
 function updateStats() {
-    let totalCoffBalance = 0;
-    Object.values(coffData.balances).forEach(balance => {
-        totalCoffBalance += balance; // balance is in hours
-    });
-    // Convert hours to days for display
-    document.getElementById('coff-balance').textContent = (totalCoffBalance / 8).toFixed(1) + ' days';
-}
-        function renderStaffList() {
-            const staffList = document.getElementById('staff-list');
-            const staff = [
-                { name: "Sreejith", type: "Operator", abbrev: "SKS" },
-                { name: "Sajeev", type: "Operator", abbrev: "SJV" },
-                { name: "Umesh", type: "Operator", abbrev: "UMU" },
-                { name: "Rajesh", type: "Operator", abbrev: "MR" },
-                { name: "ANEESH", type: "CTP Operator", abbrev: "AMR" }
-            ];
+    console.log('Updating stats...');
+    
+    // Update pending approvals count
+    const pendingCount = leaveRequests.filter(req => req.status === 'pending').length;
+    document.getElementById('pending-count').textContent = pendingCount;
 
-            staffList.innerHTML = '';
-            staff.forEach(person => {
-                const div = document.createElement('div');
-                div.className = `staff-item ${person.type === 'CTP Operator' ? 'ctp-operator' : ''}`;
-                div.innerHTML = `
-                            <div style="font-weight: bold; font-size: 0.9em;">${person.name}</div>
-                            <div style="font-size: 0.75em; color: #666;">${person.type} (${person.abbrev})</div>
-                        `;
-                staffList.appendChild(div);
-            });
+    // Update COFF balance - use saved balances first
+    const coffBalanceElement = document.getElementById('coff-balance');
+    if (coffBalanceElement) {
+        try {
+            let totalCoffHours = 0;
+            
+            // FIRST: Try to use existing coffData.balances (from Firestore)
+            if (coffData && coffData.balances) {
+                Object.values(coffData.balances).forEach(hours => {
+                    totalCoffHours += parseFloat(hours) || 0;
+                });
+                console.log('Using existing balances:', coffData.balances);
+            } 
+            // SECOND: If no balances, calculate fresh
+            else {
+                const netBalances = calculateNetCOFFBalance();
+                Object.values(netBalances).forEach(hours => {
+                    totalCoffHours += hours;
+                });
+                
+                // Save to Firestore for next time
+                if (currentUser) {
+                    saveCOFFBalancesToFirestore();
+                }
+            }
+            
+            // Convert hours to days
+            const totalCoffDays = totalCoffHours / 8;
+            
+            // Update the display
+            coffBalanceElement.textContent = totalCoffDays.toFixed(1) + ' days';
+            
+            // Add color coding
+            if (totalCoffDays >= 2) {
+                coffBalanceElement.style.color = '#27ae60';
+                coffBalanceElement.style.fontWeight = 'bold';
+            } else if (totalCoffDays >= 1) {
+                coffBalanceElement.style.color = '#2ecc71';
+                coffBalanceElement.style.fontWeight = 'bold';
+            } else if (totalCoffDays > 0) {
+                coffBalanceElement.style.color = '#f39c12';
+            } else {
+                coffBalanceElement.style.color = '#7f8c8d';
+            }
+            
+        } catch (error) {
+            console.error('Error updating COFF balance:', error);
+            coffBalanceElement.textContent = '0.0 days';
         }
-
+    }
+}
         function renderTodayView() {
             const container = document.getElementById('todayViewContainer');
             const date = currentDayView;
@@ -9396,6 +9427,151 @@ async function updateCOFFBalanceDisplay() {
         balanceDiv.innerHTML = '<span style="color: #e74c3c;">Error loading balance</span>';
     }
 }
+
+// Calculate net COFF balance for all staff
+function calculateNetCOFFBalance() {
+    console.log('Calculating net COFF balance...');
+    
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    const netBalances = {};
+    
+    // Initialize all to zero
+    staffList.forEach(staff => netBalances[staff] = 0);
+    
+    // TRACK EARNINGS (positive)
+    
+    // 1. Off-duty working entries (each = 8 hours)
+    if (offDutyEntries) {
+        Object.values(offDutyEntries).forEach(entry => {
+            if (entry && entry.staff) {
+                netBalances[entry.staff] = (netBalances[entry.staff] || 0) + 8;
+            }
+        });
+    }
+    
+    // 2. On-duty extra hours
+    if (onDutyEntries) {
+        Object.values(onDutyEntries).forEach(entry => {
+            if (entry && entry.staff && entry.type === 'extra' && entry.hours) {
+                const hours = parseFloat(entry.hours) || 0;
+                netBalances[entry.staff] = (netBalances[entry.staff] || 0) + hours;
+            }
+        });
+    }
+    
+    // 3. Extra hours data (standalone)
+    if (extraHoursData) {
+        Object.values(extraHoursData).forEach(entry => {
+            if (entry && entry.staff && entry.hours) {
+                // Skip if already counted as off-duty or on-duty
+                const isOffDuty = entry.type === 'Off-Duty Working';
+                const isOnDutyExtra = entry.type === 'OD Extra Hours';
+                
+                if (!isOffDuty && !isOnDutyExtra) {
+                    const hours = parseFloat(entry.hours) || 0;
+                    netBalances[entry.staff] = (netBalances[entry.staff] || 0) + hours;
+                }
+            }
+        });
+    }
+    
+    // TRACK USAGE (negative)
+    
+    // 1. COFF applications (approved)
+    if (coffData && coffData.history) {
+        coffData.history.forEach(entry => {
+            if (entry && entry.staff && entry.type === 'use') {
+                const hours = Math.abs(parseFloat(entry.hours) || 0);
+                netBalances[entry.staff] = (netBalances[entry.staff] || 0) - hours;
+            }
+        });
+    }
+    
+    // 2. Late entries regularized with COFF
+    if (lateEntries && lateEntries.entries) {
+        lateEntries.entries.forEach(entry => {
+            if (entry && entry.staff && entry.regularizedFromCOFF && entry.coffHoursRequired) {
+                const hours = parseFloat(entry.coffHoursRequired) || 0;
+                netBalances[entry.staff] = (netBalances[entry.staff] || 0) - hours;
+            }
+        });
+    }
+    
+    // Ensure no negative balances
+    staffList.forEach(staff => {
+        if (netBalances[staff] < 0) {
+            netBalances[staff] = 0;
+        }
+    });
+    
+    // Update coffData.balances
+    if (!coffData) coffData = {};
+    coffData.balances = netBalances;
+    
+    return netBalances;
+}
+// Save COFF balances to Firestore
+async function saveCOFFBalancesToFirestore() {
+    console.log('Saving COFF balances to Firestore...');
+    
+    try {
+        const netBalances = calculateNetCOFFBalance();
+        
+        // Save each staff's balance to Firestore
+        for (const [staff, hours] of Object.entries(netBalances)) {
+            await db.collection('coffBalances').doc(staff).set({
+                staff: staff,
+                balance: hours,
+                lastUpdated: new Date().toISOString(),
+                updatedBy: currentUser?.email || 'system'
+            }, { merge: true });
+        }
+        
+        console.log('✅ COFF balances saved to Firestore');
+        return true;
+    } catch (error) {
+        console.error('Error saving COFF balances:', error);
+        return false;
+    }
+}
+// Load COFF balances from Firestore
+async function loadCOFFBalancesFromFirestore() {
+    console.log('Loading COFF balances from Firestore...');
+    
+    try {
+        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+        
+        // Initialize coffData.balances if not exists
+        if (!coffData) coffData = {};
+        if (!coffData.balances) coffData.balances = {};
+        
+        // Load each staff's balance
+        for (const staff of staffList) {
+            const balanceDoc = await db.collection('coffBalances').doc(staff).get();
+            
+            if (balanceDoc.exists) {
+                const data = balanceDoc.data();
+                coffData.balances[staff] = data.balance || 0;
+            } else {
+                // Initialize with 0 if not exists
+                coffData.balances[staff] = 0;
+                await db.collection('coffBalances').doc(staff).set({
+                    staff: staff,
+                    balance: 0,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: 'system'
+                });
+            }
+        }
+        
+        console.log('✅ COFF balances loaded from Firestore');
+        return true;
+    } catch (error) {
+        console.error('Error loading COFF balances:', error);
+        return false;
+    }
+}
+
         async function submitCOFF() {
             const staff = document.getElementById('coffStaff').value;
             const fromDate = document.getElementById('coffFromDate').value;
@@ -12931,3 +13107,6 @@ function hideLoading() {
     </script>
 </body>
 </html>
+
+
+
