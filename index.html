@@ -2777,6 +2777,51 @@
             border-left-color: #9b59b6; 
             color: #8e44ad; 
         }
+/* Enhanced Today Highlighting */
+.day-card.today.enhanced-today {
+    border: 3px solid #e74c3c !important;
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%) !important;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3) !important;
+    transform: scale(1.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.day-card.today.enhanced-today::before {
+    content: "📅 TODAY";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #e74c3c;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.day-card.today.enhanced-today .day-header {
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 5px;
+    padding: 8px;
+    margin: -5px -5px 10px -5px;
+}
+
+.day-card.today.enhanced-today .day-name {
+    color: #c0392b;
+    font-size: 1.1em;
+}
+
+.day-card.today.enhanced-today .date {
+    color: #e67e22;
+    font-weight: bold;
+    background: white;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
 
     </style>
 </head>
@@ -5534,13 +5579,20 @@ function updateStats() {
                     if (hasExtraHours) extraHoursOperators++;
                 });
 
-                // Create day card
-                const dayCard = document.createElement('div');
-                let additionalClass = '';
-                if (isHoliday) additionalClass = 'holiday-cell';
-                if (isSkeleton) additionalClass = 'skeleton-cell';
-                dayCard.className = `day-card ${isToday ? 'today' : ''} ${additionalClass}`;
-                dayCard.onclick = () => showDayDetails(date);
+// Create day card with stronger today highlighting
+const dayCard = document.createElement('div');
+let additionalClass = '';
+if (isHoliday) additionalClass = 'holiday-cell';
+if (isSkeleton) additionalClass = 'skeleton-cell';
+
+// Enhanced today styling
+if (isToday) {
+    dayCard.className = `day-card today enhanced-today`;
+    // Add a special style attribute for extra prominence
+    dayCard.setAttribute('style', 'border: 3px solid #e74c3c !important; background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);');
+} else {
+    dayCard.className = `day-card ${additionalClass}`;
+}
 
 
                 // Add holiday/skeleton marker
