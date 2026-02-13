@@ -4729,13 +4729,13 @@ unsubscribeListeners.offDutyEntries = db.collection('offDutyEntries')
         }
 
         function checkIfOnLeave(staff, date) {
-            const dateKey = formatDateForInput(date);
-            return leaveRequests.some(req =>
-                req.staff === staff &&
-                req.date === dateKey &&
-                req.status === 'approved'
-            );
-        }
+        const dateKey = formatDateForInput(date);
+          return leaveRequests.some(req =>
+            req.staff === staff &&
+            req.date === dateKey &&
+            (req.status === 'approved' || req.status === 'pending')
+    );
+}
 
         function getLeaveStatus(staff, date) {
             const dateKey = formatDateForInput(date);
@@ -6386,243 +6386,251 @@ function openOffDutyModal() {
             generateAttendanceReportForPeriod(0);
         }
 
-        function generateAttendanceReportForPeriod(periodOffset) {
-            const container = document.getElementById('report-container');
-            const periodTitle = document.getElementById('attendance-period-title');
+function generateAttendanceReportForPeriod(periodOffset) {
+    const container = document.getElementById('report-container');
+    const periodTitle = document.getElementById('attendance-period-title');
 
-            // Calculate period based on offset
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            const currentDay = today.getDate();
+    // Calculate period based on offset
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const currentDay = today.getDate();
 
-            // Determine base period (0 = current/next period based on today's date)
-            let baseStartDate, baseEndDate;
+    // Determine base period (0 = current/next period based on today's date)
+    let baseStartDate, baseEndDate;
 
-            if (currentDay <= 20) {
-                // If today is before the 21st, current period is previous month 21st to current month 20th
-                baseStartDate = new Date(currentYear, currentMonth - 1, 21);
-                baseEndDate = new Date(currentYear, currentMonth, 20);
-            } else {
-                // If today is after the 20th, current period is current month 21st to next month 20th
-                baseStartDate = new Date(currentYear, currentMonth, 21);
-                baseEndDate = new Date(currentYear, currentMonth + 1, 20);
-            }
-
-            // Apply offset (each offset is one month forward or backward)
-            const monthsToAdjust = periodOffset;
-            const reportStartDate = new Date(baseStartDate.getFullYear(), baseStartDate.getMonth() + monthsToAdjust, 21);
-            const reportEndDate = new Date(reportStartDate.getFullYear(), reportStartDate.getMonth() + 1, 20);
-
-            // Adjust year if crossing year boundary
-            if (reportStartDate.getMonth() === 11 && reportStartDate.getDate() === 21) {
-                reportEndDate.setFullYear(reportStartDate.getFullYear() + 1);
-            }
-
-            // Store current period for navigation
-            currentAttendancePeriod = periodOffset;
-            currentAttendanceStartDate = reportStartDate;
-            currentAttendanceEndDate = reportEndDate;
-
-            const reportPeriod = `${reportStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to ${reportEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-
-            // Update period title
-            let periodLabel = "Current Period";
-            if (periodOffset < 0) {
-                periodLabel = `${Math.abs(periodOffset)} Period${Math.abs(periodOffset) > 1 ? 's' : ''} Ago`;
-            } else if (periodOffset > 0) {
-                periodLabel = `${periodOffset} Period${periodOffset > 1 ? 's' : ''} Ahead`;
-            }
-            periodTitle.textContent = `${periodLabel}: ${reportPeriod}`;
-
-            let html = `<h3>Attendance Report</h3>`;
-
-            // Create table
-            html += `<div style="overflow-x: auto;">
-                        <table style="min-width: 1000px;">
-                            <thead>
-                                <tr>
-                                    <th style="min-width: 100px;">Operator</th>`;
-
-            // Generate date headers
-            const tempDate = new Date(reportStartDate);
-            while (tempDate <= reportEndDate) {
-                const dateStr = tempDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const dayName = tempDate.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 2);
-                html += `<th style="min-width: 30px; text-align: center;" title="${tempDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}">
-                                    ${dateStr}<br>${dayName}
-                                 </th>`;
-                tempDate.setDate(tempDate.getDate() + 1);
-            }
-
-            html += `<th>Total Days</th><th>Present</th><th>Leave</th><th>Off</th><th>% Present</th></tr></thead><tbody>`;
-
-            // Get all staff members
-            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-            staffList.forEach(staff => {
-                const abbrev = staffAbbreviations[staff];
-                html += `<tr>
-                                    <td style="font-weight: bold;">${abbrev}<br>(${staff}${staff === 'ANEESH' ? ' CTP' : ''})</td>`;
-
-                let totalDays = 0;
-                let presentDays = 0;
-                let leaveDays = 0;
-                let offDays = 0;
-
-                // Reset tempDate for this staff member
-                tempDate.setTime(reportStartDate.getTime());
-
-                while (tempDate <= reportEndDate) {
-                    const dateKey = formatDateForInput(tempDate);
-                    const dayIndex = tempDate.getDay();
-                    const dayName = shiftData.days[dayIndex];
-
-                    // Check various statuses
-                    const isHoliday = holidays[dateKey];
-                    const isSkeleton = skeletonShifts[dateKey];
-                    const shift = shiftData.shifts[dayName][staff];
-                    const isOnLeave = checkIfOnLeave(staff, tempDate);
-                    const isOffDutyWorking = checkOffDutyWorking(staff, tempDate);
-                    const isOnDuty = checkOnDuty(staff, tempDate);
-                    const hasLateEntry = checkLateEntry(staff, tempDate);
-                    const leaveStatus = getLeaveStatus(staff, tempDate);
-                    const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
-
-                    let attendanceMark = '';
-                    let cellStyle = '';
-                    let cellTitle = '';
-
-                    if (isHoliday) {
-                        attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Holiday">H</span>';
-                        cellStyle = 'background-color: #ffebee;';
-                        cellTitle = `Holiday: ${holidays[dateKey].name}`;
-                        // Don't count holidays in totals
-                    } else if (isSkeleton) {
-                        attendanceMark = '<span style="color: #26a69a; font-weight: bold;" title="Skeleton Shift">S</span>';
-                        cellStyle = 'background-color: #e8f6f3;';
-                        cellTitle = `Skeleton Shift: ${skeletonShifts[dateKey].hours} hours`;
-                        // Don't count skeleton shifts in totals
-    if (isOnLeave) {
-        attendanceMark = leaveStatus === 'pending' ? 
-            '<span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;" title="Pending Leave">L?</span>' :
-            '<span style="color: #e74c3c; font-weight: bold;" title="Leave">L</span>';
-        cellStyle = leaveStatus === 'pending' ? 'background-color: #fff9e6;' : 'background-color: #ffebee;';
-        
-        // Count pending leaves differently
-        if (leaveStatus === 'pending') {
-            pendingLeaveDays++;
-        } else {
-            leaveDays++;
-        }
-        totalDays++;
-        cellTitle = leaveStatus === 'pending' ? 'Pending Leave' : 'On Leave';
+    if (currentDay <= 20) {
+        // If today is before the 21st, current period is previous month 21st to current month 20th
+        baseStartDate = new Date(currentYear, currentMonth - 1, 21);
+        baseEndDate = new Date(currentYear, currentMonth, 20);
+    } else {
+        // If today is after the 20th, current period is current month 21st to next month 20th
+        baseStartDate = new Date(currentYear, currentMonth, 21);
+        baseEndDate = new Date(currentYear, currentMonth + 1, 20);
     }
-                    } else if (isOffDuty && !isOffDutyWorking) {
-                        attendanceMark = '<span style="color: #95a5a6; font-weight: bold;" title="Off Duty">O</span>';
-                        cellStyle = 'background-color: #f1f2f6;';
-                        offDays++;
-                        totalDays++;
-                        cellTitle = 'Off Duty';
-                    } else if (isOffDutyWorking || isOnDuty || hasLateEntry) {
-                        attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">X</span>';
-                        cellStyle = 'background-color: #e8f6ef;';
-                        presentDays++;
-                        totalDays++;
-                        cellTitle = isOffDutyWorking ? 'Off-duty Working' :
-                            isOnDuty ? 'On Duty (OD)' :
-                                hasLateEntry ? 'Present (Late Entry)' : 'Present';
-                    } else if (shift && !shift.includes('Off')) {
-                        attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
-                        cellStyle = 'background-color: #e8f6ef;';
-                        presentDays++;
-                        totalDays++;
-                        cellTitle = `Present: ${shift}`;
-                    } else {
-                        attendanceMark = '<span style="color: #95a5a6;">-</span>';
-                        cellTitle = 'No Shift';
-                        // Don't count "no shift" days in totals
-                    }
 
-                    html += `<td style="text-align: center; ${cellStyle}" title="${cellTitle}">${attendanceMark}</td>`;
+    // Apply offset (each offset is one month forward or backward)
+    const monthsToAdjust = periodOffset;
+    const reportStartDate = new Date(baseStartDate.getFullYear(), baseStartDate.getMonth() + monthsToAdjust, 21);
+    const reportEndDate = new Date(reportStartDate.getFullYear(), reportStartDate.getMonth() + 1, 20);
 
-                    tempDate.setDate(tempDate.getDate() + 1);
-                }
+    // Adjust year if crossing year boundary
+    if (reportStartDate.getMonth() === 11 && reportStartDate.getDate() === 21) {
+        reportEndDate.setFullYear(reportStartDate.getFullYear() + 1);
+    }
 
-                // Calculate attendance percentage
-                const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-                let percentageColor = '#27ae60'; // Green for good attendance
-                if (attendancePercentage < 80) percentageColor = '#f39c12'; // Orange for moderate
-                if (attendancePercentage < 60) percentageColor = '#e74c3c'; // Red for poor
+    // Store current period for navigation
+    currentAttendancePeriod = periodOffset;
+    currentAttendanceStartDate = reportStartDate;
+    currentAttendanceEndDate = reportEndDate;
 
-                // Add totals for this staff member
-                html += `<td style="text-align: center; font-weight: bold;">${totalDays}</td>
-                                 <td style="text-align: center; color: #27ae60; font-weight: bold;">${presentDays}</td>
-                                 <td style="text-align: center; color: #e74c3c; font-weight: bold;">${leaveDays}</td>
-                                 <td style="text-align: center; color: #95a5a6; font-weight: bold;">${offDays}</td>
-                                 <td style="text-align: center; color: ${percentageColor}; font-weight: bold;">${attendancePercentage}%</td>
-                               </tr>`;
-            });
+    const reportPeriod = `${reportStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to ${reportEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
-            // Add summary row
-            html += `<tr style="background-color: #f8f9fa; font-weight: bold;">
-                                <td>TOTAL</td>`;
+    // Update period title
+    let periodLabel = "Current Period";
+    if (periodOffset < 0) {
+        periodLabel = `${Math.abs(periodOffset)} Period${Math.abs(periodOffset) > 1 ? 's' : ''} Ago`;
+    } else if (periodOffset > 0) {
+        periodLabel = `${periodOffset} Period${periodOffset > 1 ? 's' : ''} Ahead`;
+    }
+    periodTitle.textContent = `${periodLabel}: ${reportPeriod}`;
 
-            // Empty cells for each date
-            tempDate.setTime(reportStartDate.getTime());
-            let dateCount = 0;
-            while (tempDate <= reportEndDate) {
-                dateCount++;
-                html += `<td style="text-align: center;">${dateCount}</td>`;
-                tempDate.setDate(tempDate.getDate() + 1);
+    let html = `<h3>Attendance Report</h3>`;
+
+    // Create table
+    html += `<div style="overflow-x: auto;">
+                <table style="min-width: 1000px;">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 100px;">Operator</th>`;
+
+    // Generate date headers
+    const tempDate = new Date(reportStartDate);
+    while (tempDate <= reportEndDate) {
+        const dateStr = tempDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dayName = tempDate.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 2);
+        html += `<th style="min-width: 30px; text-align: center;" title="${tempDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}">
+                            ${dateStr}<br>${dayName}
+                         </th>`;
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    html += `<th>Total Days</th><th>Present</th><th>Leave</th><th>Pending</th><th>Off</th><th>% Present</th></tr></thead><tbody>`;
+
+    // Get all staff members
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+
+    staffList.forEach(staff => {
+        const abbrev = staffAbbreviations[staff];
+        html += `<tr>
+                            <td style="font-weight: bold;">${abbrev}<br>(${staff}${staff === 'ANEESH' ? ' CTP' : ''})</td>`;
+
+        let totalDays = 0;
+        let presentDays = 0;
+        let leaveDays = 0;
+        let pendingLeaveDays = 0;
+        let offDays = 0;
+
+        // Reset tempDate for this staff member
+        tempDate.setTime(reportStartDate.getTime());
+
+        while (tempDate <= reportEndDate) {
+            const dateKey = formatDateForInput(tempDate);
+            const dayIndex = tempDate.getDay();
+            const dayName = shiftData.days[dayIndex];
+
+            // Check various statuses
+            const isHoliday = holidays[dateKey];
+            const isSkeleton = skeletonShifts[dateKey];
+            const shift = shiftData.shifts[dayName][staff];
+            
+            // Check leave status specifically - use direct lookup from leaveRequests
+            const leaveRequest = leaveRequests.find(req =>
+                req.staff === staff && req.date === dateKey
+            );
+            
+            const isOnLeave = leaveRequest && (leaveRequest.status === 'approved' || leaveRequest.status === 'pending');
+            const isPendingLeave = leaveRequest && leaveRequest.status === 'pending';
+            const isApprovedLeave = leaveRequest && leaveRequest.status === 'approved';
+            
+            const isOffDutyWorking = checkOffDutyWorking(staff, tempDate);
+            const isOnDuty = checkOnDuty(staff, tempDate);
+            const hasLateEntry = checkLateEntry(staff, tempDate);
+            const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
+
+            let attendanceMark = '';
+            let cellStyle = '';
+            let cellTitle = '';
+
+            // Check status in correct order
+            if (isHoliday) {
+                attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Holiday">H</span>';
+                cellStyle = 'background-color: #ffebee;';
+                cellTitle = `Holiday: ${holidays[dateKey].name}`;
+                // Don't count holidays in totals
+            } else if (isSkeleton) {
+                attendanceMark = '<span style="color: #26a69a; font-weight: bold;" title="Skeleton Shift">S</span>';
+                cellStyle = 'background-color: #e8f6f3;';
+                cellTitle = `Skeleton Shift: ${skeletonShifts[dateKey].hours} hours`;
+                // Don't count skeleton shifts in totals
+            } else if (isPendingLeave) {
+                attendanceMark = '<span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;" title="Pending Leave">L?</span>';
+                cellStyle = 'background-color: #fff9e6;';
+                pendingLeaveDays++;
+                totalDays++;
+                cellTitle = 'Pending Leave';
+            } else if (isApprovedLeave) {
+                attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Leave">L</span>';
+                cellStyle = 'background-color: #ffebee;';
+                leaveDays++;
+                totalDays++;
+                cellTitle = 'On Leave';
+            } else if (isOffDuty && !isOffDutyWorking) {
+                attendanceMark = '<span style="color: #95a5a6; font-weight: bold;" title="Off Duty">O</span>';
+                cellStyle = 'background-color: #f1f2f6;';
+                offDays++;
+                totalDays++;
+                cellTitle = 'Off Duty';
+            } else if (isOffDutyWorking || isOnDuty || hasLateEntry) {
+                attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
+                cellStyle = 'background-color: #e8f6ef;';
+                presentDays++;
+                totalDays++;
+                cellTitle = isOffDutyWorking ? 'Off-duty Working' :
+                    isOnDuty ? 'On Duty (OD)' :
+                        hasLateEntry ? 'Present (Late Entry)' : 'Present';
+            } else if (shift && !shift.includes('Off')) {
+                attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
+                cellStyle = 'background-color: #e8f6ef;';
+                presentDays++;
+                totalDays++;
+                cellTitle = `Present: ${shift}`;
+            } else {
+                attendanceMark = '<span style="color: #95a5a6;">-</span>';
+                cellTitle = 'No Shift';
+                // Don't count "no shift" days in totals
             }
 
-            // Calculate overall totals
-            const totalStaff = staffList.length;
-            const totalDaysInPeriod = Math.floor((reportEndDate - reportStartDate) / (1000 * 60 * 60 * 24)) + 1;
+            html += `<td style="text-align: center; ${cellStyle}" title="${cellTitle}">${attendanceMark}</td>`;
 
-            html += `<td style="text-align: center;">${totalDaysInPeriod * totalStaff}</td>
-                             <td style="text-align: center;">-</td>
-                             <td style="text-align: center;">-</td>
-                             <td style="text-align: center;">-</td>
-                             <td style="text-align: center;">-</td>
-                           </tr>`;
-
-            html += `</tbody></table></div>`;
-
-            // Add legend
-            html += `
-                        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-                            <h4>Legend:</h4>
-                            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #27ae60; font-weight: bold;">✓</span> Present
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #e74c3c; font-weight: bold;">L</span> Leave
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #95a5a6; font-weight: bold;">O</span> Off Duty
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;">L?</span> Pending Leave
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #e74c3c; font-weight: bold;">H</span> Holiday
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span style="color: #26a69a; font-weight: bold;">S</span> Skeleton Shift
-                                </div>
-                            </div>
-                            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                                <strong>Note:</strong> Holiday and Skeleton Shift days are not counted in Present/Leave/Off totals.
-                            </div>
-                        </div>
-                    `;
-
-            container.innerHTML = html;
+            tempDate.setDate(tempDate.getDate() + 1);
         }
 
+        // Calculate attendance percentage
+        const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+        let percentageColor = '#27ae60'; // Green for good attendance
+        if (attendancePercentage < 80) percentageColor = '#f39c12'; // Orange for moderate
+        if (attendancePercentage < 60) percentageColor = '#e74c3c'; // Red for poor
+
+        // Add totals for this staff member
+        html += `<td style="text-align: center; font-weight: bold;">${totalDays}</td>
+                         <td style="text-align: center; color: #27ae60; font-weight: bold;">${presentDays}</td>
+                         <td style="text-align: center; color: #e74c3c; font-weight: bold;">${leaveDays}</td>
+                         <td style="text-align: center; color: #f39c12; font-weight: bold;">${pendingLeaveDays}</td>
+                         <td style="text-align: center; color: #95a5a6; font-weight: bold;">${offDays}</td>
+                         <td style="text-align: center; color: ${percentageColor}; font-weight: bold;">${attendancePercentage}%</td>
+                       </tr>`;
+    });
+
+    // Add summary row
+    html += `<tr style="background-color: #f8f9fa; font-weight: bold;">
+                        <td>TOTAL</td>`;
+
+    // Empty cells for each date
+    tempDate.setTime(reportStartDate.getTime());
+    let dateCount = 0;
+    while (tempDate <= reportEndDate) {
+        dateCount++;
+        html += `<td style="text-align: center;">${dateCount}</td>`;
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    // Calculate overall totals
+    const totalStaff = staffList.length;
+    const totalDaysInPeriod = Math.floor((reportEndDate - reportStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    html += `<td style="text-align: center;">${totalDaysInPeriod * totalStaff}</td>
+                         <td style="text-align: center;">-</td>
+                         <td style="text-align: center;">-</td>
+                         <td style="text-align: center;">-</td>
+                         <td style="text-align: center;">-</td>
+                         <td style="text-align: center;">-</td>
+                       </tr>`;
+
+    html += `</tbody></table></div>`;
+
+    // Add legend
+    html += `
+                <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                    <h4>Legend:</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #27ae60; font-weight: bold;">✓</span> Present
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #e74c3c; font-weight: bold;">L</span> Approved Leave
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;">L?</span> Pending Leave
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #95a5a6; font-weight: bold;">O</span> Off Duty
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #e74c3c; font-weight: bold;">H</span> Holiday
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: #26a69a; font-weight: bold;">S</span> Skeleton Shift
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        <strong>Note:</strong> Holiday and Skeleton Shift days are not counted in Present/Leave/Off totals.
+                    </div>
+                </div>
+            `;
+
+    container.innerHTML = html;
+}
         // Navigation functions for attendance report
         function previousAttendancePeriod() {
             generateAttendanceReportForPeriod(currentAttendancePeriod - 1);
@@ -9347,30 +9355,47 @@ async function saveExtraHours() {
     }
 }
         // ============== COFF MANAGEMENT FUNCTIONS ==============
-        function updateCOFFBalanceDisplay() {
-            const staff = document.getElementById('coffStaff').value;
-            const balanceDiv = document.getElementById('coffBalanceDisplay');
+async function updateCOFFBalanceDisplay() {
+    const staff = document.getElementById('coffStaff').value;
+    const balanceDiv = document.getElementById('coffBalanceDisplay');
 
-            const balance = coffData.balances[staff] || 0;
-            const hours = balance * 8;
+    if (!staff) return;
 
-            let status = 'Not eligible for COFF';
-            let statusColor = '#e74c3c';
-
-            if (balance >= 1) {
-                status = 'Eligible for COFF';
-                statusColor = '#27ae60';
-            } else if (balance >= 0.5) {
-                status = 'Partial COFF available (minimum 0.5 day required)';
-                statusColor = '#f39c12';
-            }
-
-            balanceDiv.innerHTML = `
-                    <div style="font-size: 1.5em; font-weight: bold; color: ${statusColor};">${balance.toFixed(2)} days (${hours.toFixed(1)} hours)</div>
-                    <div style="color: ${statusColor}; margin-top: 5px;">${status}</div>
-                `;
+    // Try to get the latest balance from Firestore directly
+    try {
+        const balanceDoc = await db.collection('coffBalances').doc(staff).get();
+        let balanceHours = 0;
+        if (balanceDoc.exists) {
+            balanceHours = balanceDoc.data().balance || 0;
+        } else {
+            // Fallback to local cached balance
+            balanceHours = coffData.balances[staff] || 0;
         }
 
+        const balanceDays = balanceHours / 8;
+
+        let status = 'Not eligible for COFF';
+        let statusColor = '#e74c3c';
+
+        if (balanceHours >= 8) {           // At least one full day
+            status = 'Eligible for COFF';
+            statusColor = '#27ae60';
+        } else if (balanceHours >= 4) {    // At least half a day
+            status = 'Partial COFF available (minimum 8 hours / 1 day required)';
+            statusColor = '#f39c12';
+        }
+
+        balanceDiv.innerHTML = `
+            <div style="font-size: 1.5em; font-weight: bold; color: ${statusColor};">
+                ${balanceHours.toFixed(1)} hours (${balanceDays.toFixed(2)} days)
+            </div>
+            <div style="color: ${statusColor}; margin-top: 5px;">${status}</div>
+        `;
+    } catch (error) {
+        console.error('Error fetching COFF balance:', error);
+        balanceDiv.innerHTML = '<span style="color: #e74c3c;">Error loading balance</span>';
+    }
+}
         async function submitCOFF() {
             const staff = document.getElementById('coffStaff').value;
             const fromDate = document.getElementById('coffFromDate').value;
@@ -10106,138 +10131,266 @@ function renderCOFFHistoryWithGrouping() {
         }
 
         // ============== APPROVAL FUNCTIONS ==============
-        function renderApprovals() {
-            const pendingContainer = document.getElementById('pending-approvals-container');
-            const approvedContainer = document.getElementById('approved-leaves-container');
-            const rejectedContainer = document.getElementById('rejected-leaves-container');
+function renderApprovals() {
+    const pendingContainer = document.getElementById('pending-approvals-container');
+    const approvedContainer = document.getElementById('approved-leaves-container');
+    const rejectedContainer = document.getElementById('rejected-leaves-container');
 
-            // Filter leave requests by status
-            const pendingRequests = leaveRequests.filter(req => req.status === 'pending');
-            const approvedRequests = leaveRequests.filter(req => req.status === 'approved');
-            const rejectedRequests = leaveRequests.filter(req => req.status === 'rejected');
+    // Get unique staff members from leave requests
+    const staffList = [...new Set(leaveRequests.map(req => req.staff))].sort();
+    
+    // Create filter dropdown if not exists
+    let filterHTML = `
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div style="font-weight: 600; color: #2c3e50;">Filter by User:</div>
+                <select id="approvalUserFilter" style="width: 200px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;" onchange="filterApprovalsByUser()">
+                    <option value="all">All Users</option>
+                    ${staffList.map(staff => {
+                        const abbrev = staffAbbreviations[staff] || staff.substring(0, 3);
+                        return `<option value="${staff}">${abbrev} (${staff})</option>`;
+                    }).join('')}
+                </select>
+                <button onclick="clearApprovalFilter()" style="padding: 8px 15px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer;">Clear Filter</button>
+            </div>
+        </div>
+    `;
 
-            // Render pending approvals
-            if (pendingRequests.length === 0) {
-                pendingContainer.innerHTML = '<p>No pending approvals.</p>';
-            } else {
-                let html = '<div class="approval-list">';
+    // Filter leave requests by user if filter is set
+    const filterUser = document.getElementById('approvalUserFilter')?.value || 'all';
+    
+    // Sort function for dates (oldest first)
+    const sortByDateAsc = (a, b) => new Date(a.date) - new Date(b.date);
+    
+    // Filter and sort pending requests
+    let pendingRequests = leaveRequests
+        .filter(req => req.status === 'pending')
+        .sort(sortByDateAsc);
+    
+    if (filterUser !== 'all') {
+        pendingRequests = pendingRequests.filter(req => req.staff === filterUser);
+    }
 
-                pendingRequests.forEach(request => {
-                    const abbrev = staffAbbreviations[request.staff];
-                    const date = new Date(request.date);
-                    const dateStr = date.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
+    // Render pending approvals
+    if (pendingRequests.length === 0) {
+        pendingContainer.innerHTML = filterHTML + '<p>No pending approvals for selected filter.</p>';
+    } else {
+        let html = filterHTML;
+        html += '<div class="approval-list">';
 
-                    html += `
-                            <div class="approval-item">
-                                <div class="approval-header">
-                                    <div>
-                                        <strong>${abbrev} (${request.staff})</strong><br>
-                                        <small>${dateStr} • ${request.type} leave</small>
-                                    </div>
-                                    <div style="font-size: 0.8em; color: #7f8c8d;">
-                                        Requested by: ${request.requestedBy}<br>
-                                        ${new Date(request.requestedDate).toLocaleDateString()}
-                                    </div>
-                                </div>
-                                ${request.reason ? `<div style="margin-top: 5px;"><em>Reason: ${request.reason}</em></div>` : ''}
-                                <div class="approval-actions">
-                                    <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
-                                    <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
+        // Group by user for better organization
+        const groupedByUser = {};
+        pendingRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
+            }
+            groupedByUser[request.staff].push(request);
+        });
+
+        // Display each user's requests
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
+            
+            html += `
+                <div style="margin-bottom: 15px;">
+                    <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 10px; border-radius: 8px 8px 0 0;">
+                        <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                        <span style="float: right;">${userRequests.length} request(s)</span>
+                    </div>
+            `;
+
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Calculate request age
+                const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+                const ageText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
+
+                html += `
+                    <div class="approval-item" style="border-left: 4px solid #f39c12; border-radius: 0; border-bottom: 1px solid #eee;">
+                        <div class="approval-header">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.9em; color: #666; min-width: 80px;">${ageText}</span>
+                                <div>
+                                    <strong>${dateStr}</strong><br>
+                                    <small style="color: #666;">${request.type} leave</small>
                                 </div>
                             </div>
-                        `;
-                });
-
-                html += '</div>';
-                pendingContainer.innerHTML = html;
-            }
-
-            // Render approved leaves (last 30 days)
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-            const recentApproved = approvedRequests.filter(req =>
-                new Date(req.date) >= thirtyDaysAgo
-            ).slice(0, 10); // Show only recent 10
-
-            if (recentApproved.length === 0) {
-                approvedContainer.innerHTML = '<p>No recently approved leaves.</p>';
-            } else {
-                let html = '<div class="approval-list">';
-
-                recentApproved.forEach(request => {
-                    const abbrev = staffAbbreviations[request.staff];
-                    const date = new Date(request.date);
-                    const dateStr = date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                    });
-
-                    html += `
-                            <div class="approval-item approved">
-                                <div class="approval-header">
-                                    <div>
-                                        <strong>${abbrev} (${request.staff})</strong><br>
-                                        <small>${dateStr} • ${request.type} leave</small>
-                                    </div>
-                                    <div style="font-size: 0.8em; color: #27ae60;">
-                                        Approved<br>
-                                        ${request.approvedBy ? `by ${request.approvedBy}` : ''}
-                                    </div>
-                                </div>
-                                ${request.approvalReason ? `<div style="margin-top: 5px;"><em>Approval note: ${request.approvalReason}</em></div>` : ''}
+                            <div style="font-size: 0.8em; color: #7f8c8d;">
+                                Requested by: ${request.requestedBy}<br>
+                                ${new Date(request.requestedDate).toLocaleDateString()}
                             </div>
-                        `;
+                        </div>
+                        ${request.reason ? `<div style="margin: 5px 0 0 90px;"><em>Reason: ${request.reason}</em></div>` : ''}
+                        <div class="approval-actions" style="margin-left: 90px;">
+                            <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
+                            <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+        pendingContainer.innerHTML = html;
+    }
+
+    // Filter and sort approved requests (last 30 days, oldest first)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    let approvedRequests = leaveRequests
+        .filter(req => req.status === 'approved' && new Date(req.date) >= thirtyDaysAgo)
+        .sort(sortByDateAsc)
+        .slice(0, 30); // Show last 30 approved
+
+    if (filterUser !== 'all') {
+        approvedRequests = approvedRequests.filter(req => req.staff === filterUser);
+    }
+
+    if (approvedRequests.length === 0) {
+        approvedContainer.innerHTML = '<p>No approved leaves in the last 30 days for selected filter.</p>';
+    } else {
+        let html = '<div class="approval-list">';
+
+        // Group by user
+        const groupedByUser = {};
+        approvedRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
+            }
+            groupedByUser[request.staff].push(request);
+        });
+
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
+            
+            html += `
+                <div style="margin-bottom: 10px;">
+                    <div style="background: #27ae60; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
+                        <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                        <span style="float: right;">${userRequests.length} approved</span>
+                    </div>
+            `;
+
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
                 });
 
-                html += '</div>';
-                approvedContainer.innerHTML = html;
-            }
-
-            // Render rejected leaves (last 30 days)
-            const recentRejected = rejectedRequests.filter(req =>
-                new Date(req.date) >= thirtyDaysAgo
-            ).slice(0, 10); // Show only recent 10
-
-            if (recentRejected.length === 0) {
-                rejectedContainer.innerHTML = '<p>No recently rejected leaves.</p>';
-            } else {
-                let html = '<div class="approval-list">';
-
-                recentRejected.forEach(request => {
-                    const abbrev = staffAbbreviations[request.staff];
-                    const date = new Date(request.date);
-                    const dateStr = date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                    });
-
-                    html += `
-                            <div class="approval-item rejected">
-                                <div class="approval-header">
-                                    <div>
-                                        <strong>${abbrev} (${request.staff})</strong><br>
-                                        <small>${dateStr} • ${request.type} leave</small>
-                                    </div>
-                                    <div style="font-size: 0.8em; color: #e74c3c;">
-                                        Rejected<br>
-                                        ${request.rejectedBy ? `by ${request.rejectedBy}` : ''}
-                                    </div>
-                                </div>
-                                ${request.rejectionReason ? `<div style="margin-top: 5px;"><em>Rejection reason: ${request.rejectionReason}</em></div>` : ''}
+                html += `
+                    <div class="approval-item approved" style="border-radius: 0; border-bottom: 1px solid #eee;">
+                        <div class="approval-header">
+                            <div>
+                                <strong>${dateStr}</strong> • ${request.type} leave
                             </div>
-                        `;
+                            <div style="font-size: 0.8em; color: #27ae60;">
+                                Approved ${request.approvedBy ? `by ${request.approvedBy}` : ''}
+                            </div>
+                        </div>
+                        ${request.approvalReason ? `<div style="margin-top: 5px;"><em>Note: ${request.approvalReason}</em></div>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+        approvedContainer.innerHTML = html;
+    }
+
+    // Filter and sort rejected requests (last 30 days, oldest first)
+    let rejectedRequests = leaveRequests
+        .filter(req => req.status === 'rejected' && new Date(req.date) >= thirtyDaysAgo)
+        .sort(sortByDateAsc)
+        .slice(0, 30); // Show last 30 rejected
+
+    if (filterUser !== 'all') {
+        rejectedRequests = rejectedRequests.filter(req => req.staff === filterUser);
+    }
+
+    if (rejectedRequests.length === 0) {
+        rejectedContainer.innerHTML = '<p>No rejected leaves in the last 30 days for selected filter.</p>';
+    } else {
+        let html = '<div class="approval-list">';
+
+        // Group by user
+        const groupedByUser = {};
+        rejectedRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
+            }
+            groupedByUser[request.staff].push(request);
+        });
+
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
+            
+            html += `
+                <div style="margin-bottom: 10px;">
+                    <div style="background: #e74c3c; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
+                        <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                        <span style="float: right;">${userRequests.length} rejected</span>
+                    </div>
+            `;
+
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
                 });
 
-                html += '</div>';
-                rejectedContainer.innerHTML = html;
-            }
-        }
+                html += `
+                    <div class="approval-item rejected" style="border-radius: 0; border-bottom: 1px solid #eee;">
+                        <div class="approval-header">
+                            <div>
+                                <strong>${dateStr}</strong> • ${request.type} leave
+                            </div>
+                            <div style="font-size: 0.8em; color: #e74c3c;">
+                                Rejected ${request.rejectedBy ? `by ${request.rejectedBy}` : ''}
+                            </div>
+                        </div>
+                        ${request.rejectionReason ? `<div style="margin-top: 5px;"><em>Reason: ${request.rejectionReason}</em></div>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+        rejectedContainer.innerHTML = html;
+    }
+}
+
+// Filter function to refresh approvals when user filter changes
+function filterApprovalsByUser() {
+    renderApprovals();
+}
+
+// Clear filter function
+function clearApprovalFilter() {
+    const filterSelect = document.getElementById('approvalUserFilter');
+    if (filterSelect) {
+        filterSelect.value = 'all';
+    }
+    renderApprovals();
+}
 
         function showApprovalReasonModal(requestId, action) {
             currentApprovalRequestId = requestId;
@@ -10874,67 +11027,74 @@ async function submitCOFF() {
     const staff = document.getElementById('coffStaff').value;
     const fromDate = document.getElementById('coffFromDate').value;
     const toDate = document.getElementById('coffToDate').value;
-    const reason = document.getElementById('coffReason').value.trim();
-    
+    const reason = document.getElementById('coffReason').value;
+
     if (!staff || !fromDate || !toDate) {
         alert('Please fill in all required fields');
         return;
     }
-    
-    const from = new Date(fromDate);
-    const to = new Date(toDate);
-    
-    if (from > to) {
-        alert('From date cannot be after To date');
+
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+
+    if (startDate > endDate) {
+        alert('To date cannot be earlier than from date');
         return;
     }
+
+    // Calculate days requested
+    const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    const daysRequested = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+    const hoursRequired = daysRequested * 8;
+
+    // FIXED: Get balance in hours (not days)
+    const balanceHours = coffData.balances[staff] || 0;
     
-    const timeDiff = Math.abs(to.getTime() - from.getTime());
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-    const hoursNeeded = daysDiff * 8;
-    
-    const balanceDoc = await db.collection('coffBalances').doc(staff).get();
-    const currentBalance = balanceDoc.exists ? (balanceDoc.data().balance || 0) : 0;
-    
-    if (currentBalance < hoursNeeded) {
-        alert(`Insufficient COFF balance!\nRequired: ${hoursNeeded} hours\nAvailable: ${currentBalance} hours`);
+    // FIXED: Check if enough hours available (8 hours = 1 day)
+    if (balanceHours < hoursRequired) {
+        alert(`Insufficient COFF balance!\n\n` +
+              `Required: ${hoursRequired} hours (${daysRequested} days)\n` +
+              `Available: ${balanceHours.toFixed(1)} hours (${(balanceHours/8).toFixed(1)} days)\n\n` +
+              `Minimum 8 hours (1 day) required.`);
         return;
     }
-    
-    if (!confirm(`Apply for ${daysDiff} day${daysDiff > 1 ? 's' : ''} COFF (${hoursNeeded} hours)?`)) {
+
+    if (!confirm(`Apply for ${daysRequested} day${daysRequested > 1 ? 's' : ''} COFF (${hoursRequired} hours)?\n\n` +
+                 `Available balance: ${balanceHours.toFixed(1)} hours (${(balanceHours/8).toFixed(1)} days)`)) {
         return;
     }
-    
-    showLoading('Submitting COFF request...');
-    
+
     try {
-        const applicationId = `coff_${Date.now()}`;
-        const timestamp = new Date().toISOString();
-        
-        await db.collection('coffApplications').doc(applicationId).set({
-            id: applicationId,
+        // Create COFF request
+        await db.collection('coffData').add({
             staff: staff,
+            type: 'pending',
             fromDate: fromDate,
             toDate: toDate,
-            days: daysDiff,
-            hours: hoursNeeded,
+            daysRequested: daysRequested,
+            hoursRequested: hoursRequired,
             reason: reason,
-            status: 'pending',
-            appliedBy: currentUser.email,
-            appliedAt: timestamp,
-            approvedBy: null,
-            approvedAt: null
+            requestedBy: currentUser.email,
+            requestedDate: new Date().toISOString(),
+            status: 'pending'
         });
-        
-        hideLoading();
-        alert('✅ COFF request submitted for approval!');
+
+        alert('✅ COFF request submitted successfully');
         closeModal('applyCOFFModal');
-        renderCOFFSummary();
-        
+
+        // Clear form
+        document.getElementById('coffFromDate').value = '';
+        document.getElementById('coffToDate').value = '';
+        document.getElementById('coffReason').value = '';
+
+        // Refresh COFF display
+        if (document.getElementById('coff-tab').classList.contains('active')) {
+            renderCOFFBreakdown();
+        }
+
     } catch (error) {
-        hideLoading();
         console.error('Error submitting COFF request:', error);
-        alert('❌ Error submitting COFF request: ' + error.message);
+        alert('❌ Failed to submit COFF request. Please try again.');
     }
 }
 
@@ -12771,5 +12931,6 @@ function hideLoading() {
     </script>
 </body>
 </html>
+
 
 
