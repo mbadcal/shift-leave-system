@@ -5267,10 +5267,6 @@
                     // Add touch event listeners
                     initTouchEvents();
 
-            // ============== ADD THIS LINE HERE ==============
-            scrollToTodayCard(); // This will scroll to today's card after login
-            // ============== END OF ADDED LINE ==============
-
                 } else {
                     // No user is signed in, show auth modal
                     document.getElementById('authModal').style.display = 'flex';
@@ -5388,31 +5384,6 @@
                 }
             }
         }
-// ============== ADD THIS NEW FUNCTION HERE Scrolling to today ==============
-function scrollToTodayCard() {
-    // Wait a moment for the UI to fully render
-    setTimeout(() => {
-        // Try to find today's card in week view first
-        const todayCard = document.querySelector('.day-card.today');
-        if (todayCard) {
-            todayCard.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-        } else {
-            // If not found, try month view
-            const todayCell = document.querySelector('.day-cell.today');
-            if (todayCell) {
-                todayCell.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-            }
-        }
-    }, 500); // 500ms delay to ensure rendering is complete
-}
-// ============== END OF NEW FUNCTION ==============
-
         function renderTodayView() {
             const container = document.getElementById('todayViewContainer');
             const date = currentDayView;
