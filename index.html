@@ -793,10 +793,56 @@
                 box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
 
-            .day-card.today {
-                border-color: #3498db;
-                background-color: #e8f4fc;
-            }
+.day-card.today {
+    border: 3px solid #0b3b5c !important; /* much darker blue */
+    background: linear-gradient(145deg, #d4e6f1 0%, #a9c9e0 100%) !important;
+    box-shadow: 0 6px 12px rgba(11, 59, 92, 0.3) !important;
+    transform: scale(1.01);
+    position: relative;
+    overflow: visible;
+}
+
+/* TODAY badge at top center */
+.day-card.today::before {
+    content: "📅 TODAY";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0b3b5c;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 20;
+    white-space: nowrap;
+    border: 1px solid #ffd966;
+}
+
+/* Adjust header inside today card */
+.day-card.today .day-header {
+    background: rgba(11, 59, 92, 0.15);
+    border-radius: 6px;
+    padding: 10px 8px 8px 8px; /* extra top padding to accommodate badge */
+    margin: 5px -5px 10px -5px;
+}
+
+.day-card.today .day-name {
+    color: #0b3b5c;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.day-card.today .date {
+    color: #1a4d6b;
+    font-weight: bold;
+    background: rgba(255,255,255,0.7);
+    padding: 2px 10px;
+    border-radius: 20px;
+}
 
         .day-header {
             display: flex;
@@ -5589,7 +5635,7 @@ if (isSkeleton) additionalClass = 'skeleton-cell';
 if (isToday) {
     dayCard.className = `day-card today enhanced-today`;
     // Add a special style attribute for extra prominence
-    dayCard.setAttribute('style', 'border: 3px solid #e74c3c !important; background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);');
+    dayCard.setAttribute('style', 'border: 3px solid #0b3b5c !important; background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);');
 } else {
     dayCard.className = `day-card ${additionalClass}`;
 }
@@ -13159,6 +13205,7 @@ function hideLoading() {
     </script>
 </body>
 </html>
+
 
 
 
