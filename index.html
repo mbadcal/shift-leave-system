@@ -2963,15 +2963,15 @@
     </div>
 
     <!-- Main Container (Initially Hidden) -->
-    <div class="container" style="display: none;">
-        <h1>📅 Shift & Leave Management System</h1>
+<div class="container" style="display: none;">
+    <h1>📅 Shift & Leave Management System</h1>
 
     <!-- Mobile Header Toggle Button -->
     <div class="mobile-header-toggle">
         <button id="headerToggleBtn" class="toggle-btn" onclick="toggleHeaderContent()">🔽 Show Header</button>
     </div>
 
-    <!-- Collapsible Header Content - ONLY STATS AND TABS -->
+    <!-- Collapsible Content - EVERYTHING from viewer message through controls -->
     <div id="headerContent" class="header-content collapsed">
         <div class="viewer-message" id="viewerMessage">
             <h3>👁️ Viewer Mode</h3>
@@ -3011,83 +3011,86 @@
             <div class="tab" id="adminToolsTab" onclick="switchTab('admin-tools')" style="display: none;">🛠️ Admin Tools</div>
             <div class="tab" onclick="logoutUser()" style="color: #e74c3c;">🚪 Logout</div>
         </div>
+
+        <!-- View Toggle Buttons (Today/Week/Month) -->
+        <div class="view-toggle">
+            <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
+            <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
+            <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
+        </div>
+
+        <!-- Controls Buttons (Admin Only) -->
+        <div class="controls admin-only" style="display: none;">
+            <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
+            <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
+            <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
+            <button onclick="openSingleDayShiftModal()">📅 Shift Change</button>
+            <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
+            <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
+            <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
+            <button onclick="openLateEntryModal()">⏰ Late Entry</button>
+            <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
+            <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
+            <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
+            <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
+            <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
+        </div>
+
+        <!-- Staff List -->
+        <div class="staff-list" id="staff-list">
+            <!-- Staff list will be populated by JavaScript -->
+        </div>
     </div>
 
-        <!-- Dashboard Tab -->
-        <div id="dashboard-tab" class="tab-content active">
-            <div class="view-toggle">
-                <button id="viewTodayBtn" onclick="switchView('today')">📅 Today</button>
-                <button id="viewWeekBtn" class="active" onclick="switchView('week')">📅 Week View (7 Days)</button>
-                <button id="viewMonthBtn" onclick="switchView('month')">📆 Month View</button>
-            </div>
-
-            <div class="controls admin-only" style="display: none;">
-                <button onclick="openAddLeaveModal()">➕ Apply Leave</button>
-                <button onclick="openCancelLeaveModal()">❌ Cancel Leave</button>
-                <button onclick="openEditShiftModal()">✏️ Edit Shift</button>
-                <button onclick="openSingleDayShiftModal()">📅 Shift Change</button>
-                <button onclick="openEditObituaryModal()">📋 Edit Obituary Duty</button>
-                <button onclick="openOffDutyModal()">📝 Off-Duty Working</button>
-                <button onclick="openOnDutyModal()">🏢 On Duty (OD)</button>
-                <button onclick="openLateEntryModal()">⏰ Late Entry</button>
-                <button onclick="openExtraHoursModal()">⏰ Add Extra Hours</button>
-                <button onclick="openCancelOffDutyModal()">🗑️ Cancel Off-Duty</button>
-                <button onclick="openApplyCOFFModal()">🔄 Apply COFF</button>
-                <button onclick="openHolidayModal()">🎉 Add/Remove Holiday</button>
-                <button onclick="openSkeletonModal()">💀 Add/Remove Skeleton Shift</button>
-            </div>
-
-            <div class="staff-list" id="staff-list">
-                <!-- Staff list will be populated by JavaScript -->
-            </div>
-
-            <!-- Today View -->
-            <div id="todayView" class="day-view">
-                <div class="day-navigation">
-                    <div class="nav-title" id="dayTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousDay()">◀ Previous Day</button>
-                        <button onclick="goToToday()">Today</button>
-                        <button onclick="nextDay()">Next Day ▶</button>
-                    </div>
-                </div>
-                <div class="day-view-container" id="todayViewContainer">
-                    <!-- Today view will be populated by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Week View (7 Days) -->
-            <div id="calendarView" class="calendar-view active">
-                <div class="week-navigation">
-                    <div class="nav-title" id="weekTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousWeek()">◀ Previous Week</button>
-                        <button onclick="goToTodayWeek()">Today</button>
-                        <button onclick="nextWeek()">Next Week ▶</button>
-                    </div>
-                </div>
-
-                <div class="calendar" id="calendar">
-                    <!-- Calendar will be populated by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Month View -->
-            <div id="monthView" class="month-view">
-                <div class="month-navigation">
-                    <div class="nav-title" id="monthTitle"></div>
-                    <div class="nav-buttons">
-                        <button onclick="previousMonth()">◀ Previous Month</button>
-                        <button onclick="goToTodayMonth()">Today</button>
-                        <button onclick="nextMonth()">Next Month ▶</button>
-                    </div>
-                </div>
-
-                <div class="month-grid" id="monthGrid">
-                    <!-- Month grid will be populated by JavaScript -->
-                </div>
+    <!-- EVERYTHING BELOW HERE STAYS VISIBLE ALWAYS -->
+    
+    <!-- Today View -->
+    <div id="todayView" class="day-view">
+        <div class="day-navigation">
+            <div class="nav-title" id="dayTitle"></div>
+            <div class="nav-buttons">
+                <button onclick="previousDay()">◀ Previous Day</button>
+                <button onclick="goToToday()">Today</button>
+                <button onclick="nextDay()">Next Day ▶</button>
             </div>
         </div>
+        <div class="day-view-container" id="todayViewContainer">
+            <!-- Today view will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Week View (7 Days) -->
+    <div id="calendarView" class="calendar-view active">
+        <div class="week-navigation">
+            <div class="nav-title" id="weekTitle"></div>
+            <div class="nav-buttons">
+                <button onclick="previousWeek()">◀ Previous Week</button>
+                <button onclick="goToTodayWeek()">Today</button>
+                <button onclick="nextWeek()">Next Week ▶</button>
+            </div>
+        </div>
+
+        <div class="calendar" id="calendar">
+            <!-- Calendar will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Month View -->
+    <div id="monthView" class="month-view">
+        <div class="month-navigation">
+            <div class="nav-title" id="monthTitle"></div>
+            <div class="nav-buttons">
+                <button onclick="previousMonth()">◀ Previous Month</button>
+                <button onclick="goToTodayMonth()">Today</button>
+                <button onclick="nextMonth()">Next Month ▶</button>
+            </div>
+        </div>
+
+        <div class="month-grid" id="monthGrid">
+            <!-- Month grid will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
 
         <!-- Approvals Tab -->
         <div id="approvals-tab" class="tab-content">
