@@ -2823,6 +2823,60 @@
                 border-left-color: #9b59b6;
                 color: #8e44ad;
             }
+/* ============== NEW MOBILE TOGGLE BUTTON STYLES ============== */
+.mobile-header-toggle {
+    display: none;
+    margin: 10px 0;
+    justify-content: center;
+}
+
+.toggle-btn {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    border: 2px solid rgba(255,255,255,0.3);
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto;
+}
+
+.toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.toggle-btn:active {
+    transform: translateY(0);
+}
+
+.toggle-btn.collapsed {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
+/* Collapsible content */
+.header-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.header-content.collapsed {
+    display: none;
+}
+
+/* Mobile-specific toggle visibility */
+@media (max-width: 768px) {
+    .mobile-header-toggle {
+        display: flex;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -2911,6 +2965,14 @@
     <!-- Main Container (Initially Hidden) -->
     <div class="container" style="display: none;">
         <h1>📅 Shift & Leave Management System</h1>
+
+            <!-- Mobile Header Toggle Button -->
+    <div class="mobile-header-toggle">
+        <button id="headerToggleBtn" class="toggle-btn" onclick="toggleHeaderContent()">🔽 Hide Header</button>
+    </div>
+
+    <!-- Collapsible Header Content -->
+    <div id="headerContent" class="header-content">
 
         <div class="viewer-message" id="viewerMessage">
             <h3>👁️ Viewer Mode</h3>
@@ -5266,6 +5328,9 @@
 
                     // Add touch event listeners
                     initTouchEvents();
+
+                    // Initialize mobile header toggle
+                    initHeaderToggle();
 
                 } else {
                     // No user is signed in, show auth modal
@@ -13167,13 +13232,108 @@
             }
         }
 
+        // ============== NEW MOBILE TOGGLE FUNCTIONS ==============
+function toggleHeaderContent() {
+    const headerContent = document.getElementById('headerContent');
+    const toggleBtn = document.getElementById('headerToggleBtn');
+
+    if (headerContent.classList.contains('collapsed')) {
+        // Expand
+        headerContent.classList.remove('collapsed');
+        headerContent.style.display = 'block';
+        toggleBtn.innerHTML = '🔽 Hide Header';
+        toggleBtn.classList.remove('collapsed');
+        localStorage.setItem('headerCollapsed', 'false');
+    } else {
+        // Collapse
+        headerContent.classList.add('collapsed');
+        headerContent.style.display = 'none';
+        toggleBtn.innerHTML = '🔼 Show Header';
+        toggleBtn.classList.add('collapsed');
+        localStorage.setItem('headerCollapsed', 'true');
+    }
+}
+
+// Initialize header state on page load (for mobile)
+function initHeaderToggle() {
+    // Only run on mobile
+    if (window.innerWidth <= 768) {
+        const headerContent = document.getElementById('headerContent');
+        const toggleBtn = document.getElementById('headerToggleBtn');
+
+        // Check if user has a saved preference
+        const savedState = localStorage.getItem('headerCollapsed');
+
+        if (savedState === 'true') {
+            // Start collapsed
+            headerContent.classList.add('collapsed');
+            headerContent.style.display = 'none';
+            toggleBtn.innerHTML = '🔼 Show Header';
+            toggleBtn.classList.add('collapsed');
+        } else {
+            // Start expanded (default)
+            headerContent.classList.remove('collapsed');
+            headerContent.style.display = 'block';
+            toggleBtn.innerHTML = '🔽 Hide Header';
+            toggleBtn.classList.remove('collapsed');
+        }
+    } else {
+        // On desktop, always show header and hide toggle button
+        const headerContent = document.getElementById('headerContent');
+        const toggleBtn = document.getElementById('headerToggleBtn');
+        const toggleContainer = document.querySelector('.mobile-header-toggle');
+
+        if (headerContent) {
+            headerContent.classList.remove('collapsed');
+            headerContent.style.display = 'block';
+        }
+
+        if (toggleContainer) {
+            toggleContainer.style.display = 'none';
+        }
+    }
+}
+
+// Listen for window resize to handle desktop/mobile transitions
+window.addEventListener('resize', function() {
+    const headerContent = document.getElementById('headerContent');
+    const toggleBtn = document.getElementById('headerToggleBtn');
+    const toggleContainer = document.querySelector('.mobile-header-toggle');
+
+    if (window.innerWidth <= 768) {
+        // Mobile view
+        if (toggleContainer) {
+            toggleContainer.style.display = 'flex';
+        }
+
+        // Restore saved state
+        const savedState = localStorage.getItem('headerCollapsed');
+        if (savedState === 'true') {
+            headerContent.classList.add('collapsed');
+            headerContent.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '🔼 Show Header';
+                toggleBtn.classList.add('collapsed');
+            }
+        } else {
+            headerContent.classList.remove('collapsed');
+            headerContent.style.display = 'block';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '🔽 Hide Header';
+                toggleBtn.classList.remove('collapsed');
+            }
+        }
+    } else {
+        // Desktop view
+        headerContent.classList.remove('collapsed');
+        headerContent.style.display = 'block';
+        if (toggleContainer) {
+            toggleContainer.style.display = 'none';
+        }
+    }
+});
+
     </script>
 </body>
 </html>
-
-
-
-
-
-
 
