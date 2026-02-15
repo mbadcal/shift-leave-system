@@ -2966,17 +2966,15 @@
     <div class="container" style="display: none;">
         <h1>📅 Shift & Leave Management System</h1>
 
-            <!-- Mobile Header Toggle Button -->
+    <!-- Mobile Header Toggle Button -->
     <div class="mobile-header-toggle">
-        <button id="headerToggleBtn" class="toggle-btn" onclick="toggleHeaderContent()">🔽 Hide Header</button>
+        <button id="headerToggleBtn" class="toggle-btn" onclick="toggleHeaderContent()">🔽 Show Header</button>
     </div>
 
-    <!-- Collapsible Header Content -->
-    <div id="headerContent" class="header-content">
-
+    <!-- Collapsible Header Content - ONLY STATS AND TABS -->
+    <div id="headerContent" class="header-content collapsed">
         <div class="viewer-message" id="viewerMessage">
             <h3>👁️ Viewer Mode</h3>
-
         </div>
 
         <div class="stats-bar">
@@ -3013,6 +3011,7 @@
             <div class="tab" id="adminToolsTab" onclick="switchTab('admin-tools')" style="display: none;">🛠️ Admin Tools</div>
             <div class="tab" onclick="logoutUser()" style="color: #e74c3c;">🚪 Logout</div>
         </div>
+    </div>
 
         <!-- Dashboard Tab -->
         <div id="dashboard-tab" class="tab-content active">
@@ -13238,17 +13237,17 @@ function toggleHeaderContent() {
     const toggleBtn = document.getElementById('headerToggleBtn');
 
     if (headerContent.classList.contains('collapsed')) {
-        // Expand
+        // Expand - SHOW stats and tabs
         headerContent.classList.remove('collapsed');
         headerContent.style.display = 'block';
         toggleBtn.innerHTML = '🔽 Hide Header';
         toggleBtn.classList.remove('collapsed');
         localStorage.setItem('headerCollapsed', 'false');
     } else {
-        // Collapse
+        // Collapse - HIDE stats and tabs
         headerContent.classList.add('collapsed');
         headerContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔼 Show Header';
+        toggleBtn.innerHTML = '🔽 Show Header';
         toggleBtn.classList.add('collapsed');
         localStorage.setItem('headerCollapsed', 'true');
     }
@@ -13260,27 +13259,22 @@ function initHeaderToggle() {
     if (window.innerWidth <= 768) {
         const headerContent = document.getElementById('headerContent');
         const toggleBtn = document.getElementById('headerToggleBtn');
+        const toggleContainer = document.querySelector('.mobile-header-toggle');
 
-        // Check if user has a saved preference
-        const savedState = localStorage.getItem('headerCollapsed');
-
-        if (savedState === 'true') {
-            // Start collapsed
-            headerContent.classList.add('collapsed');
-            headerContent.style.display = 'none';
-            toggleBtn.innerHTML = '🔼 Show Header';
-            toggleBtn.classList.add('collapsed');
-        } else {
-            // Start expanded (default)
-            headerContent.classList.remove('collapsed');
-            headerContent.style.display = 'block';
-            toggleBtn.innerHTML = '🔽 Hide Header';
-            toggleBtn.classList.remove('collapsed');
+        // Ensure toggle container is visible
+        if (toggleContainer) {
+            toggleContainer.style.display = 'flex';
         }
+
+        // Start COLLAPSED by default (stats and tabs hidden)
+        headerContent.classList.add('collapsed');
+        headerContent.style.display = 'none';
+        toggleBtn.innerHTML = '🔽 Show Header';
+        toggleBtn.classList.add('collapsed');
+        
     } else {
-        // On desktop, always show header and hide toggle button
+        // On desktop, always show stats/tabs and hide toggle button
         const headerContent = document.getElementById('headerContent');
-        const toggleBtn = document.getElementById('headerToggleBtn');
         const toggleContainer = document.querySelector('.mobile-header-toggle');
 
         if (headerContent) {
@@ -13294,7 +13288,7 @@ function initHeaderToggle() {
     }
 }
 
-// Listen for window resize to handle desktop/mobile transitions
+// Listen for window resize
 window.addEventListener('resize', function() {
     const headerContent = document.getElementById('headerContent');
     const toggleBtn = document.getElementById('headerToggleBtn');
@@ -13305,26 +13299,15 @@ window.addEventListener('resize', function() {
         if (toggleContainer) {
             toggleContainer.style.display = 'flex';
         }
-
-        // Restore saved state
-        const savedState = localStorage.getItem('headerCollapsed');
-        if (savedState === 'true') {
-            headerContent.classList.add('collapsed');
-            headerContent.style.display = 'none';
-            if (toggleBtn) {
-                toggleBtn.innerHTML = '🔼 Show Header';
-                toggleBtn.classList.add('collapsed');
-            }
-        } else {
-            headerContent.classList.remove('collapsed');
-            headerContent.style.display = 'block';
-            if (toggleBtn) {
-                toggleBtn.innerHTML = '🔽 Hide Header';
-                toggleBtn.classList.remove('collapsed');
-            }
-        }
+        
+        // Always collapsed on mobile by default
+        headerContent.classList.add('collapsed');
+        headerContent.style.display = 'none';
+        toggleBtn.innerHTML = '🔽 Show Header';
+        toggleBtn.classList.add('collapsed');
+        
     } else {
-        // Desktop view
+        // Desktop view - always show stats/tabs
         headerContent.classList.remove('collapsed');
         headerContent.style.display = 'block';
         if (toggleContainer) {
