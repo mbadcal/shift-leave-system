@@ -2877,6 +2877,22 @@
     }
 }
 
+/* Desktop - ensure content is always visible */
+@media (min-width: 769px) {
+    .header-content {
+        display: block !important;
+    }
+    
+    .header-content.collapsed {
+        display: block !important; /* Override collapsed class on desktop */
+    }
+    
+    .mobile-header-toggle {
+        display: none !important;
+    }
+
+}
+
     </style>
 </head>
 <body>
@@ -3043,6 +3059,9 @@
     </div>
 
     <!-- EVERYTHING BELOW HERE STAYS VISIBLE ALWAYS -->
+
+    <!-- DASHBOARD TAB -->
+    <div id="dashboard-tab" class="tab-content active">
     
     <!-- Today View -->
     <div id="todayView" class="day-view">
@@ -6256,48 +6275,42 @@
             document.getElementById('dayDetailsModal').style.display = 'flex';
         }
 
-        function switchTab(tabName) {
-            // 1. Remove 'active' class from all tabs and all tab-content sections
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
+function switchTab(tabName) {
+    // Remove 'active' class from all tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
 
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => content.classList.remove('active'));
+    // Remove 'active' class from all tab-content sections
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.classList.remove('active'));
 
-            // 2. Activate the selected tab content
-            const selectedContent = document.getElementById(`${tabName}-tab`);
-            if (selectedContent) {
-                selectedContent.classList.add('active');
-            }
+    // Activate the selected tab content
+    const selectedContent = document.getElementById(`${tabName}-tab`);
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    }
 
-            // 3. Activate the specific tab button using its ID (More reliable than event.target)
-            // Map your tab names to their specific IDs
-            const tabIdMap = {
-                'dashboard': 'dashboardTab', // assuming these IDs exist
-                'approvals': 'approvalsTab',
-                'coff': 'coffTab',
-                'reports': 'reportsTab',
-                'admin-tools': 'adminToolsTab'
-            };
-
-            const tabButton = document.getElementById(tabIdMap[tabName]);
-            if (tabButton) {
-                tabButton.classList.add('active');
-            }
-
-            // 4. Refresh content based on the active tab
-            if (tabName === 'approvals') {
-                renderApprovals();
-            } else if (tabName === 'coff') {
-                renderCOFFBreakdown();
-                renderCOFFHistoryWithGrouping();
-            } else if (tabName === 'reports') {
-                document.getElementById('report-container').innerHTML = '<p>Select a report to generate</p>';
-                document.getElementById('attendance-nav').style.display = 'none';
-            } else if (tabName === 'admin-tools') {
-                loadCollectionStatus();
-            }
+    // Find and activate the clicked tab button by matching the onclick attribute
+    tabs.forEach(tab => {
+        const onclickAttr = tab.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(`'${tabName}'`)) {
+            tab.classList.add('active');
         }
+    });
+
+    // Refresh content based on the active tab
+    if (tabName === 'approvals') {
+        renderApprovals();
+    } else if (tabName === 'coff') {
+        renderCOFFBreakdown();
+        renderCOFFHistoryWithGrouping();
+    } else if (tabName === 'reports') {
+        document.getElementById('report-container').innerHTML = '<p>Select a report to generate</p>';
+        document.getElementById('attendance-nav').style.display = 'none';
+    } else if (tabName === 'admin-tools') {
+        loadCollectionStatus();
+    }
+}
         function switchView(viewType) {
             // Update buttons
             document.getElementById('viewTodayBtn').classList.remove('active');
@@ -10437,252 +10450,256 @@
         }
 
         // ============== APPROVAL FUNCTIONS ==============
-        function renderApprovals() {
-            const pendingContainer = document.getElementById('pending-approvals-container');
-            const approvedContainer = document.getElementById('approved-leaves-container');
-            const rejectedContainer = document.getElementById('rejected-leaves-container');
+function renderApprovals() {
+    const pendingContainer = document.getElementById('pending-approvals-container');
+    const approvedContainer = document.getElementById('approved-leaves-container');
+    const rejectedContainer = document.getElementById('rejected-leaves-container');
 
-            // Get unique staff members from leave requests
-            const staffList = [...new Set(leaveRequests.map(req => req.staff))].sort();
+    // Get unique staff members from leave requests
+    const staffList = [...new Set(leaveRequests.map(req => req.staff))].sort();
 
-            // Create filter dropdown if not exists
-            let filterHTML = `
-            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                    <div style="font-weight: 600; color: #2c3e50;">Filter by User:</div>
-                    <select id="approvalUserFilter" style="width: 200px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;" onchange="filterApprovalsByUser()">
-                        <option value="all">All Users</option>
-                        ${staffList.map(staff => {
-                const abbrev = staffAbbreviations[staff] || staff.substring(0, 3);
-                return `<option value="${staff}">${abbrev} (${staff})</option>`;
-            }).join('')}
-                    </select>
-                    <button onclick="clearApprovalFilter()" style="padding: 8px 15px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer;">Clear Filter</button>
+    // Get current filter value (if dropdown exists)
+    const existingFilter = document.getElementById('approvalUserFilter');
+    const currentFilter = existingFilter ? existingFilter.value : 'all';
+
+    // Create filter dropdown
+    let filterHTML = `
+    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="font-weight: 600; color: #2c3e50;">Filter by User:</div>
+            <select id="approvalUserFilter" style="width: 200px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;" onchange="filterApprovalsByUser()">
+                <option value="all">All Users</option>
+                ${staffList.map(staff => {
+                    const abbrev = staffAbbreviations[staff] || staff.substring(0, 3);
+                    return `<option value="${staff}" ${currentFilter === staff ? 'selected' : ''}>${abbrev} (${staff})</option>`;
+                }).join('')}
+            </select>
+            <button onclick="clearApprovalFilter()" style="padding: 8px 15px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer;">Clear Filter</button>
+        </div>
+    </div>
+    `;
+
+    // Filter leave requests by user if filter is set
+    const filterUser = currentFilter;
+
+    // Sort function for dates (oldest first)
+    const sortByDateAsc = (a, b) => new Date(a.date) - new Date(b.date);
+
+    // Filter and sort pending requests
+    let pendingRequests = leaveRequests
+        .filter(req => req.status === 'pending')
+        .sort(sortByDateAsc);
+
+    if (filterUser !== 'all') {
+        pendingRequests = pendingRequests.filter(req => req.staff === filterUser);
+    }
+
+    // Render pending approvals
+    if (pendingRequests.length === 0) {
+        pendingContainer.innerHTML = filterHTML + '<p>No pending approvals for selected filter.</p>';
+    } else {
+        let html = filterHTML;
+        html += '<div class="approval-list">';
+
+        // Group by user for better organization
+        const groupedByUser = {};
+        pendingRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
+            }
+            groupedByUser[request.staff].push(request);
+        });
+
+        // Display each user's requests
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
+
+            html += `
+            <div style="margin-bottom: 15px;">
+                <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 10px; border-radius: 8px 8px 0 0;">
+                    <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                    <span style="float: right;">${userRequests.length} request(s)</span>
                 </div>
-            </div>
         `;
 
-            // Filter leave requests by user if filter is set
-            const filterUser = document.getElementById('approvalUserFilter')?.value || 'all';
-
-            // Sort function for dates (oldest first)
-            const sortByDateAsc = (a, b) => new Date(a.date) - new Date(b.date);
-
-            // Filter and sort pending requests
-            let pendingRequests = leaveRequests
-                .filter(req => req.status === 'pending')
-                .sort(sortByDateAsc);
-
-            if (filterUser !== 'all') {
-                pendingRequests = pendingRequests.filter(req => req.staff === filterUser);
-            }
-
-            // Render pending approvals
-            if (pendingRequests.length === 0) {
-                pendingContainer.innerHTML = filterHTML + '<p>No pending approvals for selected filter.</p>';
-            } else {
-                let html = filterHTML;
-                html += '<div class="approval-list">';
-
-                // Group by user for better organization
-                const groupedByUser = {};
-                pendingRequests.forEach(request => {
-                    if (!groupedByUser[request.staff]) {
-                        groupedByUser[request.staff] = [];
-                    }
-                    groupedByUser[request.staff].push(request);
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
 
-                // Display each user's requests
-                Object.keys(groupedByUser).sort().forEach(staff => {
-                    const userRequests = groupedByUser[staff];
-                    const abbrev = staffAbbreviations[staff];
+                // Calculate request age
+                const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+                const ageText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
 
-                    html += `
-                    <div style="margin-bottom: 15px;">
-                        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 10px; border-radius: 8px 8px 0 0;">
-                            <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
-                            <span style="float: right;">${userRequests.length} request(s)</span>
-                        </div>
-                `;
-
-                    userRequests.forEach(request => {
-                        const date = new Date(request.date);
-                        const dateStr = date.toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
-
-                        // Calculate request age
-                        const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
-                        const ageText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
-
-                        html += `
-                        <div class="approval-item" style="border-left: 4px solid #f39c12; border-radius: 0; border-bottom: 1px solid #eee;">
-                            <div class="approval-header">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span style="font-size: 0.9em; color: #666; min-width: 80px;">${ageText}</span>
-                                    <div>
-                                        <strong>${dateStr}</strong><br>
-                                        <small style="color: #666;">${request.type} leave</small>
-                                    </div>
-                                </div>
-                                <div style="font-size: 0.8em; color: #7f8c8d;">
-                                    Requested by: ${request.requestedBy}<br>
-                                    ${new Date(request.requestedDate).toLocaleDateString()}
-                                </div>
-                            </div>
-                            ${request.reason ? `<div style="margin: 5px 0 0 90px;"><em>Reason: ${request.reason}</em></div>` : ''}
-                            <div class="approval-actions" style="margin-left: 90px;">
-                                <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
-                                <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
+                html += `
+                <div class="approval-item" style="border-left: 4px solid #f39c12; border-radius: 0; border-bottom: 1px solid #eee;">
+                    <div class="approval-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 0.9em; color: #666; min-width: 80px;">${ageText}</span>
+                            <div>
+                                <strong>${dateStr}</strong><br>
+                                <small style="color: #666;">${request.type} leave</small>
                             </div>
                         </div>
-                    `;
-                    });
-
-                    html += '</div>';
-                });
-
-                html += '</div>';
-                pendingContainer.innerHTML = html;
-            }
-
-            // Filter and sort approved requests (last 30 days, oldest first)
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-            let approvedRequests = leaveRequests
-                .filter(req => req.status === 'approved' && new Date(req.date) >= thirtyDaysAgo)
-                .sort(sortByDateAsc)
-                .slice(0, 30); // Show last 30 approved
-
-            if (filterUser !== 'all') {
-                approvedRequests = approvedRequests.filter(req => req.staff === filterUser);
-            }
-
-            if (approvedRequests.length === 0) {
-                approvedContainer.innerHTML = '<p>No approved leaves in the last 30 days for selected filter.</p>';
-            } else {
-                let html = '<div class="approval-list">';
-
-                // Group by user
-                const groupedByUser = {};
-                approvedRequests.forEach(request => {
-                    if (!groupedByUser[request.staff]) {
-                        groupedByUser[request.staff] = [];
-                    }
-                    groupedByUser[request.staff].push(request);
-                });
-
-                Object.keys(groupedByUser).sort().forEach(staff => {
-                    const userRequests = groupedByUser[staff];
-                    const abbrev = staffAbbreviations[staff];
-
-                    html += `
-                    <div style="margin-bottom: 10px;">
-                        <div style="background: #27ae60; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
-                            <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
-                            <span style="float: right;">${userRequests.length} approved</span>
+                        <div style="font-size: 0.8em; color: #7f8c8d;">
+                            Requested by: ${request.requestedBy}<br>
+                            ${new Date(request.requestedDate).toLocaleDateString()}
                         </div>
-                `;
+                    </div>
+                    ${request.reason ? `<div style="margin: 5px 0 0 90px;"><em>Reason: ${request.reason}</em></div>` : ''}
+                    <div class="approval-actions" style="margin-left: 90px;">
+                        <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
+                        <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
+                    </div>
+                </div>
+            `;
+            });
 
-                    userRequests.forEach(request => {
-                        const date = new Date(request.date);
-                        const dateStr = date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                        });
+            html += '</div>';
+        });
 
-                        html += `
-                        <div class="approval-item approved" style="border-radius: 0; border-bottom: 1px solid #eee;">
-                            <div class="approval-header">
-                                <div>
-                                    <strong>${dateStr}</strong> • ${request.type} leave
-                                </div>
-                                <div style="font-size: 0.8em; color: #27ae60;">
-                                    Approved ${request.approvedBy ? `by ${request.approvedBy}` : ''}
-                                </div>
-                            </div>
-                            ${request.approvalReason ? `<div style="margin-top: 5px;"><em>Note: ${request.approvalReason}</em></div>` : ''}
-                        </div>
-                    `;
-                    });
+        html += '</div>';
+        pendingContainer.innerHTML = html;
+    }
 
-                    html += '</div>';
+    // Filter and sort approved requests (last 30 days, oldest first)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    let approvedRequests = leaveRequests
+        .filter(req => req.status === 'approved' && new Date(req.date) >= thirtyDaysAgo)
+        .sort(sortByDateAsc)
+        .slice(0, 30); // Show last 30 approved
+
+    if (filterUser !== 'all') {
+        approvedRequests = approvedRequests.filter(req => req.staff === filterUser);
+    }
+
+    if (approvedRequests.length === 0) {
+        approvedContainer.innerHTML = '<p>No approved leaves in the last 30 days for selected filter.</p>';
+    } else {
+        let html = '<div class="approval-list">';
+
+        // Group by user
+        const groupedByUser = {};
+        approvedRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
+            }
+            groupedByUser[request.staff].push(request);
+        });
+
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
+
+            html += `
+            <div style="margin-bottom: 10px;">
+                <div style="background: #27ae60; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
+                    <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                    <span style="float: right;">${userRequests.length} approved</span>
+                </div>
+        `;
+
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
                 });
 
-                html += '</div>';
-                approvedContainer.innerHTML = html;
+                html += `
+                <div class="approval-item approved" style="border-radius: 0; border-bottom: 1px solid #eee;">
+                    <div class="approval-header">
+                        <div>
+                            <strong>${dateStr}</strong> • ${request.type} leave
+                        </div>
+                        <div style="font-size: 0.8em; color: #27ae60;">
+                            Approved ${request.approvedBy ? `by ${request.approvedBy}` : ''}
+                        </div>
+                    </div>
+                    ${request.approvalReason ? `<div style="margin-top: 5px;"><em>Note: ${request.approvalReason}</em></div>` : ''}
+                </div>
+            `;
+            });
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+        approvedContainer.innerHTML = html;
+    }
+
+    // Filter and sort rejected requests (last 30 days, oldest first)
+    let rejectedRequests = leaveRequests
+        .filter(req => req.status === 'rejected' && new Date(req.date) >= thirtyDaysAgo)
+        .sort(sortByDateAsc)
+        .slice(0, 30); // Show last 30 rejected
+
+    if (filterUser !== 'all') {
+        rejectedRequests = rejectedRequests.filter(req => req.staff === filterUser);
+    }
+
+    if (rejectedRequests.length === 0) {
+        rejectedContainer.innerHTML = '<p>No rejected leaves in the last 30 days for selected filter.</p>';
+    } else {
+        let html = '<div class="approval-list">';
+
+        // Group by user
+        const groupedByUser = {};
+        rejectedRequests.forEach(request => {
+            if (!groupedByUser[request.staff]) {
+                groupedByUser[request.staff] = [];
             }
+            groupedByUser[request.staff].push(request);
+        });
 
-            // Filter and sort rejected requests (last 30 days, oldest first)
-            let rejectedRequests = leaveRequests
-                .filter(req => req.status === 'rejected' && new Date(req.date) >= thirtyDaysAgo)
-                .sort(sortByDateAsc)
-                .slice(0, 30); // Show last 30 rejected
+        Object.keys(groupedByUser).sort().forEach(staff => {
+            const userRequests = groupedByUser[staff];
+            const abbrev = staffAbbreviations[staff];
 
-            if (filterUser !== 'all') {
-                rejectedRequests = rejectedRequests.filter(req => req.staff === filterUser);
-            }
+            html += `
+            <div style="margin-bottom: 10px;">
+                <div style="background: #e74c3c; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
+                    <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                    <span style="float: right;">${userRequests.length} rejected</span>
+                </div>
+        `;
 
-            if (rejectedRequests.length === 0) {
-                rejectedContainer.innerHTML = '<p>No rejected leaves in the last 30 days for selected filter.</p>';
-            } else {
-                let html = '<div class="approval-list">';
-
-                // Group by user
-                const groupedByUser = {};
-                rejectedRequests.forEach(request => {
-                    if (!groupedByUser[request.staff]) {
-                        groupedByUser[request.staff] = [];
-                    }
-                    groupedByUser[request.staff].push(request);
+            userRequests.forEach(request => {
+                const date = new Date(request.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
                 });
 
-                Object.keys(groupedByUser).sort().forEach(staff => {
-                    const userRequests = groupedByUser[staff];
-                    const abbrev = staffAbbreviations[staff];
-
-                    html += `
-                    <div style="margin-bottom: 10px;">
-                        <div style="background: #e74c3c; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
-                            <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
-                            <span style="float: right;">${userRequests.length} rejected</span>
+                html += `
+                <div class="approval-item rejected" style="border-radius: 0; border-bottom: 1px solid #eee;">
+                    <div class="approval-header">
+                        <div>
+                            <strong>${dateStr}</strong> • ${request.type} leave
                         </div>
-                `;
-
-                    userRequests.forEach(request => {
-                        const date = new Date(request.date);
-                        const dateStr = date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                        });
-
-                        html += `
-                        <div class="approval-item rejected" style="border-radius: 0; border-bottom: 1px solid #eee;">
-                            <div class="approval-header">
-                                <div>
-                                    <strong>${dateStr}</strong> • ${request.type} leave
-                                </div>
-                                <div style="font-size: 0.8em; color: #e74c3c;">
-                                    Rejected ${request.rejectedBy ? `by ${request.rejectedBy}` : ''}
-                                </div>
-                            </div>
-                            ${request.rejectionReason ? `<div style="margin-top: 5px;"><em>Reason: ${request.rejectionReason}</em></div>` : ''}
+                        <div style="font-size: 0.8em; color: #e74c3c;">
+                            Rejected ${request.rejectedBy ? `by ${request.rejectedBy}` : ''}
                         </div>
-                    `;
-                    });
+                    </div>
+                    ${request.rejectionReason ? `<div style="margin-top: 5px;"><em>Reason: ${request.rejectionReason}</em></div>` : ''}
+                </div>
+            `;
+            });
 
-                    html += '</div>';
-                });
+            html += '</div>';
+        });
 
-                html += '</div>';
-                rejectedContainer.innerHTML = html;
-            }
-        }
+        html += '</div>';
+        rejectedContainer.innerHTML = html;
+    }
+}
 
         // Filter function to refresh approvals when user filter changes
         function filterApprovalsByUser() {
@@ -13234,20 +13251,20 @@
             }
         }
 
-        // ============== NEW MOBILE TOGGLE FUNCTIONS ==============
+// ============== NEW MOBILE TOGGLE FUNCTIONS ==============
 function toggleHeaderContent() {
     const headerContent = document.getElementById('headerContent');
     const toggleBtn = document.getElementById('headerToggleBtn');
 
     if (headerContent.classList.contains('collapsed')) {
-        // Expand - SHOW stats and tabs
+        // Expand - SHOW all header content
         headerContent.classList.remove('collapsed');
         headerContent.style.display = 'block';
         toggleBtn.innerHTML = '🔽 Hide Header';
         toggleBtn.classList.remove('collapsed');
         localStorage.setItem('headerCollapsed', 'false');
     } else {
-        // Collapse - HIDE stats and tabs
+        // Collapse - HIDE all header content
         headerContent.classList.add('collapsed');
         headerContent.style.display = 'none';
         toggleBtn.innerHTML = '🔽 Show Header';
@@ -13258,36 +13275,45 @@ function toggleHeaderContent() {
 
 // Initialize header state on page load (for mobile)
 function initHeaderToggle() {
-    // Only run on mobile
-    if (window.innerWidth <= 768) {
-        const headerContent = document.getElementById('headerContent');
-        const toggleBtn = document.getElementById('headerToggleBtn');
-        const toggleContainer = document.querySelector('.mobile-header-toggle');
+    const headerContent = document.getElementById('headerContent');
+    const toggleBtn = document.getElementById('headerToggleBtn');
+    const toggleContainer = document.querySelector('.mobile-header-toggle');
 
-        // Ensure toggle container is visible
+    // Check if we're on mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // MOBILE: Show toggle button, start collapsed
         if (toggleContainer) {
             toggleContainer.style.display = 'flex';
         }
-
-        // Start COLLAPSED by default (stats and tabs hidden)
-        headerContent.classList.add('collapsed');
-        headerContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔽 Show Header';
-        toggleBtn.classList.add('collapsed');
         
-    } else {
-        // On desktop, always show stats/tabs and hide toggle button
-        const headerContent = document.getElementById('headerContent');
-        const toggleContainer = document.querySelector('.mobile-header-toggle');
-
-        if (headerContent) {
+        // Get saved preference or default to collapsed
+        const savedState = localStorage.getItem('headerCollapsed');
+        
+        if (savedState === 'false') {
+            // User previously expanded - show content
             headerContent.classList.remove('collapsed');
             headerContent.style.display = 'block';
+            toggleBtn.innerHTML = '🔽 Hide Header';
+            toggleBtn.classList.remove('collapsed');
+        } else {
+            // Default or saved collapsed - hide content
+            headerContent.classList.add('collapsed');
+            headerContent.style.display = 'none';
+            toggleBtn.innerHTML = '🔽 Show Header';
+            toggleBtn.classList.add('collapsed');
         }
-
+        
+    } else {
+        // DESKTOP: Hide toggle button, always show content
         if (toggleContainer) {
             toggleContainer.style.display = 'none';
         }
+        
+        // Force content to be visible on desktop
+        headerContent.classList.remove('collapsed');
+        headerContent.style.display = 'block';
     }
 }
 
@@ -13296,30 +13322,42 @@ window.addEventListener('resize', function() {
     const headerContent = document.getElementById('headerContent');
     const toggleBtn = document.getElementById('headerToggleBtn');
     const toggleContainer = document.querySelector('.mobile-header-toggle');
+    
+    if (!headerContent || !toggleContainer) return;
 
-    if (window.innerWidth <= 768) {
-        // Mobile view
-        if (toggleContainer) {
-            toggleContainer.style.display = 'flex';
-        }
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // Switching to MOBILE view
+        toggleContainer.style.display = 'flex';
         
-        // Always collapsed on mobile by default
-        headerContent.classList.add('collapsed');
-        headerContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔽 Show Header';
-        toggleBtn.classList.add('collapsed');
+        // Get saved preference
+        const savedState = localStorage.getItem('headerCollapsed');
+        
+        if (savedState === 'false') {
+            headerContent.classList.remove('collapsed');
+            headerContent.style.display = 'block';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '🔽 Hide Header';
+                toggleBtn.classList.remove('collapsed');
+            }
+        } else {
+            headerContent.classList.add('collapsed');
+            headerContent.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '🔽 Show Header';
+                toggleBtn.classList.add('collapsed');
+            }
+        }
         
     } else {
-        // Desktop view - always show stats/tabs
+        // Switching to DESKTOP view
+        toggleContainer.style.display = 'none';
         headerContent.classList.remove('collapsed');
         headerContent.style.display = 'block';
-        if (toggleContainer) {
-            toggleContainer.style.display = 'none';
-        }
     }
 });
 
     </script>
 </body>
 </html>
-
