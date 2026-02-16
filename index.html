@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shift & Leave Management System</title>
+    <title>PHC SLM</title>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2246,7 +2246,7 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
             margin-bottom: 15px;
-            background-color: white;
+            background-color: rgb(204, 195, 218);
             padding: 10px;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
@@ -2284,7 +2284,7 @@
             }
 
             .day-cell.today {
-                border-color: #3498db;
+                border-color: #3681b3;
                 background-color: #e8f4fc;
                 border-width: 2px;
             }
@@ -2325,7 +2325,7 @@
         }
 
         .day-card {
-            background: white;
+            background: #a1d5f7;
             border-radius: 8px;
             padding: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -2892,6 +2892,19 @@
     }
 
 }
+h1 {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white !important;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.6em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    margin-bottom: 20px;
+    border-bottom: none; /* Remove the existing border-bottom */
+}
 
     </style>
 </head>
@@ -2900,7 +2913,7 @@
     <div id="authModal" class="auth-modal">
         <div class="auth-container">
             <div class="auth-header">
-                <h2>🔐 Shift & Leave Management</h2>
+                <h2>🔐 PHC Shift & Leave </h2>
                 <p>Sign in to access your dashboard</p>
             </div>
 
@@ -2980,7 +2993,7 @@
 
     <!-- Main Container (Initially Hidden) -->
 <div class="container" style="display: none;">
-    <h1>📅 Shift & Leave Management System</h1>
+    <h1>📅 PHC Shift & Leave Management</h1>
 
     <!-- Mobile Header Toggle Button -->
     <div class="mobile-header-toggle">
