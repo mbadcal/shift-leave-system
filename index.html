@@ -3201,34 +3201,32 @@ h1 {
             </div>
         </div>
 
-        <!-- Reports Tab -->
-        <div id="reports-tab" class="tab-content">
-            <h2>📊 Reports</h2>
-            <div class="controls">
-                <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
-               
-                <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
-                <button onclick="generateCOFFReport()">🔄 COFF Report</button>
-                <button onclick="generateOTReport()">💰 OT Report</button>
-                <button onclick="exportAllData()">💾 Export All Data</button>
-            </div>
-
-            <!-- Navigation for attendance report -->
-            <div id="attendance-nav">
-                <div class="nav-buttons" style="justify-content: center;">
-                    <button onclick="previousAttendancePeriod()">◀ Previous Period</button>
-                    <button onclick="goToCurrentAttendancePeriod()">Current Period</button>
-                    <button onclick="nextAttendancePeriod()">Next Period ▶</button>
-                </div>
-                <div id="attendance-period-title"></div>
-            </div>
-
-            <div id="report-container">
-                <!-- Reports will be displayed here -->
-            </div>
-        </div>
+<!-- Reports Tab -->
+<div id="reports-tab" class="tab-content">
+    <h2>📊 Reports</h2>
+    <div class="controls">
+        <button onclick="generateAttendancePeriodReport()">📋 Attendance (21st-20th)</button>
+        <button onclick="exportAttendanceToExcel()" class="btn-success" style="background: linear-gradient(135deg, #27ae60, #229954);">📊 Export to Excel</button>
+        <button onclick="generateLeaveReport()">🏖️ Leave Report</button>
+        <button onclick="generateCOFFReport()">🔄 COFF Report</button>
+        <button onclick="generateOTReport()">💰 OT Report</button>
+        <button onclick="exportAllData()">💾 Export All Data</button>
     </div>
 
+    <!-- Navigation for attendance report -->
+    <div id="attendance-nav">
+        <div class="nav-buttons" style="justify-content: center;">
+            <button onclick="previousAttendancePeriod()">◀ Previous Period</button>
+            <button onclick="goToCurrentAttendancePeriod()">Current Period</button>
+            <button onclick="nextAttendancePeriod()">Next Period ▶</button>
+        </div>
+        <div id="attendance-period-title"></div>
+    </div>
+
+    <div id="report-container">
+        <!-- Reports will be displayed here -->
+    </div>
+</div>
     <!-- Admin Tools Tab -->
     <div id="admin-tools-tab" class="tab-content">
         <h2>🛠️ Admin Tools & Database Management</h2>
@@ -13371,18 +13369,122 @@ window.addEventListener('resize', function() {
     }
 });
 
+// Add this function to your JavaScript section
+function exportAttendanceToExcel() {
+    const container = document.getElementById('report-container');
+    const reportTable = container.querySelector('table');
+    
+    if (!reportTable) {
+        alert('No attendance report data to export. Please generate a report first.');
+        return;
+    }
+
+    // Get period information
+    const periodTitle = document.getElementById('attendance-period-title').textContent;
+    const reportDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // Create HTML content for Excel
+    let htmlContent = `
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Attendance Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+                h2 { color: #2c3e50; }
+                .header { 
+                    background: linear-gradient(135deg, #3498db, #2980b9); 
+                    color: white; 
+                    padding: 15px; 
+                    text-align: center; 
+                    border-radius: 5px; 
+                }
+                table { 
+                    border-collapse: collapse; 
+                    width: 100%; 
+                    margin-top: 20px; 
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                }
+                th { 
+                    background: #34495e; 
+                    color: white; 
+                    padding: 12px; 
+                    text-align: center; 
+                    font-weight: bold; 
+                }
+                td { 
+                    padding: 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center; 
+                }
+                tr:nth-child(even) { background: #f9f9f9; }
+                tr:hover { background: #f1f1f1; }
+                .legend { 
+                    margin-top: 20px; 
+                    padding: 15px; 
+                    background: #f8f9fa; 
+                    border-radius: 5px; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📊 PHC Shift Management - Attendance Report</h1>
+                <p>Generated: ${reportDate}</p>
+            </div>
+            <h2>${periodTitle}</h2>
+            ${reportTable.outerHTML}
+    `;
+
+    // Add legend if present
+    const legend = container.querySelector('.legend, div[style*="background-color: #f8f9fa;"]:last-child');
+    if (legend) {
+        htmlContent += legend.outerHTML;
+    }
+
+    htmlContent += `
+            <div style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d; text-align: center;">
+                <p>Generated by PHC Shift Management System</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    // Format filename with period info
+    const periodText = periodTitle.replace(/[^a-zA-Z0-9]/g, '_');
+    const filename = `Attendance_Report_${periodText}_${new Date().toISOString().split('T')[0]}.xls`;
+    
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // Show success message
+    const indicator = document.getElementById('updateIndicator');
+    indicator.textContent = '✅ Report exported successfully!';
+    indicator.style.display = 'block';
+    setTimeout(() => {
+        indicator.style.display = 'none';
+        indicator.textContent = '🔄 Data Updated'; // Reset text
+    }, 3000);
+}
+
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
 
 
 
