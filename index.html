@@ -8238,110 +8238,118 @@ function switchTab(tabName) {
             });
         }
 
-        async function saveShiftEdit() {
-            const effectiveDate = document.getElementById('effectiveDate').value;
-            if (!effectiveDate) {
-                alert('Please select an effective date');
-                return;
-            }
+async function saveShiftEdit() {
+    const effectiveDate = document.getElementById('effectiveDate').value;
+    if (!effectiveDate) {
+        alert('Please select an effective date');
+        return;
+    }
 
-            // Check if user has permission (admin only)
-            if (currentUserRole !== 'admin') {
-                alert('Only administrators can edit shifts.');
-                return;
-            }
+    // Check if user has permission (admin only)
+    if (currentUserRole !== 'admin') {
+        alert('Only administrators can edit shifts.');
+        return;
+    }
 
-            const startDate = new Date(effectiveDate);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 6);
+    const startDate = new Date(effectiveDate);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
 
-            const dates = getDatesInRange(startDate, endDate);
-            const updates = {};
+    const dates = getDatesInRange(startDate, endDate);
+    const updates = {};
 
-            // Collect all changes
-            dates.forEach(date => {
-                const dateKey = formatDateForInput(date);
-                const dayIndex = date.getDay();
-                const dayName = shiftData.days[dayIndex];
+    // Collect all changes
+    dates.forEach(date => {
+        const dateKey = formatDateForInput(date);
+        const dayIndex = date.getDay();
+        const dayName = shiftData.days[dayIndex];
 
-                const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
 
-                staffList.forEach(staff => {
-                    const select = document.getElementById(`shift_${dateKey}_${staff}`);
-                    if (select && select.value) {
-                        if (!updates[dayName]) {
-                            updates[dayName] = {};
-                        }
-                        updates[dayName][staff] = select.value;
-                    }
-                });
-            });
-
-            if (Object.keys(updates).length === 0) {
-                alert('No changes made to shifts');
-                return;
-            }
-
-            try {
-                console.log('Updating shifts with:', updates);
-
-                // Prepare the update data
-                const updateData = {
-                    updatedAt: new Date().toISOString(),
-                    lastUpdatedBy: currentUser.email
-                };
-
-                // Add shift updates
-                Object.keys(updates).forEach(dayName => {
-                    updateData[`shifts.${dayName}`] = updates[dayName];
-                });
-
-                console.log('Update data prepared:', updateData);
-
-                // Update in Firestore using set with merge: true
-                await db.collection('shiftData').doc('current').set({
-                    shifts: {
-                        ...shiftData.shifts,
-                        ...updates
-                    },
-                    updatedAt: new Date().toISOString(),
-                    lastUpdatedBy: currentUser.email
-                }, { merge: true });
-
-                // Also update local shiftData
-                shiftData.shifts = {
-                    ...shiftData.shifts,
-                    ...updates
-                };
-
-                alert('Shift schedule updated successfully');
-                closeModal('editShiftModal');
-
-                // Refresh the UI
-                updateAllViews();
-
-            } catch (error) {
-                console.error('Error updating shifts:', error);
-                console.error('Error details:', error.message, error.stack);
-
-                if (error.code === 'permission-denied') {
-                    alert('Permission denied. You may not have permission to edit shifts.\n\nPlease ensure:\n1. You are logged in as an administrator\n2. Firestore rules allow write access\n3. Your email is verified');
-                } else if (error.code === 'not-found') {
-                    // Document doesn't exist, create it
-                    try {
-                        await createOrUpdateShiftDocument(updates);
-                        alert('Shift schedule created and updated successfully');
-                        closeModal('editShiftModal');
-                        updateAllViews();
-                    } catch (createError) {
-                        console.error('Error creating shift document:', createError);
-                        alert('Failed to create shift document: ' + createError.message);
-                    }
-                } else {
-                    alert('Failed to update shifts: ' + error.message);
+        staffList.forEach(staff => {
+            const select = document.getElementById(`shift_${dateKey}_${staff}`);
+            if (select && select.value) {
+                if (!updates[dayName]) {
+                    updates[dayName] = {};
                 }
+                updates[dayName][staff] = select.value;
+            }
+        });
+    });
+
+    if (Object.keys(updates).length === 0) {
+        alert('No changes made to shifts');
+        return;
+    }
+
+    try {
+        console.log('Updating shifts with:', updates);
+
+        // Update in Firestore using set with merge: true
+        await db.collection('shiftData').doc('current').set({
+            shifts: {
+                ...shiftData.shifts,
+                ...updates
+            },
+            updatedAt: new Date().toISOString(),
+            lastUpdatedBy: currentUser.email
+        }, { merge: true });
+
+        // Also update local shiftData
+        shiftData.shifts = {
+            ...shiftData.shifts,
+            ...updates
+        };
+
+        alert('Shift schedule updated successfully');
+        closeModal('editShiftModal');
+
+        // Refresh the UI - FIXED: Check if functions exist before calling
+        if (typeof updateAllViews === 'function') {
+            updateAllViews();
+        } else {
+            // Call individual render functions
+            renderWeekView();
+            renderMonthView();
+            renderTodayView();
+            if (typeof renderStaffList === 'function') {
+                renderStaffList();
             }
         }
+
+    } catch (error) {
+        console.error('Error updating shifts:', error);
+        console.error('Error details:', error.message, error.stack);
+
+        if (error.code === 'permission-denied') {
+            alert('Permission denied. You may not have permission to edit shifts.\n\nPlease ensure:\n1. You are logged in as an administrator\n2. Firestore rules allow write access\n3. Your email is verified');
+        } else if (error.code === 'not-found') {
+            // Document doesn't exist, create it
+            try {
+                await createOrUpdateShiftDocument(updates);
+                alert('Shift schedule created and updated successfully');
+                closeModal('editShiftModal');
+                
+                // Refresh the UI - FIXED: Check if functions exist before calling
+                if (typeof updateAllViews === 'function') {
+                    updateAllViews();
+                } else {
+                    renderWeekView();
+                    renderMonthView();
+                    renderTodayView();
+                    if (typeof renderStaffList === 'function') {
+                        renderStaffList();
+                    }
+                }
+            } catch (createError) {
+                console.error('Error creating shift document:', createError);
+                alert('Failed to create shift document: ' + createError.message);
+            }
+        } else {
+            alert('Failed to update shifts: ' + error.message);
+        }
+    }
+}
 
         async function createOrUpdateShiftDocument(updates) {
             // First, get current data or initialize
@@ -8569,111 +8577,119 @@ function switchTab(tabName) {
             container.innerHTML = html;
         }
 
-        async function saveSingleDayShifts() {
-            const date = document.getElementById('singleDayDate').value;
+async function saveSingleDayShifts() {
+    const date = document.getElementById('singleDayDate').value;
 
-            if (!date) {
-                alert('Please select a date');
+    if (!date) {
+        alert('Please select a date');
+        return;
+    }
+
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+
+    const updates = {};
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+
+    // Collect changes
+    staffList.forEach(staff => {
+        const select = document.getElementById(`single_shift_${date}_${staff}`);
+        if (select && select.value) {
+            // Check if staff is on leave
+            const isOnLeave = checkIfOnLeave(staff, dateObj);
+            if (isOnLeave) {
+                alert(`Cannot change shift for ${staff} while they are on leave`);
                 return;
             }
 
-            const dateObj = new Date(date);
-            const dayIndex = dateObj.getDay();
-            const dayName = shiftData.days[dayIndex];
-
-            const updates = {};
-            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-            // Collect changes
-            staffList.forEach(staff => {
-                const select = document.getElementById(`single_shift_${date}_${staff}`);
-                if (select && select.value) {
-                    // Check if staff is on leave
-                    const isOnLeave = checkIfOnLeave(staff, dateObj);
-                    if (isOnLeave) {
-                        alert(`Cannot change shift for ${staff} while they are on leave`);
-                        return;
-                    }
-
-                    if (!updates[dayName]) {
-                        updates[dayName] = {};
-                    }
-                    updates[dayName][staff] = select.value;
-                }
-            });
-
-            if (Object.keys(updates).length === 0) {
-                alert('No changes made to shifts');
-                return;
+            if (!updates[dayName]) {
+                updates[dayName] = {};
             }
+            updates[dayName][staff] = select.value;
+        }
+    });
 
-            try {
-                // First, get the current shift data to ensure we have the document
-                const shiftDoc = await db.collection('shiftData').doc('current').get();
+    if (Object.keys(updates).length === 0) {
+        alert('No changes made to shifts');
+        return;
+    }
 
-                if (!shiftDoc.exists) {
-                    alert('Shift data document not found. Please contact administrator.');
-                    return;
-                }
+    try {
+        // First, get the current shift data to ensure we have the document
+        const shiftDoc = await db.collection('shiftData').doc('current').get();
 
-                // Update in Firestore - use set with merge for more reliable updates
-                await db.collection('shiftData').doc('current').set({
-                    shifts: {
-                        ...shiftData.shifts,
-                        [dayName]: {
-                            ...shiftData.shifts[dayName],
-                            ...updates[dayName]
-                        }
-                    },
-                    updatedAt: new Date().toISOString(),
-                    lastUpdatedBy: currentUser.email,
-                    lastSingleDayUpdate: {
-                        date: date,
-                        dayName: dayName,
-                        updatedAt: new Date().toISOString()
-                    }
-                }, { merge: true });
+        if (!shiftDoc.exists) {
+            alert('Shift data document not found. Please contact administrator.');
+            return;
+        }
 
-                // Update local data
-                shiftData.shifts[dayName] = {
+        // Update in Firestore - use set with merge for more reliable updates
+        await db.collection('shiftData').doc('current').set({
+            shifts: {
+                ...shiftData.shifts,
+                [dayName]: {
                     ...shiftData.shifts[dayName],
                     ...updates[dayName]
-                };
-
-                // Log the change (optional, can skip if permission issues)
-                try {
-                    await db.collection('singleDayShiftChanges').add({
-                        date: date,
-                        dayName: dayName,
-                        changes: updates[dayName],
-                        changedBy: currentUser.email,
-                        changedAt: new Date().toISOString()
-                    });
-                } catch (logError) {
-                    console.warn('Could not log shift change (permission may be denied):', logError);
-                    // Continue anyway, logging is optional
                 }
+            },
+            updatedAt: new Date().toISOString(),
+            lastUpdatedBy: currentUser.email,
+            lastSingleDayUpdate: {
+                date: date,
+                dayName: dayName,
+                updatedAt: new Date().toISOString()
+            }
+        }, { merge: true });
 
-                alert('Shift changes saved successfully for this day only');
-                closeModal('singleDayShiftModal');
+        // Update local data
+        shiftData.shifts[dayName] = {
+            ...shiftData.shifts[dayName],
+            ...updates[dayName]
+        };
 
-                // Refresh UI
-                updateAllViews();
+        // Log the change (optional, can skip if permission issues)
+        try {
+            await db.collection('singleDayShiftChanges').add({
+                date: date,
+                dayName: dayName,
+                changes: updates[dayName],
+                changedBy: currentUser.email,
+                changedAt: new Date().toISOString()
+            });
+        } catch (logError) {
+            console.warn('Could not log shift change (permission may be denied):', logError);
+            // Continue anyway, logging is optional
+        }
 
-            } catch (error) {
-                console.error('Error saving single day shifts:', error);
+        alert('Shift changes saved successfully for this day only');
+        closeModal('singleDayShiftModal');
 
-                // More specific error messages
-                if (error.code === 'permission-denied') {
-                    alert('Permission denied. Please ensure:\n\n1. You are logged in as administrator\n2. Firestore rules allow write access\n3. Your email is verified\n\nPlease contact system administrator to update Firestore security rules.');
-                } else if (error.code === 'not-found') {
-                    alert('Shift data document not found. Please contact administrator.');
-                } else {
-                    alert('Failed to save shift changes: ' + error.message);
-                }
+        // Refresh UI - FIXED: Check if functions exist before calling
+        if (typeof updateAllViews === 'function') {
+            updateAllViews();
+        } else {
+            renderWeekView();
+            renderMonthView();
+            renderTodayView();
+            if (typeof renderStaffList === 'function') {
+                renderStaffList();
             }
         }
 
+    } catch (error) {
+        console.error('Error saving single day shifts:', error);
+
+        // More specific error messages
+        if (error.code === 'permission-denied') {
+            alert('Permission denied. Please ensure:\n\n1. You are logged in as administrator\n2. Firestore rules allow write access\n3. Your email is verified\n\nPlease contact system administrator to update Firestore security rules.');
+        } else if (error.code === 'not-found') {
+            alert('Shift data document not found. Please contact administrator.');
+        } else {
+            alert('Failed to save shift changes: ' + error.message);
+        }
+    }
+}
         // ============== OBITUARY DUTY FUNCTIONS ==============
         async function loadCurrentObituaryDuty() {
             const date = document.getElementById('obituaryDate').value;
@@ -9726,59 +9742,153 @@ function switchTab(tabName) {
             }
         }
 
-        async function submitCOFF() {
-            const staff = document.getElementById('coffStaff').value;
-            const fromDate = document.getElementById('coffFromDate').value;
-            const toDate = document.getElementById('coffToDate').value;
-            const reason = document.getElementById('coffReason').value;
+async function submitCOFF() {
+    const staff = document.getElementById('coffStaff').value;
+    const fromDate = document.getElementById('coffFromDate').value;
+    const toDate = document.getElementById('coffToDate').value;
+    const reason = document.getElementById('coffReason').value;
 
-            if (!staff || !fromDate || !toDate) {
-                alert('Please fill in all required fields');
-                return;
-            }
+    if (!staff || !fromDate || !toDate) {
+        alert('Please fill in all required fields');
+        return;
+    }
 
-            const startDate = new Date(fromDate);
-            const endDate = new Date(toDate);
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
 
-            if (startDate > endDate) {
-                alert('To date cannot be earlier than from date');
-                return;
-            }
+    if (startDate > endDate) {
+        alert('To date cannot be earlier than from date');
+        return;
+    }
 
-            const balance = coffData.balances[staff] || 0;
+    // Calculate days and hours
+    const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    const daysRequested = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+    const hoursRequested = daysRequested * 8;
 
-            if (balance < 1) {
-                alert(`Insufficient COFF balance: ${balance.toFixed(2)} days. Minimum 1 day required.`);
-                return;
-            }
-
-            try {
-                // Create COFF request
-                await db.collection('coffData').add({
-                    staff: staff,
-                    type: 'pending',
-                    fromDate: fromDate,
-                    toDate: toDate,
-                    daysRequested: Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1,
-                    reason: reason,
-                    requestedBy: currentUser.email,
-                    requestedDate: new Date().toISOString(),
-                    status: 'pending'
-                });
-
-                alert('COFF request submitted successfully');
-                closeModal('applyCOFFModal');
-
-                // Clear form
-                document.getElementById('coffFromDate').value = '';
-                document.getElementById('coffToDate').value = '';
-                document.getElementById('coffReason').value = '';
-
-            } catch (error) {
-                console.error('Error submitting COFF request:', error);
-                alert('Failed to submit COFF request. Please try again.');
-            }
+    try {
+        // Get current balance
+        const balanceDoc = await db.collection('coffBalances').doc(staff).get();
+        let currentBalance = 0;
+        
+        if (balanceDoc.exists) {
+            currentBalance = balanceDoc.data().balance || 0;
+        } else {
+            // Initialize balance if not exists
+            currentBalance = 0;
+            await db.collection('coffBalances').doc(staff).set({
+                staff: staff,
+                balance: 0,
+                lastUpdated: new Date().toISOString(),
+                updatedBy: 'system'
+            });
         }
+
+        // Check if enough balance
+        if (currentBalance < hoursRequested) {
+            alert(`❌ Insufficient COFF balance!\n\n` +
+                `Required: ${hoursRequested} hours (${daysRequested} days)\n` +
+                `Available: ${currentBalance.toFixed(1)} hours (${(currentBalance / 8).toFixed(1)} days)`);
+            return;
+        }
+
+        if (!confirm(`Apply for ${daysRequested} day${daysRequested > 1 ? 's' : ''} COFF (${hoursRequested} hours)?\n\n` +
+            `Available balance: ${currentBalance.toFixed(1)} hours (${(currentBalance / 8).toFixed(1)} days)`)) {
+            return;
+        }
+
+        // Calculate new balance
+        const newBalance = currentBalance - hoursRequested;
+
+        // 1. Update balance in coffBalances collection
+        await db.collection('coffBalances').doc(staff).set({
+            staff: staff,
+            balance: newBalance,
+            lastUpdated: new Date().toISOString(),
+            updatedBy: currentUser.email
+        }, { merge: true });
+
+        // 2. Create transaction record (for history) - FIXED DESCRIPTION
+        const transactionId = `coff_use_${staff}_${Date.now()}`;
+        await db.collection('coffTransactions').doc(transactionId).set({
+            staff: staff,
+            type: 'use',
+            hours: -hoursRequested,
+            balanceBefore: currentBalance,
+            balanceAfter: newBalance,
+            timestamp: new Date().toISOString(),
+            metadata: {
+                source: 'coff_application',
+                date: fromDate,
+                toDate: toDate,
+                hours: hoursRequested,
+                days: daysRequested,
+                reason: reason || 'No reason provided'
+            },
+            description: `COFF Leave (${daysRequested} days) - ${reason || 'No reason provided'}`, // FIXED: Added description at top level
+            processedBy: currentUser.email,
+            canceled: false,
+            valid: true
+        });
+
+        // 3. Create leave request for each date (so it shows in calendar)
+        const dates = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        for (const date of dates) {
+            const dateKey = formatDateForInput(date);
+            await db.collection('leaveRequests').add({
+                staff: staff,
+                date: dateKey,
+                type: 'full',
+                status: 'approved',
+                reason: `COFF: ${reason || 'Compensatory off'}`,
+                requestedBy: currentUser.email,
+                requestedDate: new Date().toISOString(),
+                approvedBy: 'system',
+                approvedDate: new Date().toISOString(),
+                isCOFF: true,
+                coffHours: hoursRequested,
+                coffDays: daysRequested
+            });
+        }
+
+        // Update local data
+        if (!coffData.balances) coffData.balances = {};
+        coffData.balances[staff] = newBalance;
+
+        alert(`✅ COFF applied successfully!\n\n` +
+            `📊 Balance updated:\n` +
+            `Previous: ${currentBalance.toFixed(1)} hours (${(currentBalance/8).toFixed(1)} days)\n` +
+            `Deducted: ${hoursRequested} hours (${daysRequested} days)\n` +
+            `New balance: ${newBalance.toFixed(1)} hours (${(newBalance/8).toFixed(1)} days)`);
+
+        closeModal('applyCOFFModal');
+
+        // Clear form
+        document.getElementById('coffFromDate').value = '';
+        document.getElementById('coffToDate').value = '';
+        document.getElementById('coffReason').value = '';
+
+        // Refresh displays - FIXED: Removed renderAllViews() which doesn't exist
+        updateStats();
+        if (document.getElementById('coff-tab').classList.contains('active')) {
+            renderCOFFBreakdown();
+        }
+        // Use updateAllViews() instead if it exists, or just refresh what's needed
+        renderWeekView();
+        renderMonthView();
+        renderTodayView();
+
+    } catch (error) {
+        console.error('Error submitting COFF request:', error);
+        alert('❌ Failed to submit COFF request. Please try again.\n\n' + error.message);
+    }
+}
 
         function viewCOFFSummary() {
             // Switch to COFF tab and show summary
@@ -10045,6 +10155,28 @@ function switchTab(tabName) {
                 container.innerHTML = '<p style="color: #e74c3c;">Error loading COFF data. Please try again.</p>';
             }
         }
+        // ============== STAFF LIST RENDERING FUNCTION ==============
+function renderStaffList() {
+    const staffListContainer = document.getElementById('staff-list');
+    if (!staffListContainer) return;
+    
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    let html = '';
+    
+    staffList.forEach(staff => {
+        const abbrev = staffAbbreviations[staff] || staff.substring(0, 3);
+        const isCTP = staff === 'ANEESH';
+        
+        html += `
+            <div class="staff-item ${isCTP ? 'ctp-operator' : ''}">
+                <strong>${abbrev}</strong><br>
+                <small>${staff}</small>
+            </div>
+        `;
+    });
+    
+    staffListContainer.innerHTML = html;
+}
 
         async function approveCOFF(requestId, staff, daysRequested) {
             if (!confirm(`Approve COFF request for ${staff} (${daysRequested} days)?`)) {
@@ -11353,82 +11485,6 @@ function renderApprovals() {
                 document.getElementById('coffBalanceCheck').innerHTML =
                     '<span style="color: #e74c3c;">Error checking balance</span>';
                 submitBtn.disabled = true;
-            }
-        }
-
-        // Submit COFF request
-        async function submitCOFF() {
-            const staff = document.getElementById('coffStaff').value;
-            const fromDate = document.getElementById('coffFromDate').value;
-            const toDate = document.getElementById('coffToDate').value;
-            const reason = document.getElementById('coffReason').value;
-
-            if (!staff || !fromDate || !toDate) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            const startDate = new Date(fromDate);
-            const endDate = new Date(toDate);
-
-            if (startDate > endDate) {
-                alert('To date cannot be earlier than from date');
-                return;
-            }
-
-            // Calculate days requested
-            const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-            const daysRequested = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-            const hoursRequired = daysRequested * 8;
-
-            // FIXED: Get balance in hours (not days)
-            const balanceHours = coffData.balances[staff] || 0;
-
-            // FIXED: Check if enough hours available (8 hours = 1 day)
-            if (balanceHours < hoursRequired) {
-                alert(`Insufficient COFF balance!\n\n` +
-                    `Required: ${hoursRequired} hours (${daysRequested} days)\n` +
-                    `Available: ${balanceHours.toFixed(1)} hours (${(balanceHours / 8).toFixed(1)} days)\n\n` +
-                    `Minimum 8 hours (1 day) required.`);
-                return;
-            }
-
-            if (!confirm(`Apply for ${daysRequested} day${daysRequested > 1 ? 's' : ''} COFF (${hoursRequired} hours)?\n\n` +
-                `Available balance: ${balanceHours.toFixed(1)} hours (${(balanceHours / 8).toFixed(1)} days)`)) {
-                return;
-            }
-
-            try {
-                // Create COFF request
-                await db.collection('coffData').add({
-                    staff: staff,
-                    type: 'pending',
-                    fromDate: fromDate,
-                    toDate: toDate,
-                    daysRequested: daysRequested,
-                    hoursRequested: hoursRequired,
-                    reason: reason,
-                    requestedBy: currentUser.email,
-                    requestedDate: new Date().toISOString(),
-                    status: 'pending'
-                });
-
-                alert('✅ COFF request submitted successfully');
-                closeModal('applyCOFFModal');
-
-                // Clear form
-                document.getElementById('coffFromDate').value = '';
-                document.getElementById('coffToDate').value = '';
-                document.getElementById('coffReason').value = '';
-
-                // Refresh COFF display
-                if (document.getElementById('coff-tab').classList.contains('active')) {
-                    renderCOFFBreakdown();
-                }
-
-            } catch (error) {
-                console.error('Error submitting COFF request:', error);
-                alert('❌ Failed to submit COFF request. Please try again.');
             }
         }
 
@@ -13485,7 +13541,3 @@ function exportAttendanceToExcel() {
     </script>
 </body>
 </html>
-
-
-
-
