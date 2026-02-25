@@ -2905,6 +2905,36 @@
             margin-bottom: 20px;
             border-bottom: none; /* Remove the existing border-bottom */
         }
+
+.cancelled-badge {
+    background: #95a5a6 !important;
+    color: white !important;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.approval-item.cancelled {
+    border-left-color: #95a5a6 !important;
+    background-color: #ecf0f1 !important;
+    opacity: 0.7;
+}
+
+.status-leave-cancelled {
+    background-color: #95a5a6;
+}
+
+.leave-cancelled {
+    background-color: #ecf0f1 !important;
+    border-left: 3px solid #95a5a6;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.leave-cancelled-badge {
+    background: #045a32;
+    color: white;
+}
+
     </style>
 </head>
 <body>
@@ -3122,23 +3152,29 @@
             </div>
         </div>
 
-        <!-- Approvals Tab -->
-        <div id="approvals-tab" class="tab-content">
-            <h2>📋 Pending Approvals</h2>
-            <div id="pending-approvals-container">
-                <!-- Pending approvals will be populated by JavaScript -->
-            </div>
+<!-- Approvals Tab -->
+<div id="approvals-tab" class="tab-content">
+    <h2>📋 Pending Approvals</h2>
+    <div id="pending-approvals-container">
+        <!-- Pending approvals will be populated by JavaScript -->
+    </div>
 
-            <h2>✅ Approved Leaves</h2>
-            <div id="approved-leaves-container">
-                <!-- Approved leaves will be populated by JavaScript -->
-            </div>
+    <h2>✅ Approved Leaves</h2>
+    <div id="approved-leaves-container">
+        <!-- Approved leaves will be populated by JavaScript -->
+    </div>
 
-            <h2>❌ Rejected Leaves</h2>
-            <div id="rejected-leaves-container">
-                <!-- Rejected leaves will be populated by JavaScript -->
-            </div>
-        </div>
+    <h2>❌ Rejected Leaves</h2>
+    <div id="rejected-leaves-container">
+        <!-- Rejected leaves will be populated by JavaScript -->
+    </div>
+    
+    <!-- ADD THIS NEW SECTION -->
+    <h2>🗑️ Cancelled Leaves</h2>
+    <div id="cancelled-leaves-container">
+        <!-- Cancelled leaves will be populated by JavaScript -->
+    </div>
+</div>
 
 
         <!-- ============== COFF MANAGEMENT SECTION (UPDATED) ============== -->
@@ -4680,9 +4716,8 @@
                     // ============== END OF NEW COFF LISTENERS ==============
                 }
                 // Listen for leave requests
-                unsubscribeListeners.leaveRequests = db.collection('leaveRequests')
-                    .where('status', '!=', 'cancelled')
-                    .onSnapshot((snapshot) => {
+                        unsubscribeListeners.leaveRequests = db.collection('leaveRequests')
+                        .onSnapshot((snapshot) => {
                         leaveRequests = [];
                         snapshot.forEach((doc) => {
                             leaveRequests.push({ id: doc.id, ...doc.data() });
@@ -4934,7 +4969,15 @@
 
             function checkExtraHours(staff, date) {
                 const dateKey = formatDateForInput(date);
-                return extraHoursData[dateKey] && extraHoursData[dateKey].staff === staff;
+            // Check in extraHoursData using compound key
+                const key = `${dateKey}_${staff}`;
+                return extraHoursData[key] !== undefined;
+            }
+
+            function getExtraHoursEntry(staff, date) {
+                const dateKey = formatDateForInput(date);
+                const key = `${dateKey}_${staff}`;
+                return extraHoursData[key];
             }
 
             function checkLateEntry(staff, date) {
@@ -4956,6 +4999,7 @@
                 if (leaveStatus === 'pending') return 'status-leave-pending';
                 if (leaveStatus === 'approved') return 'status-leave-approved';
                 if (leaveStatus === 'rejected') return 'status-leave-rejected';
+                if (leaveStatus === 'cancelled') return 'status-leave-cancelled';
                 if (isOffDutyWorking) return 'status-off-duty-working';
                 if (isOnDuty) return 'status-on-duty';
                 if (hasExtraHours) return 'status-extra-hours';
@@ -5584,6 +5628,12 @@
                         statusClass = 'leave-rejected';
                         statusText = 'Leave Rejected';
                         badge = '<span class="badge leave-rejected-badge">REJECTED</span>';
+                    } else if (leaveStatus === 'cancelled') {  
+                        statusClass = 'leave-cancelled';
+                        statusText = 'Leave Cancelled';
+                        badge = '<span class="badge leave-cancelled-badge">CANCELLED</span>';
+                        // Don't count cancelled leaves as available
+    
                     } else if (isOffDutyWorking) {
                         statusClass = 'off-duty-working';
                         statusText = 'Off-duty Working';
@@ -5598,10 +5648,15 @@
                         badge = '<span class="badge on-duty-badge">OD</span>';
                         availableOperators++;
                     } else if (hasExtraHours) {
-                        statusClass = 'extra-hours';
-                        const extra = extraHoursData[dateKey];
-                        statusText = `+${extra.hours} extra hours`;
-                        badge = '<span class="badge extra-hours-badge">EXTRA</span>';
+    statusClass = 'extra-hours';
+    const extra = getExtraHoursEntry(staff, date);
+    if (extra) {
+        statusText = `+${extra.hours} extra hours`;
+        badge = '<span class="badge extra-hours-badge">EXTRA</span>';
+        shiftDisplay = shift || '';
+        availableOperators++;
+    
+}
                         availableOperators++;
                     } else if (shift && shift.includes('Obituary')) {
                         statusClass = 'obituary-duty';
@@ -5829,13 +5884,13 @@
                                 }
                             }
 
-                            if (hasExtraHours) {
-                                const extra = extraHoursData[dateKey];
-                                if (extra && extra.staff === staff) {
-                                    shiftDisplay = (shiftDisplay || 'Shift') + ` +${extra.hours}h extra`;
-                                    badge += '<span class="badge extra-hours-badge">+EXTRA</span>';
-                                }
-                            }
+if (hasExtraHours) {
+    const extra = getExtraHoursEntry(staff, date);
+    if (extra) {
+        shiftDisplay = (shiftDisplay || 'Shift') + ` +${extra.hours}h extra`;
+        badge += '<span class="badge extra-hours-badge">+EXTRA</span>';
+    }
+}
 
                             if (leaveStatus === 'pending') {
                                 badge += '<span class="badge leave-pending-badge">PENDING</span>';
@@ -5843,6 +5898,8 @@
                                 badge += '<span class="badge leave-approved-badge">LEAVE</span>';
                             } else if (leaveStatus === 'rejected') {
                                 badge += '<span class="badge leave-rejected-badge">REJECTED</span>';
+                            } else if (leaveStatus === 'cancelled') {  
+                                badge += '<span class="badge leave-cancelled-badge">CANCELLED</span>';
                             }
 
                             if (shift && shift.includes('Obituary')) {
@@ -6094,6 +6151,9 @@
                         } else if (leaveStatus === 'approved') {
                             statusClass = 'leave';
                             statusText += ' - Leave';
+                        } else if (leaveStatus === 'cancelled') {  
+                            statusClass = 'leave-cancelled';
+                            statusText += ' - Cancelled Leave';
                         } else if (isOffDutyWorking) {
                             statusClass = 'off-duty-working';
                             statusText += ' - Off-duty Working';
@@ -6104,11 +6164,12 @@
                                 statusText += entry.type === 'extra' ? ` - OD (+${entry.hours}h)` : ' - OD';
                             }
                         } else if (hasExtraHours) {
-                            statusClass = 'extra-hours';
-                            const extra = extraHoursData[dateKey];
-                            if (extra && extra.staff === staff) {
-                                statusText += ` - +${extra.hours}h extra`;
-                            }
+    statusClass = 'extra-hours';
+    const extra = getExtraHoursEntry(staff, date);
+    if (extra) {
+        statusText += ` - +${extra.hours}h extra`;
+    }
+
                         } else if (shift && shift.includes('Obituary')) {
                             statusClass = 'obituary';
                             statusText += ' - Obituary Duty';
@@ -6277,6 +6338,9 @@
                     } else if (leaveStatus === 'rejected') {
                         detailClass = 'leave';
                         statusText = 'Leave Rejected';
+                    } else if (leaveStatus === 'cancelled') { 
+                        detailClass = 'leave-cancelled';
+                        statusText = 'Leave Cancelled';    
                     } else if (isOffDutyWorking) {
                         detailClass = 'off-duty-working';
                         statusText = 'Off-duty Working';
@@ -6286,10 +6350,13 @@
                         detailClass = 'on-duty';
                         const entry = onDutyEntries[dateKey];
                         statusText = entry.type === 'extra' ? `On Duty (+${entry.hours}h extra)` : 'On Duty (OD)';
-                    } else if (hasExtraHours) {
-                        detailClass = 'extra-hours';
-                        const extra = extraHoursData[dateKey];
-                        statusText = `+${extra.hours} extra hours`;
+} else if (hasExtraHours) {
+    detailClass = 'extra-hours';
+    const extra = getExtraHoursEntry(staff, date);
+    if (extra) {
+        statusText = `+${extra.hours} extra hours`;
+    }
+
                     } else if (shift && shift.includes('Obituary')) {
                         detailClass = 'obituary';
                         statusText = 'Obituary Duty';
@@ -7955,22 +8022,28 @@
                     return;
                 }
 
-                // Check for conflicting leaves
-                const dates = getDatesInRange(startDate, endDate);
-                let conflicts = [];
 
-                dates.forEach(date => {
-                    const dateKey = formatDateForInput(date);
-                    const dayIndex = date.getDay();
-                    const dayName = shiftData.days[dayIndex];
-                    const shift = shiftData.shifts[dayName][staff];
+// Check for conflicting leaves
+const dates = getDatesInRange(startDate, endDate);
+let conflicts = [];
 
-                    // Check if already on leave
-                    const existingLeave = leaveRequests.find(req =>
-                        req.staff === staff &&
-                        req.date === dateKey &&
-                        req.status === 'approved'
-                    );
+dates.forEach(date => {
+    const dateKey = formatDateForInput(date);
+    const dayIndex = date.getDay();
+    const dayName = shiftData.days[dayIndex];
+    const shift = shiftData.shifts[dayName][staff];
+
+    // ===== UPDATED SECTION =====
+    // Check for existing leave requests (pending or approved)
+    const existingRequest = leaveRequests.find(req =>
+        req.staff === staff &&
+        req.date === dateKey &&
+        (req.status === 'pending' || req.status === 'approved')
+    );
+
+    if (existingRequest) {
+        conflicts.push(`${dateKey}: ${existingRequest.status.toUpperCase()} leave already exists`);
+    }
 
                     // Check if it's an off day
                     const isOffDay = shift && (shift.includes('Off') || shift.includes('Off-operator'));
@@ -8022,6 +8095,33 @@
                 }
 
                 const dates = getDatesInRange(startDate, endDate);
+
+                // ========== ADD THIS VALIDATION CODE HERE ==========
+// Check for existing pending or approved leaves
+let hasConflict = false;
+let conflictMessages = [];
+
+for (const date of dates) {
+    const dateKey = formatDateForInput(date);
+    
+    // Check if there's ANY existing leave request (pending or approved)
+    const existingRequest = leaveRequests.find(req => 
+        req.staff === staff && 
+        req.date === dateKey && 
+        (req.status === 'pending' || req.status === 'approved')
+    );
+    
+    if (existingRequest) {
+        hasConflict = true;
+        const status = existingRequest.status === 'pending' ? 'PENDING' : 'APPROVED';
+        conflictMessages.push(`${dateKey}: Already has a ${status} leave request`);
+    }
+}
+
+if (hasConflict) {
+    alert('❌ Cannot apply for leave:\n\n' + conflictMessages.join('\n'));
+    return;
+}
 
                 try {
                     // Create leave request for each date
@@ -10735,9 +10835,16 @@
                                             </div>
                                             ${request.reason ? `<div style="margin: 5px 0 0 90px;"><em>Reason: ${request.reason}</em></div>` : ''}
 <div class="approval-actions" style="margin-left: 90px;">
-            <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
-            <button class="btn-warning" onclick="showApproveWithCOFFModal('${request.id}')" style="background: #9b59b6;">Approve with COFF</button>
-            <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
+    <button class="btn-success" onclick="showApprovalReasonModal('${request.id}', 'approve')">Approve</button>
+    <button class="btn-warning" onclick="showApproveWithCOFFModal('${request.id}')" style="background: #9b59b6;">Approve with COFF</button>
+    
+    <!-- Cancel button - Only visible to admins (NOW AFTER Approve with COFF) -->
+    ${currentUserRole === 'admin' ? 
+        `<button class="btn-secondary" onclick="cancelPendingLeave('${request.id}')" style="background: #95a5a6;">Leave Cancel</button>` : 
+        ''
+    }
+    
+    <button class="btn-danger" onclick="showApprovalReasonModal('${request.id}', 'reject')">Reject</button>
 </div>
                                         </div>
                                     `;
@@ -10896,6 +11003,80 @@
                     filterSelect.value = 'all';
                 }
                 renderApprovals();
+            
+// ============== CANCELLED LEAVES SECTION ==============
+const cancelledContainer = document.getElementById('cancelled-leaves-container');
+if (!cancelledContainer) {
+    console.warn('Cancelled leaves container not found');
+    return;
+}
+
+// Filter cancelled requests (last 30 days)
+let cancelledRequests = leaveRequests
+    .filter(req => req.status === 'cancelled' && new Date(req.date) >= thirtyDaysAgo)
+    .sort(sortByDateAsc)
+    .slice(0, 30);
+
+if (filterUser !== 'all') {
+    cancelledRequests = cancelledRequests.filter(req => req.staff === filterUser);
+}
+
+if (cancelledRequests.length === 0) {
+    cancelledContainer.innerHTML = '<p>No cancelled leaves in the last 30 days for selected filter.</p>';
+} else {
+    let cancelledHTML = '<div class="approval-list">';
+    
+    // Group by user
+    const groupedByUser = {};
+    cancelledRequests.forEach(request => {
+        if (!groupedByUser[request.staff]) {
+            groupedByUser[request.staff] = [];
+        }
+        groupedByUser[request.staff].push(request);
+    });
+
+    Object.keys(groupedByUser).sort().forEach(staff => {
+        const userRequests = groupedByUser[staff];
+        const abbrev = staffAbbreviations[staff];
+
+        cancelledHTML += `
+            <div style="margin-bottom: 10px;">
+                <div style="background: #95a5a6; color: white; padding: 8px; border-radius: 8px 8px 0 0;">
+                    <span style="font-weight: bold;">👤 ${abbrev} (${staff})</span>
+                    <span style="float: right;">${userRequests.length} cancelled</span>
+                </div>
+        `;
+
+        userRequests.forEach(request => {
+            const date = new Date(request.date);
+            const dateStr = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+
+            cancelledHTML += `
+                <div class="approval-item" style="border-left-color: #95a5a6; border-radius: 0; border-bottom: 1px solid #eee; opacity: 0.7;">
+                    <div class="approval-header">
+                        <div>
+                            <strong style="text-decoration: line-through;">${dateStr}</strong> • ${request.type} leave
+                            <span class="badge" style="background: #95a5a6; color: white; margin-left: 8px;">CANCELLED</span>
+                        </div>
+                        <div style="font-size: 0.8em; color: #95a5a6;">
+                            Cancelled by ${request.cancelledBy || 'admin'}
+                        </div>
+                    </div>
+                    ${request.cancellationReason ? `<div style="margin-top: 5px;"><em>Reason: ${request.cancellationReason}</em></div>` : ''}
+                </div>
+            `;
+        });
+
+        cancelledHTML += '</div>';
+    });
+
+    cancelledHTML += '</div>';
+    cancelledContainer.innerHTML = cancelledHTML;
+}              
+            
             }
 
             function showApprovalReasonModal(requestId, action) {
@@ -10947,6 +11128,35 @@
                     alert('Failed to reject leave. Please try again.');
                 }
             }
+
+            // Cancel pending leave request (ADMIN ONLY)
+async function cancelPendingLeave(requestId) {
+    // Double-check admin role
+    if (currentUserRole !== 'admin') {
+        alert('❌ Only administrators can cancel leave requests.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to cancel this pending leave request?')) {
+        return;
+    }
+    
+    try {
+        await db.collection('leaveRequests').doc(requestId).update({
+            status: 'cancelled',
+            cancelledBy: currentUser.email,
+            cancelledDate: new Date().toISOString(),
+            cancellationReason: 'Cancelled by admin'
+        });
+        
+        alert('✅ Leave request cancelled successfully');
+        renderApprovals(); // Refresh the approvals list
+        
+    } catch (error) {
+        console.error('Error cancelling leave:', error);
+        alert('❌ Failed to cancel leave request: ' + error.message);
+    }
+}
 
             // ============== COFF LEAVE APPROVAL FUNCTIONS ==============
             let currentCOFFLeaveRequestId = null;
@@ -13797,5 +14007,6 @@
         </script>
 </body>
 </html>
+
 
 
