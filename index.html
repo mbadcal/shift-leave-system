@@ -11322,6 +11322,7 @@ async function cancelPendingLeave(requestId) {
                         metadata: {
                             source: 'leave_approval_with_coff',
                             leaveDate: request.date,
+                            date: request.date,
                             documentedWorkDate: selectedWorkDate || null,
                             reason: reason || 'Approved leave using COFF'
                         },
@@ -14007,6 +14008,7 @@ async function cancelPendingLeave(requestId) {
         </script>
 </body>
 </html>
+
 
 
 
