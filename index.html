@@ -2935,6 +2935,19 @@
     color: white;
 }
 
+.early-exit-badge {
+    background: #9b59b6;
+    color: white;
+}
+.early-exit {
+    background-color: #f4ecf7 !important;
+    border-left: 3px solid #9b59b6;
+    color: #8e44ad;
+}
+.status-early-exit {
+    background-color: #9b59b6;
+}
+
     </style>
 </head>
 <body>
@@ -3154,7 +3167,13 @@
 
 <!-- Approvals Tab -->
 <div id="approvals-tab" class="tab-content">
-    <h2>📋 Pending Approvals</h2>
+
+    <h2>⏱️ Late/Early Entry Approvals</h2>
+    <div id="lateEntryApprovalsContainer">
+    <!-- Pending late/early entries will be populated here -->
+    </div>
+
+    <h2>📋 Pending Leave Approvals</h2>
     <div id="pending-approvals-container">
         <!-- Pending approvals will be populated by JavaScript -->
     </div>
@@ -3169,11 +3188,11 @@
         <!-- Rejected leaves will be populated by JavaScript -->
     </div>
     
-    <!-- ADD THIS NEW SECTION -->
     <h2>🗑️ Cancelled Leaves</h2>
     <div id="cancelled-leaves-container">
-        <!-- Cancelled leaves will be populated by JavaScript -->
+    <!-- Cancelled leaves will be populated by JavaScript -->
     </div>
+
 </div>
 
 
@@ -3673,8 +3692,8 @@
                     <label for="offDutyShift">Actual Shift Worked:</label>
                     <select id="offDutyShift">
                         <option value="5pm-1:30am">5pm-1:30am</option>
-                        <option value="4pm-12:30pm">4pm-12:30pm</option>
-                        <option value="7pm-3:30pm">7pm-3:30pm</option>
+                        <option value="4pm-12:30am">4pm-12:30am</option>
+                        <option value="7pm-3:30am">7pm-3:30am</option>
                         <option value="7:00pm-3:30am">7:00pm-3:30am</option>
                     </select>
                 </div>
@@ -3754,66 +3773,84 @@
             </div>
         </div>
 
-        <!-- Modal for Late Entry -->
-        <div id="lateEntryModal" class="modal">
-            <div class="modal-content">
-                <h3>Late Entry Registration</h3>
-                <div class="form-group">
-                    <label for="lateEntryStaff">Staff Member:</label>
-                    <select id="lateEntryStaff" onchange="updateRegularShiftTime()">
-                        <option value="Sreejith">Sreejith</option>
-                        <option value="Sajeev">Sajeev</option>
-                        <option value="Umesh">Umesh</option>
-                        <option value="Rajesh">Rajesh</option>
-                        <option value="ANEESH">ANEESH (CTP)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="lateEntryDate">Date:</label>
-                    <input type="date" id="lateEntryDate" onchange="updateRegularShiftTime()">
-                </div>
-                <div class="form-group">
-                    <label for="regularShiftTime">Regular Shift Time:</label>
-                    <input type="text" id="regularShiftTime" readonly style="background: #f5f5f5;">
-                </div>
-                <div class="form-group">
-                    <label for="actualTime">Actual Entry Time:</label>
-                    <input type="time" id="actualTime" onchange="calculateDelay()" required>
-                </div>
-                <div class="form-group">
-                    <label for="delayMinutes">Calculated Delay:</label>
-                    <input type="text" id="delayMinutes" readonly style="background: #f5f5f5;">
-                    <div id="delayMessage" style="font-size: 0.9em; margin-top: 5px; color: #666;"></div>
-                </div>
-                <div class="form-group">
-                    <label>Regularization:</label>
-                    <div id="regularizeTypeSelector">
-                        <label class="radio-option">
-                            <input type="radio" name="regularizeType" value="coff" checked onclick="toggleCOFFRequirement()">
-                            <span class="radio-custom"></span>
-                            <span class="radio-label">Regularize from COFF</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="regularizeType" value="skip" onclick="toggleCOFFRequirement()">
-                            <span class="radio-custom"></span>
-                            <span class="radio-label">Skip Regularization</span>
-                        </label>
-                    </div>
-                    <div id="coffRequirement" style="padding: 10px; background: #e8f4fc; border-radius: 5px; margin-top: 10px; display: block;">
-                        <strong>COFF Required:</strong> <span id="coffHoursRequired">0</span> hours<br>
-                        <small>Based on delay calculation</small>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="lateEntryReason">Reason for Late Entry:</label>
-                    <textarea id="lateEntryReason" rows="2" placeholder="e.g., Traffic, Personal emergency"></textarea>
-                </div>
-                <div class="button-group">
-                    <button onclick="saveLateEntry()">Save Late Entry</button>
-                    <button class="btn-secondary" onclick="closeModal('lateEntryModal')">Cancel</button>
-                </div>
+<!-- Modal for Late Entry -->
+<div id="lateEntryModal" class="modal">
+    <div class="modal-content">
+        <h3 id="lateEntryModalTitle">⏰ Late/Early Entry Registration</h3>
+        <div class="form-group">
+            <label for="lateEntryStaff">Staff Member:</label>
+            <select id="lateEntryStaff" onchange="updateRegularShiftTime()">
+                <option value="Sreejith">Sreejith</option>
+                <option value="Sajeev">Sajeev</option>
+                <option value="Umesh">Umesh</option>
+                <option value="Rajesh">Rajesh</option>
+                <option value="ANEESH">ANEESH (CTP)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="lateEntryDate">Date:</label>
+            <input type="date" id="lateEntryDate" onchange="updateRegularShiftTime()">
+        </div>
+        <div class="form-group">
+            <label>Entry Type:</label>
+            <div style="display: flex; gap: 15px; margin-top: 5px;">
+                <label class="radio-option">
+                    <input type="radio" name="shiftType" value="late" checked onclick="updateRegularShiftTime()">
+                    <span class="radio-custom"></span>
+                    <span class="radio-label">Late Entry</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="shiftType" value="early" onclick="updateRegularShiftTime()">
+                    <span class="radio-custom"></span>
+                    <span class="radio-label">Early Exit</span>
+                </label>
             </div>
         </div>
+        <div class="form-group">
+            <label id="regularShiftLabel">Regular Shift Start Time:</label>
+            <input type="text" id="regularShiftTime" readonly style="background: #f5f5f5;">
+        </div>
+        <div class="form-group">
+            <label for="actualTime" id="actualTimeLabel">Actual Entry/Exit Time:</label>
+            <input type="time" id="actualTime" onchange="calculateTimeDifference()" required>
+        </div>
+        <div class="form-group">
+            <label for="delayMinutes">Calculated Duration:</label>
+            <input type="text" id="delayMinutes" readonly style="background: #f5f5f5;">
+            <div id="delayMessage" style="font-size: 0.9em; margin-top: 5px; color: #666;"></div>
+        </div>
+        <div class="form-group">
+            <label>Regularization:</label>
+            <div id="regularizeTypeSelector">
+                <label class="radio-option">
+                    <input type="radio" name="regularizeType" value="coff" checked>
+                    <span class="radio-custom"></span>
+                    <span class="radio-label">Regularize from COFF (Requires Approval)</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="regularizeType" value="skip">
+                    <span class="radio-custom"></span>
+                    <span class="radio-label">Just Record (No COFF)</span>
+                </label>
+            </div>
+            <div id="coffRequirement" style="padding: 10px; background: #e8f4fc; border-radius: 5px; margin-top: 10px;">
+                <strong>COFF Required:</strong> <span id="coffHoursRequired">0</span> hours<br>
+                <small>Based on duration calculation (30 min = 0.5h, 60 min = 1h, 90 min = 1.5h, etc.)</small>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lateEntryReason">Reason:</label>
+            <textarea id="lateEntryReason" rows="2" placeholder="e.g., Traffic, Personal emergency"></textarea>
+        </div>
+        <div class="form-group" style="background: #fff9e6; padding: 10px; border-radius: 5px;">
+            <small>⚠️ When selecting "Regularize from COFF", this will be sent for approval. COFF will be deducted only after approval.</small>
+        </div>
+        <div class="button-group">
+            <button onclick="submitLateEntryRequest()">Submit Request</button>
+            <button class="btn-secondary" onclick="closeModal('lateEntryModal')">Cancel</button>
+        </div>
+    </div>
+</div>
 
         <!-- Modal for extra hours -->
         <div id="extraHoursModal" class="modal">
@@ -4088,49 +4125,49 @@
                         "Sreejith": "Obituary duty 5pm-1:30am",
                         "Sajeev": "5pm-1:30am",
                         "Umesh": "5pm-1:30am",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "7:00pm-3:30am"
                     },
                     "Monday": {
                         "Sreejith": "Obituary duty 5pm-1:30am",
                         "Sajeev": "Off-operator",
                         "Umesh": "5pm-1:30am",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "7:00pm-3:30am"
                     },
                     "Tuesday": {
                         "Sreejith": "5pm-1:30am",
                         "Sajeev": "Obituary duty 5pm-1:30am",
                         "Umesh": "Off-operator",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "7:00pm-3:30am"
                     },
                     "Wednesday": {
                         "Sreejith": "Off-operator",
                         "Sajeev": "5pm-1:30am",
                         "Umesh": "Obituary duty 5pm-1:30am",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "Off-operator"
                     },
                     "Thursday": {
                         "Sreejith": "Obituary duty 5pm-1:30am",
-                        "Sajeev": "4pm-12:30pm",
+                        "Sajeev": "4pm-12:30am",
                         "Umesh": "5pm-1:30am",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "7:00pm-3:30am"
                     },
                     "Friday": {
                         "Sreejith": "5pm-1:30am",
                         "Sajeev": "Obituary duty 5pm-1:30am",
-                        "Umesh": "7pm-3:30pm",
+                        "Umesh": "7pm-3:30am",
                         "Rajesh": "Off-operator",
                         "ANEESH": "7:00pm-3:30am"
                     },
                     "Saturday": {
-                        "Sreejith": "4pm-12:30pm",
+                        "Sreejith": "4pm-12:30am",
                         "Sajeev": "5pm-1:30am",
                         "Umesh": "Obituary duty 5pm-1:30am",
-                        "Rajesh": "7pm-3:30pm",
+                        "Rajesh": "7pm-3:30am",
                         "ANEESH": "7:00pm-3:30am"
                     }
                 }
@@ -4418,49 +4455,49 @@
                                 "Sreejith": "Obituary duty 5pm-1:30am",
                                 "Sajeev": "5pm-1:30am",
                                 "Umesh": "5pm-1:30am",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "7:00pm-3:30am"
                             },
                             "Monday": {
                                 "Sreejith": "Obituary duty 5pm-1:30am",
                                 "Sajeev": "Off-operator",
                                 "Umesh": "5pm-1:30am",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "7:00pm-3:30am"
                             },
                             "Tuesday": {
                                 "Sreejith": "5pm-1:30am",
                                 "Sajeev": "Obituary duty 5pm-1:30am",
                                 "Umesh": "Off-operator",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "7:00pm-3:30am"
                             },
                             "Wednesday": {
                                 "Sreejith": "Off-operator",
                                 "Sajeev": "5pm-1:30am",
                                 "Umesh": "Obituary duty 5pm-1:30am",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "Off-operator"
                             },
                             "Thursday": {
                                 "Sreejith": "Obituary duty 5pm-1:30am",
-                                "Sajeev": "4pm-12:30pm",
+                                "Sajeev": "4pm-12:30am",
                                 "Umesh": "5pm-1:30am",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "7:00pm-3:30am"
                             },
                             "Friday": {
                                 "Sreejith": "5pm-1:30am",
                                 "Sajeev": "Obituary duty 5pm-1:30am",
-                                "Umesh": "7pm-3:30pm",
+                                "Umesh": "7pm-3:30am",
                                 "Rajesh": "Off-operator",
                                 "ANEESH": "7:00pm-3:30am"
                             },
                             "Saturday": {
-                                "Sreejith": "4pm-12:30pm",
+                                "Sreejith": "4pm-12:30am",
                                 "Sajeev": "5pm-1:30am",
                                 "Umesh": "Obituary duty 5pm-1:30am",
-                                "Rajesh": "7pm-3:30pm",
+                                "Rajesh": "7pm-3:30am",
                                 "ANEESH": "7:00pm-3:30am"
                             }
                         }
@@ -4993,6 +5030,23 @@
                     entry.staff === staff && entry.date === dateKey
                 );
             }
+            function checkEarlyExit(staff, date) {
+                const dateKey = formatDateForInput(date);
+                return lateEntries.entries.some(entry =>
+                    entry.staff === staff && 
+                    entry.date === dateKey && 
+                    entry.shiftType === 'early'
+                );
+            }
+
+            function getEarlyExit(staff, date) {
+                const dateKey = formatDateForInput(date);
+                return lateEntries.entries.find(entry =>
+                    entry.staff === staff && 
+                    entry.date === dateKey && 
+                    entry.shiftType === 'early'
+                );
+            }
 
             function getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry) {
                 if (hasLateEntry) return 'status-late-entry';
@@ -5241,49 +5295,49 @@
                                     "Sreejith": "Obituary duty 5pm-1:30am",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Monday": {
                                     "Sreejith": "Obituary duty 5pm-1:30am",
                                     "Sajeev": "Off-operator",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Tuesday": {
                                     "Sreejith": "5pm-1:30am",
                                     "Sajeev": "Obituary duty 5pm-1:30am",
                                     "Umesh": "Off-operator",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Wednesday": {
                                     "Sreejith": "Off-operator",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "Obituary duty 5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "Off-operator"
                                 },
                                 "Thursday": {
                                     "Sreejith": "Obituary duty 5pm-1:30am",
-                                    "Sajeev": "4pm-12:30pm",
+                                    "Sajeev": "4pm-12:30am",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Friday": {
                                     "Sreejith": "5pm-1:30am",
                                     "Sajeev": "Obituary duty 5pm-1:30am",
-                                    "Umesh": "7pm-3:30pm",
+                                    "Umesh": "7pm-3:30am",
                                     "Rajesh": "Off-operator",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Saturday": {
-                                    "Sreejith": "4pm-12:30pm",
+                                    "Sreejith": "4pm-12:30am",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "Obituary duty 5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 }
                             },
@@ -5302,49 +5356,49 @@
                                     "Sreejith": "Obituary duty 5pm-1:30am",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Monday": {
                                     "Sreejith": "Obituary duty 5pm-1:30am",
                                     "Sajeev": "Off-operator",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Tuesday": {
                                     "Sreejith": "5pm-1:30am",
                                     "Sajeev": "Obituary duty 5pm-1:30am",
                                     "Umesh": "Off-operator",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Wednesday": {
                                     "Sreejith": "Off-operator",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "Obituary duty 5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "Off-operator"
                                 },
                                 "Thursday": {
                                     "Sreejith": "Obituary duty 5pm-1:30am",
-                                    "Sajeev": "4pm-12:30pm",
+                                    "Sajeev": "4pm-12:30am",
                                     "Umesh": "5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Friday": {
                                     "Sreejith": "5pm-1:30am",
                                     "Sajeev": "Obituary duty 5pm-1:30am",
-                                    "Umesh": "7pm-3:30pm",
+                                    "Umesh": "7pm-3:30am",
                                     "Rajesh": "Off-operator",
                                     "ANEESH": "7:00pm-3:30am"
                                 },
                                 "Saturday": {
-                                    "Sreejith": "4pm-12:30pm",
+                                    "Sreejith": "4pm-12:30am",
                                     "Sajeev": "5pm-1:30am",
                                     "Umesh": "Obituary duty 5pm-1:30am",
-                                    "Rajesh": "7pm-3:30pm",
+                                    "Rajesh": "7pm-3:30am",
                                     "ANEESH": "7:00pm-3:30am"
                                 }
                             }
@@ -5413,6 +5467,9 @@
 
                         // Initialize admin tools
                         initAdminTools();
+
+                        // Initialize late entry approval system - ADD THIS LINE
+                        initLateEntryApprovalSystem();
 
                         // Initialize UI
                         document.getElementById('current-date').textContent = currentDateStr;
@@ -5593,122 +5650,140 @@
                 // Get all staff for today
                 const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
                 let availableOperators = 0;
+                let availableNonAneesh = 0;
 
-                staffList.forEach(staff => {
-                    const shift = shiftData.shifts[dayName][staff];
-                    const isOnLeave = checkIfOnLeave(staff, date);
-                    const isOffDutyWorking = checkOffDutyWorking(staff, date);
-                    const isOnDuty = checkOnDuty(staff, date);
-                    const hasExtraHours = checkExtraHours(staff, date);
-                    const leaveStatus = getLeaveStatus(staff, date);
-                    const hasLateEntry = checkLateEntry(staff, date);
-                    const abbrev = staffAbbreviations[staff];
+    staffList.forEach(staff => {
+    const shift = shiftData.shifts[dayName][staff];
+    const isOnLeave = checkIfOnLeave(staff, date);
+    const isOffDutyWorking = checkOffDutyWorking(staff, date);
+    const isOnDuty = checkOnDuty(staff, date);
+    const hasExtraHours = checkExtraHours(staff, date);
+    const leaveStatus = getLeaveStatus(staff, date);
+    const hasLateEntry = checkLateEntry(staff, date);
+    const abbrev = staffAbbreviations[staff];
 
-                    let statusClass = '';
-                    let statusText = '';
-                    let badge = '';
-                    let shiftDisplay = shift || 'Not Scheduled';
-
-                    if (hasLateEntry) {
-                        statusClass = 'late-entry';
-                        const lateEntry = getLateEntry(staff, date);
-                        statusText = `Late Entry: ${lateEntry.delayMinutes} min delay`;
-                        badge = '<span class="badge late-entry-badge">LATE</span>';
-                        shiftDisplay = lateEntry.actualTime || shiftDisplay;
-                        availableOperators++;
-                    } else if (leaveStatus === 'pending') {
-                        statusClass = 'leave-pending';
-                        statusText = 'Pending Leave';
-                        badge = '<span class="badge leave-pending-badge">PENDING</span>';
-                    } else if (leaveStatus === 'approved') {
-                        statusClass = 'leave-approved';
-                        statusText = 'On Leave';
-                        badge = '<span class="badge leave-approved-badge">LEAVE</span>';
-                    } else if (leaveStatus === 'rejected') {
-                        statusClass = 'leave-rejected';
-                        statusText = 'Leave Rejected';
-                        badge = '<span class="badge leave-rejected-badge">REJECTED</span>';
-                    } else if (leaveStatus === 'cancelled') {  
-                        statusClass = 'leave-cancelled';
-                        statusText = 'Leave Cancelled';
-                        badge = '<span class="badge leave-cancelled-badge">CANCELLED</span>';
-                        // Don't count cancelled leaves as available
+    let statusClass = '';
+    let statusText = '';
+    let badge = '';
+    let shiftDisplay = shift || 'Not Scheduled';
     
-                    } else if (isOffDutyWorking) {
-                        statusClass = 'off-duty-working';
-                        statusText = 'Off-duty Working';
-                        const entry = offDutyEntries[dateKey];
-                        shiftDisplay = entry ? entry.shift : shiftDisplay;
-                        badge = '<span class="badge off-duty-working-badge">OFF-DUTY</span>';
-                        availableOperators++;
-                    } else if (isOnDuty) {
-                        statusClass = 'on-duty';
-                        const entry = onDutyEntries[dateKey];
-                        statusText = entry && entry.type === 'extra' ? `On Duty (+${entry.hours}h extra)` : 'On Duty (OD)';
-                        badge = '<span class="badge on-duty-badge">OD</span>';
-                        availableOperators++;
-                    } else if (hasExtraHours) {
-    statusClass = 'extra-hours';
-    const extra = getExtraHoursEntry(staff, date);
-    if (extra) {
-        statusText = `+${extra.hours} extra hours`;
-        badge = '<span class="badge extra-hours-badge">EXTRA</span>';
-        shiftDisplay = shift || '';
+    // 👇 ADD THIS FLAG
+    let isAvailable = false;
+
+    if (hasLateEntry) {
+        statusClass = 'late-entry';
+        const lateEntry = getLateEntry(staff, date);
+        statusText = `Late Entry: ${lateEntry.delayMinutes} min delay`;
+        badge = '<span class="badge late-entry-badge">LATE</span>';
+        shiftDisplay = lateEntry.actualTime || shiftDisplay;
+        isAvailable = true; // 👈 SET FLAG
+    } else if (leaveStatus === 'pending') {
+        statusClass = 'leave-pending';
+        statusText = 'Pending Leave';
+        badge = '<span class="badge leave-pending-badge">PENDING</span>';
+        isAvailable = false; // 👈 NOT AVAILABLE
+    } else if (leaveStatus === 'approved') {
+        statusClass = 'leave-approved';
+        statusText = 'On Leave';
+        badge = '<span class="badge leave-approved-badge">LEAVE</span>';
+        isAvailable = false; // 👈 NOT AVAILABLE
+    } else if (leaveStatus === 'rejected') {
+        statusClass = 'leave-rejected';
+        statusText = 'Leave Rejected';
+        badge = '<span class="badge leave-rejected-badge">REJECTED</span>';
+        isAvailable = false; // 👈 NOT AVAILABLE
+    } else if (leaveStatus === 'cancelled') {  
+        statusClass = 'leave-cancelled';
+        statusText = 'Leave Cancelled';
+        badge = '<span class="badge leave-cancelled-badge">CANCELLED</span>';
+        isAvailable = false; // 👈 NOT AVAILABLE
+    } else if (isOffDutyWorking) {
+        statusClass = 'off-duty-working';
+        statusText = 'Off-duty Working';
+        const entry = offDutyEntries[dateKey];
+        shiftDisplay = entry ? entry.shift : shiftDisplay;
+        badge = '<span class="badge off-duty-working-badge">OFF-DUTY</span>';
+        isAvailable = true; // 👈 SET FLAG
+    } else if (isOnDuty) {
+        statusClass = 'on-duty';
+        const entry = onDutyEntries[dateKey];
+        statusText = entry && entry.type === 'extra' ? `On Duty (+${entry.hours}h extra)` : 'On Duty (OD)';
+        badge = '<span class="badge on-duty-badge">OD</span>';
+        isAvailable = true; // 👈 SET FLAG
+    } else if (hasExtraHours) {
+        statusClass = 'extra-hours';
+        const extra = getExtraHoursEntry(staff, date);
+        if (extra) {
+            statusText = `+${extra.hours} extra hours`;
+            badge = '<span class="badge extra-hours-badge">EXTRA</span>';
+            shiftDisplay = shift || '';
+        }
+        isAvailable = true; // 👈 SET FLAG
+    } else if (shift && shift.includes('Obituary')) {
+        statusClass = 'obituary-duty';
+        statusText = 'Obituary Duty';
+        badge = '<span class="badge obituary-badge">OBITUARY</span>';
+        isAvailable = true; // 👈 SET FLAG
+    } else if (shift && shift.includes('Off')) {
+        statusClass = 'off-duty';
+        statusText = 'Off Duty';
+        isAvailable = false; // 👈 NOT AVAILABLE
+    } else if (shift && !isOnLeave) {
+        isAvailable = true; // 👈 SET FLAG
+    }
+
+    // 👇 ADD THIS BLOCK AFTER ALL CONDITIONS
+    if (isAvailable) {
         availableOperators++;
-    
+        if (staff !== 'ANEESH') {
+            availableNonAneesh++;
+        }
+    }
+
+    // 👇 THE REST OF THE CODE (HTML GENERATION) STAYS THE SAME
+    if (isHoliday) {
+        badge += '<span class="badge holiday-badge">HOLIDAY</span>';
+        statusText = 'Holiday';
+    }
+
+    if (isSkeleton) {
+        badge += '<span class="badge skeleton-badge">SKELETON</span>';
+        statusText = 'Skeleton Shift';
+    }
+
+    html += `
+        <div class="shift-item ${statusClass}">
+            <div class="operator-name">
+                <span class="status-indicator ${getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry)}"></span>
+                ${abbrev} (${staff})
+                ${badge}
+            </div>
+            <div class="shift-time">${shiftDisplay}</div>
+        </div>
+        ${statusText ? `<div style="font-size: 0.75em; color: #666; margin-left: 20px; margin-bottom: 5px;">${statusText}</div>` : ''}
+    `;
+});
+
+// Add operator count with separate CTP count
+html += `
+    <div class="operator-count-display" style="margin-top: 15px;">
+        <div class="operator-count-item">
+            <span class="operator-dot available"></span>
+            <span>Available Operators: ${availableNonAneesh}/4</span>
+        </div>
+        <div class="operator-count-item">
+            <span class="operator-dot" style="background: #9b59b6;"></span>
+            <span>CTP: ${availableOperators - availableNonAneesh}/1</span>
+        </div>
+    </div>
+`;
+
+// Add warnings - using availableNonAneesh
+if (availableNonAneesh <= 2) {
+    html += `<div class="warning" style="margin-top: 12px;">⚠️ Minimum operators only (${availableNonAneesh} available)</div>`;
+} else if (availableNonAneesh < 2) {
+    html += `<div class="warning critical" style="margin-top: 12px;">❌ CRITICAL: Less than 2 operators available (${availableNonAneesh} available)!</div>`;
 }
-                        availableOperators++;
-                    } else if (shift && shift.includes('Obituary')) {
-                        statusClass = 'obituary-duty';
-                        statusText = 'Obituary Duty';
-                        availableOperators++;
-                        badge = '<span class="badge obituary-badge">OBITUARY</span>';
-                    } else if (shift && shift.includes('Off')) {
-                        statusClass = 'off-duty';
-                        statusText = 'Off Duty';
-                    } else if (shift && !isOnLeave) {
-                        availableOperators++;
-                    }
-
-                    if (isHoliday) {
-                        badge += '<span class="badge holiday-badge">HOLIDAY</span>';
-                        statusText = 'Holiday';
-                    }
-
-                    if (isSkeleton) {
-                        badge += '<span class="badge skeleton-badge">SKELETON</span>';
-                        statusText = 'Skeleton Shift';
-                    }
-
-                    html += `
-                                                        <div class="shift-item ${statusClass}">
-                                                            <div class="operator-name">
-                                                                <span class="status-indicator ${getStatusIndicatorClass(leaveStatus, isOffDutyWorking, isOnDuty, hasExtraHours, shift, hasLateEntry)}"></span>
-                                                                ${abbrev} (${staff})
-                                                                ${badge}
-                                                            </div>
-                                                            <div class="shift-time">${shiftDisplay}</div>
-                                                        </div>
-                                                        ${statusText ? `<div style="font-size: 0.75em; color: #666; margin-left: 20px; margin-bottom: 5px;">${statusText}</div>` : ''}
-                                                    `;
-                });
-
-                // Add operator count
-                html += `
-                                                    <div class="operator-count-display" style="margin-top: 15px;">
-                                                        <div class="operator-count-item">
-                                                            <span class="operator-dot available"></span>
-                                                            <span>Available Operators: ${availableOperators}/5</span>
-                                                        </div>
-                                                    </div>
-                                                `;
-
-                // Add warnings
-                if (availableOperators <= 2) {
-                    html += `<div class="warning" style="margin-top: 12px;">⚠️ Minimum operators only (${availableOperators} available)</div>`;
-                } else if (availableOperators < 2) {
-                    html += `<div class="warning critical" style="margin-top: 12px;">❌ CRITICAL: Less than 2 operators available!</div>`;
-                }
 
                 container.innerHTML = html;
             }
@@ -5745,43 +5820,58 @@
                     const isHoliday = holidays[dateKey];
                     const isSkeleton = skeletonShifts[dateKey];
 
-                    // Count operators by status
-                    const operators = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-                    let availableOperators = 0;
-                    let leaveOperators = 0;
-                    let offDutyOperators = 0;
-                    let offDutyWorkingOperators = 0;
-                    let onDutyOperators = 0;
-                    let obituaryOperators = 0;
-                    let extraHoursOperators = 0;
-                    let lateEntryOperators = 0;
+// Count operators by status
+const operators = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+let availableOperators = 0;
+let availableNonAneesh = 0;
+let leaveOperators = 0;
+let offDutyOperators = 0;
+let offDutyWorkingOperators = 0;
+let onDutyOperators = 0;
+let obituaryOperators = 0;
+let extraHoursOperators = 0;
+let lateEntryOperators = 0;
 
-                    operators.forEach(op => {
-                        const shift = shiftData.shifts[dayName][op];
-                        const isOnLeave = checkIfOnLeave(op, date);
-                        const isOffDutyWorking = checkOffDutyWorking(op, date);
-                        const isOnDuty = checkOnDuty(op, date);
-                        const hasExtraHours = checkExtraHours(op, date);
-                        const hasLateEntry = checkLateEntry(op, date);
+operators.forEach(op => {
+    const shift = shiftData.shifts[dayName][op];
+    const isOnLeave = checkIfOnLeave(op, date);
+    const isOffDutyWorking = checkOffDutyWorking(op, date);
+    const isOnDuty = checkOnDuty(op, date);
+    const hasExtraHours = checkExtraHours(op, date);
+    const hasLateEntry = checkLateEntry(op, date);
+    const hasEarlyExit = checkEarlyExit(op, date); // Add this if you have it
+    
+    let isAvailable = false;
 
-                        if (hasLateEntry) {
-                            availableOperators++;
-                            lateEntryOperators++;
-                        } else if (isOffDutyWorking || isOnDuty) {
-                            availableOperators++;
-                            if (isOffDutyWorking) offDutyWorkingOperators++;
-                            if (isOnDuty) onDutyOperators++;
-                        } else if (shift && !shift.includes('Off') && !isOnLeave) {
-                            availableOperators++;
-                            if (shift.includes('Obituary')) {
-                                obituaryOperators++;
-                            }
-                        }
+    if (hasLateEntry) {
+        isAvailable = true;
+        lateEntryOperators++;
+    } else if (hasEarlyExit) { // Add early exit check if you have it
+        isAvailable = true;
+        lateEntryOperators++; // Or create earlyExitOperators counter
+    } else if (isOffDutyWorking || isOnDuty) {
+        isAvailable = true;
+        if (isOffDutyWorking) offDutyWorkingOperators++;
+        if (isOnDuty) onDutyOperators++;
+    } else if (shift && !shift.includes('Off') && !isOnLeave) {
+        isAvailable = true;
+        if (shift.includes('Obituary')) {
+            obituaryOperators++;
+        }
+    }
+    
+    // THIS IS THE KEY PART - count available operators here
+    if (isAvailable) {
+        availableOperators++;
+        if (op !== 'ANEESH') {
+            availableNonAneesh++;
+        }
+    }
 
-                        if (isOnLeave) leaveOperators++;
-                        if (shift && shift.includes('Off') && !isOffDutyWorking) offDutyOperators++;
-                        if (hasExtraHours) extraHoursOperators++;
-                    });
+    if (isOnLeave) leaveOperators++;
+    if (shift && shift.includes('Off') && !isOffDutyWorking) offDutyOperators++;
+    if (hasExtraHours) extraHoursOperators++;
+});
 
                     // Create day card with stronger today highlighting
                     const dayCard = document.createElement('div');
@@ -5832,6 +5922,7 @@
                             const isOnDuty = checkOnDuty(staff, date);
                             const hasExtraHours = checkExtraHours(staff, date);
                             const hasLateEntry = checkLateEntry(staff, date);
+                            const hasEarlyExit = checkEarlyExit(staff, date);
                             const abbrev = staffAbbreviations[staff];
 
                             const shiftItem = document.createElement('div');
@@ -5866,6 +5957,13 @@
                                 const lateEntry = getLateEntry(staff, date);
                                 shiftDisplay = lateEntry.actualTime || shiftDisplay;
                                 badge = '<span class="badge late-entry-badge">LATE</span>';
+
+                            } 
+                            else if (hasEarlyExit) {
+                                const earlyExit = getEarlyExit(staff, date);
+                                shiftDisplay = earlyExit.actualTime || shiftDisplay;
+                                badge = '<span class="badge early-exit-badge">EARLY</span>';    
+                                
                             } else if (isOffDutyWorking) {
                                 const entry = offDutyEntries[dateKey];
                                 if (entry && entry.staff === staff) {
@@ -5953,16 +6051,16 @@ if (hasExtraHours) {
                                 `;
                     shiftList.appendChild(operatorCount);
 
-                    // Add warnings
-                    if (availableOperators <= 2) {
+                    // Add warnings - using availableNonAneesh instead of availableOperators
+                    if (availableNonAneesh <= 2) {
                         const warning = document.createElement('div');
                         warning.className = 'warning';
-                        warning.textContent = `⚠️ Minimum operators only (${availableOperators} available)`;
+                        warning.textContent = `⚠️ Minimum operators only (${availableNonAneesh} available)`;
                         shiftList.appendChild(warning);
-                    } else if (availableOperators < 2) {
+                    } else if (availableNonAneesh < 2) {
                         const warning = document.createElement('div');
                         warning.className = 'warning critical';
-                        warning.textContent = '❌ CRITICAL: Less than 2 operators available!';
+                        warning.textContent = `❌ CRITICAL: Less than 2 operators available (${availableNonAneesh} available)!`;
                         shiftList.appendChild(warning);
                     }
 
@@ -6329,6 +6427,17 @@ if (hasExtraHours) {
                             statusText += ' (Regularized from COFF)';
                         }
                         shiftDisplay = lateEntry.actualTime || shiftDisplay;
+                        }
+                    
+                    else if (checkEarlyExit(staff, date)) {
+                    const earlyExit = getEarlyExit(staff, date);
+                    detailClass = 'early-exit';
+                    statusText = `Early Exit: ${earlyExit.delayMinutes} minutes early`;
+                    if (earlyExit.regularizedFromCOFF) {
+                    statusText += ' (Regularized from COFF)';
+                    }
+                    shiftDisplay = earlyExit.actualTime || shiftDisplay;
+
                     } else if (leaveStatus === 'pending') {
                         detailClass = 'leave';
                         statusText = 'Pending Leave';
@@ -8362,8 +8471,8 @@ if (hasConflict) {
                                             <select id="shift_${dateKey}_${staff}">
                                                 <option value="">Select Shift</option>
                                                 <option value="5pm-1:30am" ${currentShift === '5pm-1:30am' ? 'selected' : ''}>5pm-1:30am</option>
-                                                <option value="4pm-12:30pm" ${currentShift === '4pm-12:30pm' ? 'selected' : ''}>4pm-12:30pm</option>
-                                                <option value="7pm-3:30pm" ${currentShift === '7pm-3:30pm' ? 'selected' : ''}>7pm-3:30pm</option>
+                                                <option value="4pm-12:30am" ${currentShift === '4pm-12:30am' ? 'selected' : ''}>4pm-12:30am</option>
+                                                <option value="7pm-3:30am" ${currentShift === '7pm-3:30am' ? 'selected' : ''}>7pm-3:30am</option>
                                                 <option value="7:00pm-3:30am" ${currentShift === '7:00pm-3:30am' ? 'selected' : ''}>7:00pm-3:30am</option>
                                                 <option value="Obituary duty 5pm-1:30am" ${currentShift === 'Obituary duty 5pm-1:30am' || currentShift.includes('Obituary duty') ? 'selected' : ''}>Obituary duty 5pm-1:30am</option>
                                                 <option value="Off" ${currentShift === 'Off' ? 'selected' : ''}>Off</option>
@@ -8517,49 +8626,49 @@ if (hasConflict) {
                             "Sreejith": "Obituary duty 5pm-1:30am",
                             "Sajeev": "5pm-1:30am",
                             "Umesh": "5pm-1:30am",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "7:00pm-3:30am"
                         },
                         "Monday": {
                             "Sreejith": "Obituary duty 5pm-1:30am",
                             "Sajeev": "Off-operator",
                             "Umesh": "5pm-1:30am",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "7:00pm-3:30am"
                         },
                         "Tuesday": {
                             "Sreejith": "5pm-1:30am",
                             "Sajeev": "Obituary duty 5pm-1:30am",
                             "Umesh": "Off-operator",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "7:00pm-3:30am"
                         },
                         "Wednesday": {
                             "Sreejith": "Off-operator",
                             "Sajeev": "5pm-1:30am",
                             "Umesh": "Obituary duty 5pm-1:30am",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "Off-operator"
                         },
                         "Thursday": {
                             "Sreejith": "Obituary duty 5pm-1:30am",
-                            "Sajeev": "4pm-12:30pm",
+                            "Sajeev": "4pm-12:30am",
                             "Umesh": "5pm-1:30am",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "7:00pm-3:30am"
                         },
                         "Friday": {
                             "Sreejith": "5pm-1:30am",
                             "Sajeev": "Obituary duty 5pm-1:30am",
-                            "Umesh": "7pm-3:30pm",
+                            "Umesh": "7pm-3:30am",
                             "Rajesh": "Off-operator",
                             "ANEESH": "7:00pm-3:30am"
                         },
                         "Saturday": {
-                            "Sreejith": "4pm-12:30pm",
+                            "Sreejith": "4pm-12:30am",
                             "Sajeev": "5pm-1:30am",
                             "Umesh": "Obituary duty 5pm-1:30am",
-                            "Rajesh": "7pm-3:30pm",
+                            "Rajesh": "7pm-3:30am",
                             "ANEESH": "7:00pm-3:30am"
                         }
                     };
@@ -8685,8 +8794,8 @@ if (hasConflict) {
                                                 <select id="single_shift_${date}_${staff}" ${isOnLeave ? 'disabled' : ''}>
                                                     <option value="">Select Shift</option>
                                                     <option value="5pm-1:30am" ${currentShift === '5pm-1:30am' ? 'selected' : ''}>5pm-1:30am</option>
-                                                    <option value="4pm-12:30pm" ${currentShift === '4pm-12:30pm' ? 'selected' : ''}>4pm-12:30pm</option>
-                                                    <option value="7pm-3:30pm" ${currentShift === '7pm-3:30pm' ? 'selected' : ''}>7pm-3:30pm</option>
+                                                    <option value="4pm-12:30am" ${currentShift === '4pm-12:30am' ? 'selected' : ''}>4pm-12:30am</option>
+                                                    <option value="7pm-3:30am" ${currentShift === '7pm-3:30am' ? 'selected' : ''}>7pm-3:30am</option>
                                                     <option value="7:00pm-3:30am" ${currentShift === '7:00pm-3:30am' ? 'selected' : ''}>7:00pm-3:30am</option>
                                                     <option value="Obituary duty 5pm-1:30am" ${currentShift === 'Obituary duty 5pm-1:30am' || currentShift.includes('Obituary duty') ? 'selected' : ''}>Obituary duty 5pm-1:30am</option>
                                                     <option value="Off" ${currentShift === 'Off' ? 'selected' : ''}>Off</option>
@@ -9144,175 +9253,221 @@ if (hasConflict) {
                 });
             }
 
-            // Fix the saveOffDutyEntry function to automatically calculate COFF
-            // Fix saveOffDutyEntry function to prevent duplicates and properly update
-            async function saveOffDutyEntry() {
-                const staff = document.getElementById('offDutyStaff').value;
-                const date = document.getElementById('offDutyDate').value;
-                const shift = document.getElementById('offDutyShift').value;
-                const reason = document.getElementById('offDutyReason').value;
+// Fix the saveOffDutyEntry function
+async function saveOffDutyEntry() {
+    const staff = document.getElementById('offDutyStaff').value;
+    const date = document.getElementById('offDutyDate').value;
+    const shift = document.getElementById('offDutyShift').value;
+    const reason = document.getElementById('offDutyReason').value;
 
-                if (!staff || !date || !shift) {
-                    alert('Please fill in all required fields');
+    if (!staff || !date || !shift) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    try {
+        // CHECK FOR EXISTING ENTRY FIRST
+        const existingEntry = await db.collection('offDutyEntries').doc(date).get();
+
+        if (existingEntry.exists) {
+            const existingStaff = existingEntry.data().staff;
+
+            // If same staff, ask if they want to update
+            if (existingStaff === staff) {
+                if (!confirm(`⚠️ Off-duty entry already exists for ${staff} on this date.\n\nDo you want to update it?`)) {
+                    return;
+                }
+            } else {
+                // Different staff - warn and ask to replace
+                if (!confirm(`⚠️ Another staff member (${existingStaff}) is already marked as off-duty working on this date.\n\nDo you want to replace it with ${staff}?`)) {
                     return;
                 }
 
-                try {
-                    // CHECK FOR EXISTING ENTRY FIRST
-                    const existingEntry = await db.collection('offDutyEntries').doc(date).get();
-
-                    if (existingEntry.exists) {
-                        const existingStaff = existingEntry.data().staff;
-
-                        // If same staff, ask if they want to update
-                        if (existingStaff === staff) {
-                            if (!confirm(`⚠️ Off-duty entry already exists for ${staff} on this date.\n\nDo you want to update it?`)) {
-                                return;
-                            }
-                        } else {
-                            // Different staff - warn and ask to replace
-                            if (!confirm(`⚠️ Another staff member (${existingStaff}) is already marked as off-duty working on this date.\n\nDo you want to replace it with ${staff}?`)) {
-                                return;
-                            }
-
-                            // Remove old COFF entry for previous staff
-                            await removeCOFFForOffDuty(existingStaff, date);
-                        }
-                    }
-
-                    // Save the new off-duty entry
-                    const entry = {
-                        staff: staff,
-                        date: date,
-                        shift: shift,
-                        reason: reason,
-                        enteredBy: currentUser.email,
-                        entryDate: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    await db.collection('offDutyEntries').doc(date).set(entry);
-
-                    // Remove any existing extra hours data for this staff/date
-                    const extraDocId = `${date}_${staff}`;
-                    await db.collection('extraHoursData').doc(extraDocId).delete().catch(() => { });
-
-                    // Add new extra hours data
-                    await db.collection('extraHoursData').doc(extraDocId).set({
-                        staff: staff,
-                        date: date,
-                        hours: 8,
-                        reason: `Off-duty working: ${reason || shift}`,
-                        enteredBy: currentUser.email,
-                        entryDate: new Date().toISOString(),
-                        type: 'Off-Duty Working',
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true });
-
-                    // Create COFF transaction
-                    // Create COFF transaction - 8 hours = 1 day
-                    await updateCOFFBalance(staff, 8, 'earn', { // 8 hours, NOT 8 days
-                        source: 'off_duty_working',
-                        date: date,
-                        hours: 8,
-                        shift: shift,
-                        description: `Off-Duty Working (${shift}) - 8 hours (1 day COFF)`,
-                        reason: reason
-                    });
-
-                    alert(`✅ Off-duty working entry saved successfully!\n\nCOFF Earned: 8 hours (1 day)`);
-                    closeModal('offDutyModal');
-
-                    // Clear form
-                    document.getElementById('offDutyReason').value = '';
-
-                } catch (error) {
-                    console.error('Error saving off-duty entry:', error);
-                    alert('Failed to save off-duty entry. Please try again.');
-                }
-
-                // Helper function to remove COFF for off-duty entries when replaced
-                async function removeCOFFForOffDuty(staff, date) {
-                    try {
-                        // Find and delete the extra hours entry
-                        const extraDocId = `${date}_${staff}`;
-                        await db.collection('extraHoursData').doc(extraDocId).delete().catch(() => { });
-
-                        // CRITICAL FIX: Instead of deleting COFF transactions, mark them as canceled
-                        const transactionsSnapshot = await db.collection('coffTransactions')
-                            .where('staff', '==', staff)
-                            .where('metadata.date', '==', date)
-                            .where('metadata.source', '==', 'off_duty_working')
-                            .get();
-
-                        const batch = db.batch();
-                        transactionsSnapshot.forEach(doc => {
-                            // IMPORTANT: Update to mark as canceled instead of delete
-                            batch.update(doc.ref, {
-                                canceled: true,
-                                canceledAt: new Date().toISOString(),
-                                canceledBy: currentUser?.email || 'system',
-                                // Keep the original transaction but mark it as invalid
-                                valid: false,
-                                reason: 'Entry was canceled/replaced'
-                            });
-                        });
-                        await batch.commit();
-
-                        // Recalculate balance for this staff
-                        await recalculateStaffCOFFBalance(staff);
-
-                        console.log(`✅ Marked COFF transactions as canceled for ${staff} on ${date}`);
-
-                    } catch (error) {
-                        console.error('Error removing COFF:', error);
-                    }
-                }
-                // Recalculate single staff COFF balance
-                async function recalculateStaffCOFFBalance(staff) {
-                    try {
-                        // Get all earn transactions for this staff
-                        const transactionsSnapshot = await db.collection('coffTransactions')
-                            .where('staff', '==', staff)
-                            .where('type', '==', 'earn')
-                            .get();
-
-                        let totalEarned = 0;
-                        transactionsSnapshot.forEach(doc => {
-                            totalEarned += doc.data().hours || 0;
-                        });
-
-                        // Get all use transactions
-                        const useTransactionsSnapshot = await db.collection('coffTransactions')
-                            .where('staff', '==', staff)
-                            .where('type', '==', 'use')
-                            .get();
-
-                        let totalUsed = 0;
-                        useTransactionsSnapshot.forEach(doc => {
-                            totalUsed += Math.abs(doc.data().hours || 0);
-                        });
-
-                        const newBalance = totalEarned - totalUsed;
-
-                        // Update balance
-                        await db.collection('coffBalances').doc(staff).set({
-                            staff: staff,
-                            balance: newBalance,
-                            lastUpdated: new Date().toISOString(),
-                            updatedBy: currentUser.email,
-                            recalculated: true
-                        }, { merge: true });
-
-                        return newBalance;
-
-                    } catch (error) {
-                        console.error('Error recalculating staff COFF:', error);
-                        return 0;
-                    }
-                }
-
+                // Remove old COFF entry for previous staff
+                await removeCOFFForOffDuty(existingStaff, date);
             }
+        }
+
+        // Save the new off-duty entry
+        const entry = {
+            staff: staff,
+            date: date,
+            shift: shift,
+            reason: reason,
+            enteredBy: currentUser.email,
+            entryDate: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        await db.collection('offDutyEntries').doc(date).set(entry);
+
+        // Remove any existing extra hours data for this staff/date
+        const extraDocId = `${date}_${staff}`;
+        await db.collection('extraHoursData').doc(extraDocId).delete().catch(() => { });
+
+        // Add new extra hours data
+        await db.collection('extraHoursData').doc(extraDocId).set({
+            staff: staff,
+            date: date,
+            hours: 8,
+            reason: `Off-duty working: ${reason || shift}`,
+            enteredBy: currentUser.email,
+            entryDate: new Date().toISOString(),
+            type: 'Off-Duty Working',
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        // Create COFF transaction - 8 hours = 1 day
+        await updateCOFFBalance(staff, 8, 'earn', {
+            source: 'off_duty_working',
+            date: date,
+            hours: 8,
+            shift: shift,
+            description: `Off-Duty Working (${shift}) - 8 hours (1 day COFF)`,
+            reason: reason
+        });
+
+        alert(`✅ Off-duty working entry saved successfully!\n\nCOFF Earned: 8 hours (1 day)`);
+        closeModal('offDutyModal');
+
+        // Clear form
+        document.getElementById('offDutyReason').value = '';
+
+    } catch (error) {
+        console.error('Error saving off-duty entry:', error);
+        alert('Failed to save off-duty entry. Please try again.');
+    }
+}
+
+// MOVE THESE FUNCTIONS OUTSIDE - ADD THEM AFTER saveOffDutyEntry
+
+// Helper function to remove COFF for off-duty entries when replaced
+async function removeCOFFForOffDuty(staff, date) {
+    try {
+        // Find and delete the extra hours entry
+        const extraDocId = `${date}_${staff}`;
+        await db.collection('extraHoursData').doc(extraDocId).delete().catch(() => { });
+
+        // CRITICAL FIX: Instead of deleting COFF transactions, mark them as canceled
+        const transactionsSnapshot = await db.collection('coffTransactions')
+            .where('staff', '==', staff)
+            .where('metadata.date', '==', date)
+            .where('metadata.source', '==', 'off_duty_working')
+            .get();
+
+        const batch = db.batch();
+        transactionsSnapshot.forEach(doc => {
+            // IMPORTANT: Update to mark as canceled instead of delete
+            batch.update(doc.ref, {
+                canceled: true,
+                canceledAt: new Date().toISOString(),
+                canceledBy: currentUser?.email || 'system',
+                // Keep the original transaction but mark it as invalid
+                valid: false,
+                reason: 'Entry was canceled/replaced'
+            });
+        });
+        await batch.commit();
+
+        // Recalculate balance for this staff
+        await recalculateStaffCOFFBalance(staff);
+
+        console.log(`✅ Marked COFF transactions as canceled for ${staff} on ${date}`);
+
+    } catch (error) {
+        console.error('Error removing COFF:', error);
+    }
+}
+
+// Recalculate single staff COFF balance
+async function recalculateStaffCOFFBalance(staff) {
+    try {
+        // Get all earn transactions for this staff (not canceled)
+        const earnSnapshot = await db.collection('coffTransactions')
+            .where('staff', '==', staff)
+            .where('type', '==', 'earn')
+            .get();
+
+        let totalEarned = 0;
+        earnSnapshot.forEach(doc => {
+            const data = doc.data();
+            // Only count if not canceled
+            if (!data.canceled && data.valid !== false) {
+                totalEarned += data.hours || 0;
+            }
+        });
+
+        // Get all use transactions
+        const useSnapshot = await db.collection('coffTransactions')
+            .where('staff', '==', staff)
+            .where('type', '==', 'use')
+            .get();
+
+        let totalUsed = 0;
+        useSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (!data.canceled && data.valid !== false) {
+                totalUsed += Math.abs(data.hours || 0);
+            }
+        });
+
+        const newBalance = totalEarned - totalUsed;
+        if (newBalance < 0) newBalance = 0;
+
+        // Update balance
+        await db.collection('coffBalances').doc(staff).set({
+            staff: staff,
+            balance: newBalance,
+            lastUpdated: new Date().toISOString(),
+            updatedBy: currentUser.email,
+            recalculated: true
+        }, { merge: true });
+
+        // Update local coffData
+        if (!coffData.balances) coffData.balances = {};
+        coffData.balances[staff] = newBalance;
+
+        return newBalance;
+
+    } catch (error) {
+        console.error('Error recalculating staff COFF:', error);
+        return 0;
+    }
+}
+
+// Update cancelOffDutyEntry function
+async function cancelOffDutyEntry(dateKey) {
+    if (!confirm('Are you sure you want to cancel this off-duty working entry?\n\nThis will remove the COFF earned for this entry.')) {
+        return;
+    }
+
+    try {
+        // Get the entry first to know which staff
+        const entryDoc = await db.collection('offDutyEntries').doc(dateKey).get();
+        if (!entryDoc.exists) {
+            alert('Entry not found');
+            return;
+        }
+
+        const staff = entryDoc.data().staff;
+
+        // Remove COFF for this staff/date
+        await removeCOFFForOffDuty(staff, dateKey);
+
+        // Delete the off-duty entry
+        await db.collection('offDutyEntries').doc(dateKey).delete();
+
+        alert('✅ Off-duty working entry cancelled successfully\n\nCOFF balance has been adjusted.');
+        
+        // Refresh the off-duty list and close modal
+        loadOffDutyForDate();
+        closeModal('cancelOffDutyModal');
+
+    } catch (error) {
+        console.error('Error cancelling off-duty entry:', error);
+        alert('Failed to cancel off-duty entry: ' + error.message);
+    }
+}
             function loadOffDutyForDate() {
                 const date = document.getElementById('cancelOffDutyDate').value;
                 const container = document.getElementById('offDutyListContainer');
@@ -9463,187 +9618,519 @@ if (hasConflict) {
                     alert('❌ Failed to save On Duty entry: ' + error.message);
                 }
             }
-            // ============== LATE ENTRY FUNCTIONS ==============
-            function updateRegularShiftTime() {
-                const staff = document.getElementById('lateEntryStaff').value;
-                const date = document.getElementById('lateEntryDate').value;
-                const regularTimeInput = document.getElementById('regularShiftTime');
+            // ============== UPDATED LATE ENTRY FUNCTIONS ==============
 
-                if (!staff || !date) return;
+function convertTo24Hour(timeStr) {
+    // Handle empty or invalid input
+    if (!timeStr) return '00:00';
+    
+    timeStr = timeStr.trim().toLowerCase();
+    
+    // Check if it already has AM/PM indicator
+    const hasAm = timeStr.includes('am');
+    const hasPm = timeStr.includes('pm');
+    
+    // Remove am/pm and trim
+    let cleanTime = timeStr.replace(/[ap]m/g, '').trim();
+    
+    // Split hours and minutes
+    let [hour, minute] = cleanTime.split(':');
+    hour = parseInt(hour);
+    minute = minute ? parseInt(minute) : 0;
+    
+    // Handle AM
+    if (hasAm) {
+        if (hour === 12) hour = 0; // 12 AM = 0:00
+    }
+    // Handle PM
+    else if (hasPm) {
+        if (hour !== 12) hour += 12; // 1 PM to 11 PM
+        // 12 PM stays as 12
+    }
+    
+    // Format with leading zeros
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+}
 
-                const dateObj = new Date(date);
-                const dayIndex = dateObj.getDay();
-                const dayName = shiftData.days[dayIndex];
-                const shift = shiftData.shifts[dayName][staff];
+// Replace your existing updateRegularShiftTime function with this:
+function updateRegularShiftTime() {
+    const staff = document.getElementById('lateEntryStaff').value;
+    const date = document.getElementById('lateEntryDate').value;
+    const regularTimeInput = document.getElementById('regularShiftTime');
+    const shiftType = document.querySelector('input[name="shiftType"]:checked').value;
 
-                if (shift && !shift.includes('Off') && !shift.includes('Off-operator')) {
-                    // Extract start time from shift string
-                    let startTime = shift;
+    if (!staff || !date) return;
 
-                    // Remove "Obituary duty " prefix if present
-                    if (startTime.includes('Obituary duty ')) {
-                        startTime = startTime.replace('Obituary duty ', '');
-                    }
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+    const shift = shiftData.shifts[dayName][staff];
 
-                    // Get the start time part (before the dash)
-                    startTime = startTime.split('-')[0].trim();
+    if (shift && !shift.includes('Off') && !shift.includes('Off-operator')) {
+        // Extract start time from shift string
+        let startTime = shift;
+        let endTime = shift;
 
-                    // Convert to 24-hour format
-                    if (startTime.includes('pm') && !startTime.includes('12')) {
-                        let hour = parseInt(startTime);
-                        if (hour < 12) hour += 12;
-                        startTime = hour.toString().padStart(2, '0') + ':00';
-                    } else if (startTime.includes('am')) {
-                        let hour = parseInt(startTime);
-                        if (hour === 12) hour = 0; // Midnight
-                        startTime = hour.toString().padStart(2, '0') + ':00';
-                    } else {
-                        // Handle times like "7:00pm"
-                        if (startTime.includes(':')) {
-                            let [hour, minute] = startTime.replace(/[ap]m/i, '').split(':');
-                            hour = parseInt(hour);
-                            minute = minute || '00';
+        // Remove "Obituary duty " prefix if present
+        if (startTime.includes('Obituary duty ')) {
+            startTime = startTime.replace('Obituary duty ', '');
+            endTime = endTime.replace('Obituary duty ', '');
+        }
 
-                            if (startTime.toLowerCase().includes('pm') && hour < 12) {
-                                hour += 12;
-                            }
-                            if (startTime.toLowerCase().includes('am') && hour === 12) {
-                                hour = 0;
-                            }
+        // Get the start and end times
+        const times = startTime.split('-');
+        startTime = times[0].trim();
+        endTime = times[1].trim();
 
-                            startTime = hour.toString().padStart(2, '0') + ':' + minute;
-                        }
-                    }
+        // Convert to 24-hour format for start time
+        startTime = convertTo24Hour(startTime);
+        
+        // Convert end time to 24-hour format
+        endTime = convertTo24Hour(endTime);
 
-                    regularTimeInput.value = startTime;
-                } else {
-                    regularTimeInput.value = 'No regular shift';
-                }
-            }
-            function calculateDelay() {
-                const regularTime = document.getElementById('regularShiftTime').value;
-                const actualTime = document.getElementById('actualTime').value;
-                const delayInput = document.getElementById('delayMinutes');
-                const delayMessage = document.getElementById('delayMessage');
-                const coffHoursRequired = document.getElementById('coffHoursRequired');
+        // For early exit, we use end time; for late entry, we use start time
+        if (shiftType === 'early') {
+            regularTimeInput.value = endTime;
+            document.getElementById('regularShiftLabel').textContent = 'Regular Shift End Time:';
+        } else {
+            regularTimeInput.value = startTime;
+            document.getElementById('regularShiftLabel').textContent = 'Regular Shift Start Time:';
+        }
+    } else {
+        regularTimeInput.value = 'No regular shift';
+    }
+}
 
-                if (!regularTime || !actualTime || regularTime === 'No regular shift') {
-                    delayInput.value = 'N/A';
-                    delayMessage.textContent = '';
-                    coffHoursRequired.textContent = '0';
-                    return;
-                }
+// Replace your existing calculateDelay function with this:
+function calculateTimeDifference() {
+    const regularTime = document.getElementById('regularShiftTime').value;
+    const actualTime = document.getElementById('actualTime').value;
+    const shiftType = document.querySelector('input[name="shiftType"]:checked').value;
+    const delayInput = document.getElementById('delayMinutes');
+    const delayMessage = document.getElementById('delayMessage');
+    const coffHoursRequired = document.getElementById('coffHoursRequired');
 
-                // Convert times to minutes
-                const [regularHour, regularMinute] = regularTime.split(':').map(Number);
-                const [actualHour, actualMinute] = actualTime.split(':').map(Number);
+    if (!regularTime || !actualTime || regularTime === 'No regular shift') {
+        delayInput.value = 'N/A';
+        delayMessage.textContent = '';
+        coffHoursRequired.textContent = '0';
+        return;
+    }
 
-                const regularTotalMinutes = regularHour * 60 + regularMinute;
-                const actualTotalMinutes = actualHour * 60 + actualMinute;
+    // Convert times to minutes
+    const [regularHour, regularMinute] = regularTime.split(':').map(Number);
+    const [actualHour, actualMinute] = actualTime.split(':').map(Number);
 
-                let delayMinutes = actualTotalMinutes - regularTotalMinutes;
+    const regularTotalMinutes = regularHour * 60 + regularMinute;
+    const actualTotalMinutes = actualHour * 60 + actualMinute;
 
-                if (delayMinutes < 0) {
-                    delayMinutes = 0; // Early arrival, no delay
-                }
+    let diffMinutes;
+    
+    if (shiftType === 'early') {
+        // For early exit: regular end time - actual exit time
+        diffMinutes = regularTotalMinutes - actualTotalMinutes;
+        
+        // Handle overnight shifts - if regular time is less than actual time,
+        // it means regular time is next day (e.g., 1:30am vs 12:00am)
+        if (diffMinutes < 0) {
+            // If regular time is smaller (like 1:30am) and actual is larger (like 11:00pm),
+            // it means regular time is actually next day
+            diffMinutes += 24 * 60; // Add 24 hours
+        }
+        
+        // Special case: if regular time is midnight (0:00) and actual is also midnight
+        if (regularTotalMinutes === 0 && actualTotalMinutes === 0) {
+            diffMinutes = 0;
+        }
+        
+        diffMinutes = Math.max(0, diffMinutes); // No negative
+    } else {
+        // For late entry: actual entry time - regular start time
+        diffMinutes = actualTotalMinutes - regularTotalMinutes;
+        // Handle overnight shifts (e.g., shift starts at 11pm, actual entry at 12:30am next day)
+        if (diffMinutes < 0) {
+            diffMinutes += 24 * 60; // Add 24 hours
+        }
+        diffMinutes = Math.max(0, diffMinutes); // No negative
+    }
 
-                delayInput.value = `${delayMinutes} minutes`;
+    delayInput.value = `${diffMinutes} minutes`;
 
-                // Calculate COFF requirement (1 hour COFF for every 60 minutes delay, rounded up)
-                const coffHours = Math.ceil(delayMinutes / 60);
-                coffHoursRequired.textContent = coffHours;
+    // Calculate COFF requirement with new rules
+    let coffHours;
+    if (diffMinutes <= 30) {
+        coffHours = 0.5;
+    } else if (diffMinutes <= 60) {
+        coffHours = 1;
+    } else if (diffMinutes <= 90) {
+        coffHours = 1.5;
+    } else if (diffMinutes <= 120) {
+        coffHours = 2;
+    } else if (diffMinutes <= 150) {
+        coffHours = 2.5;
+    } else if (diffMinutes <= 180) {
+        coffHours = 3;
+    } else if (diffMinutes <= 210) {
+        coffHours = 3.5;
+    } else if (diffMinutes <= 240) {
+        coffHours = 4;
+    } else {
+        // For every additional 30 minutes beyond 4 hours
+        coffHours = 4 + Math.ceil((diffMinutes - 240) / 30) * 0.5;
+    }
 
-                if (delayMinutes === 0) {
-                    delayMessage.textContent = '✓ On time or early';
-                    delayMessage.style.color = '#27ae60';
-                } else if (delayMinutes <= 15) {
-                    delayMessage.textContent = '⚠ Minor delay (15 mins or less)';
-                    delayMessage.style.color = '#f39c12';
-                } else if (delayMinutes <= 60) {
-                    delayMessage.textContent = '⚠ Moderate delay (1 hour or less)';
-                    delayMessage.style.color = '#f39c12';
-                } else {
-                    delayMessage.textContent = '❌ Significant delay (more than 1 hour)';
-                    delayMessage.style.color = '#e74c3c';
-                }
-            }
+    coffHoursRequired.textContent = coffHours.toFixed(1);
 
-            function toggleCOFFRequirement() {
-                const coffRequirementDiv = document.getElementById('coffRequirement');
-                const isCOFF = document.querySelector('input[name="regularizeType"]:checked').value === 'coff';
-                coffRequirementDiv.style.display = isCOFF ? 'block' : 'none';
-            }
+    if (diffMinutes === 0) {
+        delayMessage.textContent = '✓ On time';
+        delayMessage.style.color = '#27ae60';
+    } else if (shiftType === 'early') {
+        delayMessage.textContent = `⚠ Early exit by ${diffMinutes} minutes`;
+        delayMessage.style.color = diffMinutes <= 30 ? '#f39c12' : '#e74c3c';
+    } else {
+        delayMessage.textContent = `⚠ Late by ${diffMinutes} minutes`;
+        delayMessage.style.color = diffMinutes <= 30 ? '#f39c12' : '#e74c3c';
+    }
+}
 
-            async function saveLateEntry() {
-                const staff = document.getElementById('lateEntryStaff').value;
-                const date = document.getElementById('lateEntryDate').value;
-                const regularTime = document.getElementById('regularShiftTime').value;
-                const actualTime = document.getElementById('actualTime').value;
-                const regularizeType = document.querySelector('input[name="regularizeType"]:checked').value;
-                const reason = document.getElementById('lateEntryReason').value;
+// ============== LATE/EARLY ENTRY APPROVAL SYSTEM ==============
 
-                if (!staff || !date || !actualTime) {
-                    alert('Please fill in all required fields');
-                    return;
-                }
+let pendingLateEntries = [];
 
-                if (regularTime === 'No regular shift') {
-                    alert('Cannot register late entry for a day with no regular shift');
-                    return;
-                }
+// Load pending late/early entries for approval
+async function loadPendingLateEntries() {
+    try {
+        const snapshot = await db.collection('lateEntryRequests')
+            .where('status', '==', 'pending')
+            .orderBy('submittedAt', 'desc')
+            .get();
 
-                try {
-                    const delayMinutes = parseInt(document.getElementById('delayMinutes').value) || 0;
-                    const coffHoursRequired = regularizeType === 'coff' ? Math.ceil(delayMinutes / 60) : 0;
+        pendingLateEntries = [];
+        snapshot.forEach(doc => {
+            pendingLateEntries.push({ id: doc.id, ...doc.data() });
+        });
 
-                    const entry = {
-                        staff: staff,
-                        date: date,
-                        regularShiftTime: regularTime,
-                        actualTime: actualTime,
-                        delayMinutes: delayMinutes,
-                        regularizeType: regularizeType,
-                        regularizedFromCOFF: regularizeType === 'coff',
-                        coffHoursRequired: coffHoursRequired,
-                        reason: reason,
-                        enteredBy: currentUser.email,
-                        entryDate: new Date().toISOString()
-                    };
+        renderLateEntryApprovals();
+    } catch (error) {
+        console.error('Error loading pending late entries:', error);
+    }
+}
 
-                    await db.collection('lateEntries').add(entry);
+// Render late entry approval section
+function renderLateEntryApprovals() {
+    const container = document.getElementById('lateEntryApprovalsContainer');
+    if (!container) return;
 
-                    // If regularization from COFF is selected, update COFF balance
-                    if (regularizeType === 'coff' && coffHoursRequired > 0) {
-                        const currentBalance = coffData.balances[staff] || 0;
-                        const newBalance = currentBalance - (coffHoursRequired / 8); // Convert hours to days
+    if (pendingLateEntries.length === 0) {
+        container.innerHTML = '<p>No pending late/early entry requests.</p>';
+        return;
+    }
 
-                        await db.collection('coffData').add({
-                            staff: staff,
-                            type: 'history',
-                            date: date,
-                            coffUsed: coffHoursRequired / 8,
-                            balanceAfter: newBalance,
-                            reason: `Late entry regularization: ${delayMinutes} min delay`,
-                            transactionDate: new Date().toISOString()
-                        });
+    let html = '<div class="approval-list">';
 
-                        // Update COFF balance
-                        await db.collection('coffData').doc(`${staff}_balance`).set({
-                            staff: staff,
-                            type: 'balance',
-                            balance: newBalance,
-                            updatedAt: new Date().toISOString()
-                        }, { merge: true });
-                    }
+    pendingLateEntries.forEach(request => {
+        const date = new Date(request.date);
+        const dateStr = date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+        });
 
-                    alert('Late entry registered successfully');
-                    closeModal('lateEntryModal');
+        const typeIcon = request.shiftType === 'early' ? '⬅️ Early Exit' : '⏰ Late Entry';
+        const timeType = request.shiftType === 'early' ? 'Early Exit' : 'Late Entry';
 
-                } catch (error) {
-                    console.error('Error saving late entry:', error);
-                    alert('Failed to register late entry. Please try again.');
-                }
-            }
+        html += `
+            <div class="approval-item" style="border-left: 4px solid #9b59b6; margin-bottom: 15px;">
+                <div class="approval-header">
+                    <div>
+                        <strong>${typeIcon}</strong><br>
+                        <span style="font-size: 1.1em;">${staffAbbreviations[request.staff]} (${request.staff})</span>
+                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                            ${dateStr} (${request.dayName})
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8em; color: #666;">
+                        Submitted: ${new Date(request.submittedAt).toLocaleString()}
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <div><strong>Regular Shift ${request.shiftType === 'early' ? 'End' : 'Start'} Time:</strong> ${request.regularTime}</div>
+                    <div><strong>Actual ${request.shiftType === 'early' ? 'Exit' : 'Entry'} Time:</strong> ${request.actualTime}</div>
+                    <div><strong>${timeType} Duration:</strong> ${request.delayMinutes} minutes</div>
+                    <div><strong>COFF Required:</strong> ${request.coffHours} hours</div>
+                    ${request.reason ? `<div><strong>Reason:</strong> ${request.reason}</div>` : ''}
+                </div>
+
+                <div class="approval-actions" style="margin-top: 15px;">
+                    <button onclick="approveLateEntry('${request.id}')" class="btn-success">Approve</button>
+                    <button onclick="rejectLateEntry('${request.id}')" class="btn-danger">Reject</button>
+                    <button onclick="showLateEntryDetails('${request.id}')" class="btn-secondary">View Details</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Approve late/early entry
+async function approveLateEntry(requestId) {
+    const request = pendingLateEntries.find(r => r.id === requestId);
+    if (!request) return;
+
+    try {
+        // Check COFF balance
+        const balanceDoc = await db.collection('coffBalances').doc(request.staff).get();
+        let currentBalance = 0;
+        if (balanceDoc.exists) {
+            currentBalance = balanceDoc.data().balance || 0;
+        }
+
+        if (currentBalance < request.coffHours) {
+            alert(`❌ Insufficient COFF balance!\n\n` +
+                  `Required: ${request.coffHours} hours\n` +
+                  `Available: ${currentBalance.toFixed(1)} hours`);
+            return;
+        }
+
+        // Calculate new balance
+        const newBalance = currentBalance - request.coffHours;
+
+        // Update COFF balance
+        await db.collection('coffBalances').doc(request.staff).set({
+            staff: request.staff,
+            balance: newBalance,
+            lastUpdated: new Date().toISOString(),
+            updatedBy: currentUser.email
+        }, { merge: true });
+
+        // Create COFF transaction
+        const transactionId = `coff_use_late_${request.staff}_${Date.now()}`;
+        await db.collection('coffTransactions').doc(transactionId).set({
+            staff: request.staff,
+            type: 'use',
+            hours: -request.coffHours,
+            balanceBefore: currentBalance,
+            balanceAfter: newBalance,
+            timestamp: new Date().toISOString(),
+            metadata: {
+                source: request.shiftType === 'early' ? 'early_exit' : 'late_entry',
+                date: request.date,
+                hours: request.coffHours,
+                delayMinutes: request.delayMinutes,
+                reason: request.reason
+            },
+            description: `${request.shiftType === 'early' ? 'Early Exit' : 'Late Entry'} - ${request.delayMinutes} min (${request.coffHours}h COFF)`,
+            processedBy: currentUser.email,
+            canceled: false,
+            valid: true
+        });
+
+        // Create late entry record
+        const lateEntryId = `late_${request.staff}_${request.date}`;
+        await db.collection('lateEntries').doc(lateEntryId).set({
+            staff: request.staff,
+            date: request.date,
+            shiftType: request.shiftType,
+            regularTime: request.regularTime,
+            actualTime: request.actualTime,
+            delayMinutes: request.delayMinutes,
+            regularizedFromCOFF: true,
+            coffHoursRequired: request.coffHours,
+            reason: request.reason,
+            enteredBy: currentUser.email,
+            entryDate: new Date().toISOString(),
+            approvedFrom: request.id
+        });
+
+        // Update request status
+        await db.collection('lateEntryRequests').doc(requestId).update({
+            status: 'approved',
+            approvedBy: currentUser.email,
+            approvedAt: new Date().toISOString(),
+            approvedFromBalance: currentBalance,
+            newBalance: newBalance
+        });
+
+        alert(`✅ ${request.shiftType === 'early' ? 'Early exit' : 'Late entry'} approved!\n\n` +
+              `📊 COFF Balance Updated:\n` +
+              `Previous: ${currentBalance.toFixed(1)}h\n` +
+              `Deducted: ${request.coffHours}h\n` +
+              `New Balance: ${newBalance.toFixed(1)}h`);
+
+        // Refresh approvals
+        loadPendingLateEntries();
+
+        // Refresh COFF display if active
+        if (document.getElementById('coff-tab')?.classList.contains('active')) {
+            renderCOFFBreakdown();
+        }
+
+    } catch (error) {
+        console.error('Error approving late entry:', error);
+        alert('❌ Failed to approve: ' + error.message);
+    }
+}
+
+// Reject late/early entry
+async function rejectLateEntry(requestId) {
+    if (!confirm('Reject this request?')) return;
+
+    try {
+        await db.collection('lateEntryRequests').doc(requestId).update({
+            status: 'rejected',
+            rejectedBy: currentUser.email,
+            rejectedAt: new Date().toISOString()
+        });
+
+        alert('❌ Request rejected');
+        loadPendingLateEntries();
+
+    } catch (error) {
+        console.error('Error rejecting:', error);
+        alert('Failed to reject: ' + error.message);
+    }
+}
+
+// Submit late/early entry request (for employees)
+async function submitLateEntryRequest() {
+    const staff = document.getElementById('lateEntryStaff').value;
+    const date = document.getElementById('lateEntryDate').value;
+    const shiftType = document.querySelector('input[name="shiftType"]:checked').value;
+    const regularTime = document.getElementById('regularShiftTime').value;
+    const actualTime = document.getElementById('actualTime').value;
+    const delayMinutes = parseInt(document.getElementById('delayMinutes').value) || 0;
+    const regularizeType = document.querySelector('input[name="regularizeType"]:checked').value;
+    const reason = document.getElementById('lateEntryReason').value;
+
+    if (!staff || !date || !actualTime) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    if (regularTime === 'No regular shift') {
+        alert('Cannot register for a day with no regular shift');
+        return;
+    }
+
+    const coffHours = parseFloat(document.getElementById('coffHoursRequired').textContent) || 0;
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+
+    try {
+        if (regularizeType === 'coff') {
+            // This requires approval - create a request
+            await db.collection('lateEntryRequests').add({
+                staff: staff,
+                date: date,
+                dayName: dayName,
+                shiftType: shiftType,
+                regularTime: regularTime,
+                actualTime: actualTime,
+                delayMinutes: delayMinutes,
+                coffHours: coffHours,
+                reason: reason,
+                status: 'pending',
+                submittedBy: currentUser.email,
+                submittedAt: new Date().toISOString(),
+                requiresCOFF: true
+            });
+
+            alert('✅ Request submitted for approval!\n\n' +
+                  `COFF Required: ${coffHours} hours\n` +
+                  'An administrator will review your request.');
+
+        } else {
+            // Skip regularization - just record the entry
+            const entry = {
+                staff: staff,
+                date: date,
+                shiftType: shiftType,
+                regularTime: regularTime,
+                actualTime: actualTime,
+                delayMinutes: delayMinutes,
+                regularizeType: 'skip',
+                regularizedFromCOFF: false,
+                coffHoursRequired: 0,
+                reason: reason,
+                enteredBy: currentUser.email,
+                entryDate: new Date().toISOString()
+            };
+
+            await db.collection('lateEntries').add(entry);
+            alert('✅ Entry recorded successfully (no COFF regularization)');
+        }
+
+        closeModal('lateEntryModal');
+        clearLateEntryForm();
+
+    } catch (error) {
+        console.error('Error submitting request:', error);
+        alert('❌ Failed to submit: ' + error.message);
+    }
+}
+
+function clearLateEntryForm() {
+    document.getElementById('lateEntryReason').value = '';
+    document.getElementById('actualTime').value = '';
+    document.querySelector('input[name="regularizeType"][value="coff"]').checked = true;
+    document.getElementById('coffRequirement').style.display = 'block';
+    document.getElementById('delayMinutes').value = '';
+    document.getElementById('coffHoursRequired').textContent = '0';
+}
+
+// Show detailed view of pending request
+function showLateEntryDetails(requestId) {
+    const request = pendingLateEntries.find(r => r.id === requestId);
+    if (!request) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>📋 ${request.shiftType === 'early' ? 'Early Exit' : 'Late Entry'} Details</h3>
+            <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <div><strong>Staff:</strong> ${staffAbbreviations[request.staff]} (${request.staff})</div>
+                <div><strong>Date:</strong> ${new Date(request.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                <div><strong>Type:</strong> ${request.shiftType === 'early' ? 'Early Exit' : 'Late Entry'}</div>
+                <div><strong>Regular Shift ${request.shiftType === 'early' ? 'End' : 'Start'}:</strong> ${request.regularTime}</div>
+                <div><strong>Actual ${request.shiftType === 'early' ? 'Exit' : 'Entry'}:</strong> ${request.actualTime}</div>
+                <div><strong>Duration:</strong> ${request.delayMinutes} minutes</div>
+                <div><strong>COFF Required:</strong> ${request.coffHours} hours</div>
+                <div><strong>Reason:</strong> ${request.reason || 'Not specified'}</div>
+                <div><strong>Submitted:</strong> ${new Date(request.submittedAt).toLocaleString()}</div>
+                <div><strong>Submitted By:</strong> ${request.submittedBy}</div>
+            </div>
+            <div class="button-group">
+                <button onclick="approveLateEntry('${request.id}')" class="btn-success">Approve</button>
+                <button onclick="rejectLateEntry('${request.id}')" class="btn-danger">Reject</button>
+                <button onclick="this.closest('.modal').remove()" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+// Initialize late entry approval system
+function initLateEntryApprovalSystem() {
+    // Only admins need to see pending requests
+    if (currentUserRole === 'admin') {
+        loadPendingLateEntries();
+        
+        // Set up real-time listener for new requests
+        db.collection('lateEntryRequests')
+            .where('status', '==', 'pending')
+            .onSnapshot((snapshot) => {
+                loadPendingLateEntries();
+            });
+    }
+}
 
             // ============== EXTRA HOURS FUNCTIONS ==============
             // Fix saveExtraHours function
@@ -11008,7 +11495,7 @@ if (hasConflict) {
 const cancelledContainer = document.getElementById('cancelled-leaves-container');
 if (!cancelledContainer) {
     console.warn('Cancelled leaves container not found');
-    return;
+    return; // REMOVE THIS RETURN - it's breaking the function
 }
 
 // Filter cancelled requests (last 30 days)
@@ -11059,7 +11546,7 @@ if (cancelledRequests.length === 0) {
                     <div class="approval-header">
                         <div>
                             <strong style="text-decoration: line-through;">${dateStr}</strong> • ${request.type} leave
-                            <span class="badge" style="background: #95a5a6; color: white; margin-left: 8px;">CANCELLED</span>
+                            <span class="badge cancelled-badge">CANCELLED</span>
                         </div>
                         <div style="font-size: 0.8em; color: #95a5a6;">
                             Cancelled by ${request.cancelledBy || 'admin'}
@@ -11075,7 +11562,7 @@ if (cancelledRequests.length === 0) {
 
     cancelledHTML += '</div>';
     cancelledContainer.innerHTML = cancelledHTML;
-}              
+}             
             
             }
 
@@ -11385,8 +11872,8 @@ async function cancelPendingLeave(requestId) {
 
                 const shiftPatterns = {
                     "5pm-1:30am": 8,
-                    "4pm-12:30pm": 8,
-                    "7pm-3:30pm": 8,
+                    "4pm-12:30am": 8,
+                    "7pm-3:30am": 8,
                     "7:00pm-3:30am": 8,
                     "Obituary duty 5pm-1:30am": 8
                 };
