@@ -2948,6 +2948,53 @@
     background-color: #9b59b6;
 }
 
+/* Staff inclusion list styling */
+.staff-inclusion-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.staff-inclusion-list .checkbox-item {
+    flex: 1 0 calc(33.333% - 10px);
+    min-width: 140px;
+}
+
+.staff-inclusion-list .checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.staff-inclusion-list .checkbox-option:hover {
+    background: #e9ecef;
+    border-color: #3498db;
+}
+
+.staff-inclusion-list .checkbox-option input[type="checkbox"]:checked + .checkbox-custom {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+@media (max-width: 768px) {
+    .staff-inclusion-list .checkbox-item {
+        flex: 1 0 100%;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -3984,40 +4031,45 @@
             </div>
         </div>
 
-        <!-- Modal for adding/removing skeleton shift -->
-        <div id="skeletonModal" class="modal">
-            <div class="modal-content">
-                <h3>Add/Remove Skeleton Shift</h3>
-                <div class="form-group">
-                    <label for="skeletonDate">Date:</label>
-                    <input type="date" id="skeletonDate" onchange="checkExistingSkeleton()">
-                </div>
-                <div class="form-group">
-                    <label for="skeletonHours">Skeleton Hours:</label>
-                    <select id="skeletonHours">
-                        <option value="4">4 hours (Half day)</option>
-                        <option value="8">8 hours (Full day)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Exclude Employees from OT:</label>
-                    <div class="staff-exclusion-list" id="skeletonExcludeList">
-                        <!-- Staff exclusion checkboxes will be populated here -->
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="skeletonReason">Reason:</label>
-                    <textarea id="skeletonReason" rows="3" placeholder="Reason for skeleton shift"></textarea>
-                </div>
-                <div id="existingSkeletonInfo" style="display: none; padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                    <!-- Existing skeleton info will be shown here -->
-                </div>
-                <div class="button-group">
-                    <button id="skeletonActionBtn" onclick="saveSkeletonShift()">Add Skeleton Shift</button>
-                    <button class="btn-secondary" onclick="closeModal('skeletonModal')">Cancel</button>
-                </div>
-            </div>
+<!-- Modal for adding/removing skeleton shift -->
+<div id="skeletonModal" class="modal">
+    <div class="modal-content">
+        <h3>Add/Remove Skeleton Shift</h3>
+        <div class="form-group">
+            <label for="skeletonDate">Date:</label>
+            <input type="date" id="skeletonDate" onchange="checkExistingSkeleton(); refreshSkeletonStaffList(this.value);">
         </div>
+        <div class="form-group">
+            <label for="skeletonHours">Skeleton Hours:</label>
+            <select id="skeletonHours">
+                <option value="4">4 hours (Half day)</option>
+                <option value="8">8 hours (Full day)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>👥 Select Staff for Skeleton Duty:</label>
+            <div class="staff-inclusion-list" id="skeletonIncludeList">
+                <!-- Staff selection checkboxes will be populated here -->
+            </div>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                ✅ Check staff who will be working during this skeleton shift.<br>
+                📌 Unchecked staff will be considered OFF.<br>
+                💡 Off-duty staff can be selected - they will receive OT but NO COFF.
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="skeletonReason">Reason:</label>
+            <textarea id="skeletonReason" rows="3" placeholder="Reason for skeleton shift"></textarea>
+        </div>
+        <div id="existingSkeletonInfo" style="display: none; padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+            <!-- Existing skeleton info will be shown here -->
+        </div>
+        <div class="button-group">
+            <button id="skeletonActionBtn" onclick="saveSkeletonShift()">Add Skeleton Shift</button>
+            <button class="btn-secondary" onclick="closeModal('skeletonModal')">Cancel</button>
+        </div>
+    </div>
+</div>
 
         <!-- Modal for approval with reason -->
         <div id="approvalReasonModal" class="modal">
@@ -4992,6 +5044,14 @@
                     req.staff === staff && req.date === dateKey
                 );
                 return request ? request.status : null;
+            }
+            function isLeaveWithCOFF(staff, dateKey) {
+                const leaveRequest = leaveRequests.find(req => 
+                    req.staff === staff && 
+                    req.date === dateKey && 
+                    req.status === 'approved'
+                );
+                return leaveRequest && leaveRequest.isCOFF === true;
             }
 
             function checkOffDutyWorking(staff, date) {
@@ -6733,36 +6793,19 @@ if (hasExtraHours) {
                 checkExistingHoliday();
             }
 
-            function openSkeletonModal() {
-                openModal('skeletonModal');
-                const todayStr = formatDateForInput(new Date());
-                document.getElementById('skeletonDate').value = todayStr;
-                document.getElementById('skeletonHours').value = '8';
-                document.getElementById('skeletonReason').value = '';
-                document.getElementById('existingSkeletonInfo').style.display = 'none';
-                document.getElementById('skeletonActionBtn').textContent = 'Add Skeleton Shift';
-                document.getElementById('skeletonActionBtn').className = '';
+function openSkeletonModal() {
+    openModal('skeletonModal');
+    const todayStr = formatDateForInput(new Date());
+    document.getElementById('skeletonDate').value = todayStr;
+    document.getElementById('skeletonHours').value = '8';
+    document.getElementById('skeletonReason').value = '';
+    document.getElementById('existingSkeletonInfo').style.display = 'none';
+    document.getElementById('skeletonActionBtn').textContent = 'Add Skeleton Shift';
+    document.getElementById('skeletonActionBtn').className = '';
 
-                // Populate staff exclusion list
-                const excludeList = document.getElementById('skeletonExcludeList');
-                excludeList.innerHTML = '';
-
-                const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-                staffList.forEach(staff => {
-                    const item = document.createElement('div');
-                    item.className = 'checkbox-item';
-                    item.innerHTML = `
-                                                        <label class="checkbox-option">
-                                                            <input type="checkbox" id="exclude_${staff}" value="${staff}">
-                                                            <span class="checkbox-custom"></span>
-                                                            <span class="checkbox-label">${staffAbbreviations[staff]} (${staff})</span>
-                                                        </label>
-                                                    `;
-                    excludeList.appendChild(item);
-                });
-
-                checkExistingSkeleton();
-            }
+    // Populate staff inclusion list for the initial date
+    refreshSkeletonStaffList(todayStr);
+}
 
             function openCancelLeaveModal() {
                 openModal('cancelLeaveModal');
@@ -6786,251 +6829,245 @@ if (hasExtraHours) {
                 generateAttendanceReportForPeriod(0);
             }
 
-            function generateAttendanceReportForPeriod(periodOffset) {
-                const container = document.getElementById('report-container');
-                const periodTitle = document.getElementById('attendance-period-title');
+function generateAttendanceReportForPeriod(periodOffset) {
+    const container = document.getElementById('report-container');
+    const periodTitle = document.getElementById('attendance-period-title');
 
-                // Calculate period based on offset
-                const today = new Date();
-                const currentMonth = today.getMonth();
-                const currentYear = today.getFullYear();
-                const currentDay = today.getDate();
+    // Calculate period based on offset
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const currentDay = today.getDate();
 
-                // Determine base period (0 = current/next period based on today's date)
-                let baseStartDate, baseEndDate;
+    // Determine base period (0 = current/next period based on today's date)
+    let baseStartDate, baseEndDate;
 
-                if (currentDay <= 20) {
-                    // If today is before the 21st, current period is previous month 21st to current month 20th
-                    baseStartDate = new Date(currentYear, currentMonth - 1, 21);
-                    baseEndDate = new Date(currentYear, currentMonth, 20);
+    if (currentDay <= 20) {
+        baseStartDate = new Date(currentYear, currentMonth - 1, 21);
+        baseEndDate = new Date(currentYear, currentMonth, 20);
+    } else {
+        baseStartDate = new Date(currentYear, currentMonth, 21);
+        baseEndDate = new Date(currentYear, currentMonth + 1, 20);
+    }
+
+    const monthsToAdjust = periodOffset;
+    const reportStartDate = new Date(baseStartDate.getFullYear(), baseStartDate.getMonth() + monthsToAdjust, 21);
+    const reportEndDate = new Date(reportStartDate.getFullYear(), reportStartDate.getMonth() + 1, 20);
+
+    if (reportStartDate.getMonth() === 11 && reportStartDate.getDate() === 21) {
+        reportEndDate.setFullYear(reportStartDate.getFullYear() + 1);
+    }
+
+    currentAttendancePeriod = periodOffset;
+    currentAttendanceStartDate = reportStartDate;
+    currentAttendanceEndDate = reportEndDate;
+
+    const reportPeriod = `${reportStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to ${reportEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+    let periodLabel = "Current Period";
+    if (periodOffset < 0) {
+        periodLabel = `${Math.abs(periodOffset)} Period${Math.abs(periodOffset) > 1 ? 's' : ''} Ago`;
+    } else if (periodOffset > 0) {
+        periodLabel = `${periodOffset} Period${periodOffset > 1 ? 's' : ''} Ahead`;
+    }
+    periodTitle.textContent = `${periodLabel}: ${reportPeriod}`;
+
+    let html = `<h3>Attendance Report</h3>`;
+
+    html += `<div style="overflow-x: auto;">
+                <table style="min-width: 1000px;">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 100px;">Operator</th>`;
+
+    const tempDate = new Date(reportStartDate);
+    while (tempDate <= reportEndDate) {
+        const dateStr = tempDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dayName = tempDate.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 2);
+        html += `<th style="min-width: 30px; text-align: center;" title="${tempDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}">
+                    ${dateStr}<br>${dayName}
+                 </th>`;
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    html += `<th>Total Days</th><th>Present</th><th>L/Coff</th><th>Pending</th><th>Off</th><th>% Present</th></tr></thead><tbody>`;
+
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+
+    staffList.forEach(staff => {
+        const abbrev = staffAbbreviations[staff];
+        html += `<tr>
+                    <td style="font-weight: bold;">${abbrev}<br>(${staff}${staff === 'ANEESH' ? ' CTP' : ''})</td>`;
+
+        let totalDays = 0;
+        let presentDays = 0;
+        let leaveDays = 0;
+        let pendingLeaveDays = 0;
+        let offDays = 0;
+
+        tempDate.setTime(reportStartDate.getTime());
+
+        while (tempDate <= reportEndDate) {
+            const dateKey = formatDateForInput(tempDate);
+            const dayIndex = tempDate.getDay();
+            const dayName = shiftData.days[dayIndex];
+
+            const isHoliday = holidays[dateKey];
+            const isSkeleton = skeletonShifts[dateKey];
+            const shift = shiftData.shifts[dayName][staff];
+
+            const leaveRequest = leaveRequests.find(req =>
+                req.staff === staff && req.date === dateKey
+            );
+
+            const isOnLeave = leaveRequest && (leaveRequest.status === 'approved' || leaveRequest.status === 'pending');
+            const isPendingLeave = leaveRequest && leaveRequest.status === 'pending';
+            const isApprovedLeave = leaveRequest && leaveRequest.status === 'approved';
+            const isCOFFLeave = isApprovedLeave && leaveRequest.isCOFF === true;
+
+            const isOffDutyWorking = checkOffDutyWorking(staff, tempDate);
+            const isOnDuty = checkOnDuty(staff, tempDate);
+            const hasLateEntry = checkLateEntry(staff, tempDate);
+            const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
+
+            let attendanceMark = '';
+            let cellStyle = '';
+            let cellTitle = '';
+
+            if (isHoliday) {
+                attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Holiday">H</span>';
+                cellStyle = 'background-color: #ffebee;';
+                cellTitle = `Holiday: ${holidays[dateKey].name}`;
+            } else if (isSkeleton) {
+                attendanceMark = '<span style="color: #26a69a; font-weight: bold;" title="Skeleton Shift">S</span>';
+                cellStyle = 'background-color: #e8f6f3;';
+                cellTitle = `Skeleton Shift: ${skeletonShifts[dateKey].hours} hours`;
+            } else if (isPendingLeave) {
+                attendanceMark = '<span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;" title="Pending Leave">L?</span>';
+                cellStyle = 'background-color: #fff9e6;';
+                pendingLeaveDays++;
+                totalDays++;
+                cellTitle = 'Pending Leave';
+            } else if (isApprovedLeave) {
+                // KEY CHANGE: Check if this is a COFF leave
+                if (isCOFFLeave) {
+                    attendanceMark = '<span style="color: #9b59b6; font-weight: bold;" title="COFF Leave">Coff</span>';
+                    cellStyle = 'background-color: #f4ecf7;';
+                    leaveDays++;
+                    totalDays++;
+                    cellTitle = 'COFF Leave';
                 } else {
-                    // If today is after the 20th, current period is current month 21st to next month 20th
-                    baseStartDate = new Date(currentYear, currentMonth, 21);
-                    baseEndDate = new Date(currentYear, currentMonth + 1, 20);
+                    attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Leave">L</span>';
+                    cellStyle = 'background-color: #ffebee;';
+                    leaveDays++;
+                    totalDays++;
+                    cellTitle = 'On Leave';
                 }
-
-                // Apply offset (each offset is one month forward or backward)
-                const monthsToAdjust = periodOffset;
-                const reportStartDate = new Date(baseStartDate.getFullYear(), baseStartDate.getMonth() + monthsToAdjust, 21);
-                const reportEndDate = new Date(reportStartDate.getFullYear(), reportStartDate.getMonth() + 1, 20);
-
-                // Adjust year if crossing year boundary
-                if (reportStartDate.getMonth() === 11 && reportStartDate.getDate() === 21) {
-                    reportEndDate.setFullYear(reportStartDate.getFullYear() + 1);
-                }
-
-                // Store current period for navigation
-                currentAttendancePeriod = periodOffset;
-                currentAttendanceStartDate = reportStartDate;
-                currentAttendanceEndDate = reportEndDate;
-
-                const reportPeriod = `${reportStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to ${reportEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-
-                // Update period title
-                let periodLabel = "Current Period";
-                if (periodOffset < 0) {
-                    periodLabel = `${Math.abs(periodOffset)} Period${Math.abs(periodOffset) > 1 ? 's' : ''} Ago`;
-                } else if (periodOffset > 0) {
-                    periodLabel = `${periodOffset} Period${periodOffset > 1 ? 's' : ''} Ahead`;
-                }
-                periodTitle.textContent = `${periodLabel}: ${reportPeriod}`;
-
-                let html = `<h3>Attendance Report</h3>`;
-
-                // Create table
-                html += `<div style="overflow-x: auto;">
-                                            <table style="min-width: 1000px;">
-                                                <thead>
-                                                    <tr>
-                                                        <th style="min-width: 100px;">Operator</th>`;
-
-                // Generate date headers
-                const tempDate = new Date(reportStartDate);
-                while (tempDate <= reportEndDate) {
-                    const dateStr = tempDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const dayName = tempDate.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 2);
-                    html += `<th style="min-width: 30px; text-align: center;" title="${tempDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}">
-                                                        ${dateStr}<br>${dayName}
-                                                     </th>`;
-                    tempDate.setDate(tempDate.getDate() + 1);
-                }
-
-                html += `<th>Total Days</th><th>Present</th><th>Leave</th><th>Pending</th><th>Off</th><th>% Present</th></tr></thead><tbody>`;
-
-                // Get all staff members
-                const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-
-                staffList.forEach(staff => {
-                    const abbrev = staffAbbreviations[staff];
-                    html += `<tr>
-                                                        <td style="font-weight: bold;">${abbrev}<br>(${staff}${staff === 'ANEESH' ? ' CTP' : ''})</td>`;
-
-                    let totalDays = 0;
-                    let presentDays = 0;
-                    let leaveDays = 0;
-                    let pendingLeaveDays = 0;
-                    let offDays = 0;
-
-                    // Reset tempDate for this staff member
-                    tempDate.setTime(reportStartDate.getTime());
-
-                    while (tempDate <= reportEndDate) {
-                        const dateKey = formatDateForInput(tempDate);
-                        const dayIndex = tempDate.getDay();
-                        const dayName = shiftData.days[dayIndex];
-
-                        // Check various statuses
-                        const isHoliday = holidays[dateKey];
-                        const isSkeleton = skeletonShifts[dateKey];
-                        const shift = shiftData.shifts[dayName][staff];
-
-                        // Check leave status specifically - use direct lookup from leaveRequests
-                        const leaveRequest = leaveRequests.find(req =>
-                            req.staff === staff && req.date === dateKey
-                        );
-
-                        const isOnLeave = leaveRequest && (leaveRequest.status === 'approved' || leaveRequest.status === 'pending');
-                        const isPendingLeave = leaveRequest && leaveRequest.status === 'pending';
-                        const isApprovedLeave = leaveRequest && leaveRequest.status === 'approved';
-
-                        const isOffDutyWorking = checkOffDutyWorking(staff, tempDate);
-                        const isOnDuty = checkOnDuty(staff, tempDate);
-                        const hasLateEntry = checkLateEntry(staff, tempDate);
-                        const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
-
-                        let attendanceMark = '';
-                        let cellStyle = '';
-                        let cellTitle = '';
-
-                        // Check status in correct order
-                        if (isHoliday) {
-                            attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Holiday">H</span>';
-                            cellStyle = 'background-color: #ffebee;';
-                            cellTitle = `Holiday: ${holidays[dateKey].name}`;
-                            // Don't count holidays in totals
-                        } else if (isSkeleton) {
-                            attendanceMark = '<span style="color: #26a69a; font-weight: bold;" title="Skeleton Shift">S</span>';
-                            cellStyle = 'background-color: #e8f6f3;';
-                            cellTitle = `Skeleton Shift: ${skeletonShifts[dateKey].hours} hours`;
-                            // Don't count skeleton shifts in totals
-                        } else if (isPendingLeave) {
-                            attendanceMark = '<span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;" title="Pending Leave">L?</span>';
-                            cellStyle = 'background-color: #fff9e6;';
-                            pendingLeaveDays++;
-                            totalDays++;
-                            cellTitle = 'Pending Leave';
-                        } else if (isApprovedLeave) {
-                            attendanceMark = '<span style="color: #e74c3c; font-weight: bold;" title="Leave">L</span>';
-                            cellStyle = 'background-color: #ffebee;';
-                            leaveDays++;
-                            totalDays++;
-                            cellTitle = 'On Leave';
-                        } else if (isOffDuty && !isOffDutyWorking) {
-                            attendanceMark = '<span style="color: #95a5a6; font-weight: bold;" title="Off Duty">O</span>';
-                            cellStyle = 'background-color: #f1f2f6;';
-                            offDays++;
-                            totalDays++;
-                            cellTitle = 'Off Duty';
-                        } else if (isOffDutyWorking || isOnDuty || hasLateEntry) {
-                            attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
-                            cellStyle = 'background-color: #e8f6ef;';
-                            presentDays++;
-                            totalDays++;
-                            cellTitle = isOffDutyWorking ? 'Off-duty Working' :
-                                isOnDuty ? 'On Duty (OD)' :
-                                    hasLateEntry ? 'Present (Late Entry)' : 'Present';
-                        } else if (shift && !shift.includes('Off')) {
-                            attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
-                            cellStyle = 'background-color: #e8f6ef;';
-                            presentDays++;
-                            totalDays++;
-                            cellTitle = `Present: ${shift}`;
-                        } else {
-                            attendanceMark = '<span style="color: #95a5a6;">-</span>';
-                            cellTitle = 'No Shift';
-                            // Don't count "no shift" days in totals
-                        }
-
-                        html += `<td style="text-align: center; ${cellStyle}" title="${cellTitle}">${attendanceMark}</td>`;
-
-                        tempDate.setDate(tempDate.getDate() + 1);
-                    }
-
-                    // Calculate attendance percentage
-                    const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-                    let percentageColor = '#27ae60'; // Green for good attendance
-                    if (attendancePercentage < 80) percentageColor = '#f39c12'; // Orange for moderate
-                    if (attendancePercentage < 60) percentageColor = '#e74c3c'; // Red for poor
-
-                    // Add totals for this staff member
-                    html += `<td style="text-align: center; font-weight: bold;">${totalDays}</td>
-                                                     <td style="text-align: center; color: #27ae60; font-weight: bold;">${presentDays}</td>
-                                                     <td style="text-align: center; color: #e74c3c; font-weight: bold;">${leaveDays}</td>
-                                                     <td style="text-align: center; color: #f39c12; font-weight: bold;">${pendingLeaveDays}</td>
-                                                     <td style="text-align: center; color: #95a5a6; font-weight: bold;">${offDays}</td>
-                                                     <td style="text-align: center; color: ${percentageColor}; font-weight: bold;">${attendancePercentage}%</td>
-                                                   </tr>`;
-                });
-
-                // Add summary row
-                html += `<tr style="background-color: #f8f9fa; font-weight: bold;">
-                                                    <td>TOTAL</td>`;
-
-                // Empty cells for each date
-                tempDate.setTime(reportStartDate.getTime());
-                let dateCount = 0;
-                while (tempDate <= reportEndDate) {
-                    dateCount++;
-                    html += `<td style="text-align: center;">${dateCount}</td>`;
-                    tempDate.setDate(tempDate.getDate() + 1);
-                }
-
-                // Calculate overall totals
-                const totalStaff = staffList.length;
-                const totalDaysInPeriod = Math.floor((reportEndDate - reportStartDate) / (1000 * 60 * 60 * 24)) + 1;
-
-                html += `<td style="text-align: center;">${totalDaysInPeriod * totalStaff}</td>
-                                                     <td style="text-align: center;">-</td>
-                                                     <td style="text-align: center;">-</td>
-                                                     <td style="text-align: center;">-</td>
-                                                     <td style="text-align: center;">-</td>
-                                                     <td style="text-align: center;">-</td>
-                                                   </tr>`;
-
-                html += `</tbody></table></div>`;
-
-                // Add legend
-                html += `
-                                            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-                                                <h4>Legend:</h4>
-                                                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #27ae60; font-weight: bold;">✓</span> Present
-                                                    </div>
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #e74c3c; font-weight: bold;">L</span> Approved Leave
-                                                    </div>
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;">L?</span> Pending Leave
-                                                    </div>
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #95a5a6; font-weight: bold;">O</span> Off Duty
-                                                    </div>
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #e74c3c; font-weight: bold;">H</span> Holiday
-                                                    </div>
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span style="color: #26a69a; font-weight: bold;">S</span> Skeleton Shift
-                                                    </div>
-                                                </div>
-                                                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                                                    <strong>Note:</strong> Holiday and Skeleton Shift days are not counted in Present/Leave/Off totals.
-                                                </div>
-                                            </div>
-                                        `;
-
-                container.innerHTML = html;
+            } else if (isOffDuty && !isOffDutyWorking) {
+                attendanceMark = '<span style="color: #95a5a6; font-weight: bold;" title="Off Duty">O</span>';
+                cellStyle = 'background-color: #f1f2f6;';
+                offDays++;
+                totalDays++;
+                cellTitle = 'Off Duty';
+            } else if (isOffDutyWorking || isOnDuty || hasLateEntry) {
+                attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
+                cellStyle = 'background-color: #e8f6ef;';
+                presentDays++;
+                totalDays++;
+                cellTitle = isOffDutyWorking ? 'Off-duty Working' :
+                    isOnDuty ? 'On Duty (OD)' :
+                        hasLateEntry ? 'Present (Late Entry)' : 'Present';
+            } else if (shift && !shift.includes('Off')) {
+                attendanceMark = '<span style="color: #27ae60; font-weight: bold;" title="Present">✓</span>';
+                cellStyle = 'background-color: #e8f6ef;';
+                presentDays++;
+                totalDays++;
+                cellTitle = `Present: ${shift}`;
+            } else {
+                attendanceMark = '<span style="color: #95a5a6;">-</span>';
+                cellTitle = 'No Shift';
             }
+
+            html += `<td style="text-align: center; ${cellStyle}" title="${cellTitle}">${attendanceMark}</td>`;
+
+            tempDate.setDate(tempDate.getDate() + 1);
+        }
+
+        const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+        let percentageColor = '#27ae60';
+        if (attendancePercentage < 80) percentageColor = '#f39c12';
+        if (attendancePercentage < 60) percentageColor = '#e74c3c';
+
+        html += `<td style="text-align: center; font-weight: bold;">${totalDays}</td>
+                 <td style="text-align: center; color: #27ae60; font-weight: bold;">${presentDays}</td>
+                 <td style="text-align: center; color: #9b59b6; font-weight: bold;">${leaveDays}</td>
+                 <td style="text-align: center; color: #f39c12; font-weight: bold;">${pendingLeaveDays}</td>
+                 <td style="text-align: center; color: #95a5a6; font-weight: bold;">${offDays}</td>
+                 <td style="text-align: center; color: ${percentageColor}; font-weight: bold;">${attendancePercentage}%</td>
+                </tr>`;
+    });
+
+    html += `<tr style="background-color: #f8f9fa; font-weight: bold;">
+                <td>TOTAL</td>`;
+
+    tempDate.setTime(reportStartDate.getTime());
+    let dateCount = 0;
+    while (tempDate <= reportEndDate) {
+        dateCount++;
+        html += `<td style="text-align: center;">${dateCount}</td>`;
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    const totalStaff = staffList.length;
+    const totalDaysInPeriod = Math.floor((reportEndDate - reportStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    html += `<td style="text-align: center;">${totalDaysInPeriod * totalStaff}</td>
+             <td style="text-align: center;">-</td>
+             <td style="text-align: center;">-</td>
+             <td style="text-align: center;">-</td>
+             <td style="text-align: center;">-</td>
+             <td style="text-align: center;">-</td>
+            </tr>`;
+
+    html += `</tbody></table></div>`;
+
+    // Update legend to include COFF
+    html += `
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+            <h4>Legend:</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #27ae60; font-weight: bold;">✓</span> Present
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #9b59b6; font-weight: bold;">C</span> COFF Leave
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #e74c3c; font-weight: bold;">L</span> Approved Leave
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #f39c12; font-weight: bold; border: 1px dashed #f39c12; padding: 0 2px;">L?</span> Pending Leave
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #95a5a6; font-weight: bold;">O</span> Off Duty
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #e74c3c; font-weight: bold;">H</span> Holiday
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #26a69a; font-weight: bold;">S</span> Skeleton Shift
+                </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                <strong>Note:</strong> <span style="color: #9b59b6; font-weight: bold;">C</span> = COFF Leave (Compensatory Off), 
+                <span style="color: #e74c3c; font-weight: bold;">L</span> = Regular Leave. 
+                Holiday and Skeleton Shift days are not counted in Present/Leave/Off totals.
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
             // Navigation functions for attendance report
             function previousAttendancePeriod() {
                 generateAttendanceReportForPeriod(currentAttendancePeriod - 1);
@@ -7781,135 +7818,181 @@ if (hasExtraHours) {
                 console.log('Missing COFF history entries created');
             }
 
-            function generateOTReport() {
-                // Hide attendance navigation for OT report
-                document.getElementById('attendance-nav').style.display = 'none';
+function generateOTReport() {
+    // Hide attendance navigation for OT report
+    document.getElementById('attendance-nav').style.display = 'none';
 
-                const container = document.getElementById('report-container');
-                let html = '<h3>Overtime Report (Skeleton Duty Only)</h3>';
+    const container = document.getElementById('report-container');
+    let html = '<h3>Overtime Report (Skeleton Duty Only)</h3>';
 
-                // Get current month
-                const currentDate = new Date();
-                const currentMonthKey = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+    // Get current month
+    const currentDate = new Date();
+    const currentMonthKey = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
 
-                // Calculate skeleton OT only (ignore extra hours)
-                const skeletonOTByStaff = {};
-                const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    // Calculate skeleton OT based on INCLUDED staff (new logic)
+    const skeletonOTByStaff = {};
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
 
-                // Initialize
-                staffList.forEach(staff => {
-                    skeletonOTByStaff[staff] = 0;
-                });
+    // Initialize
+    staffList.forEach(staff => {
+        skeletonOTByStaff[staff] = 0;
+    });
 
-                // Calculate skeleton OT only
-                Object.entries(skeletonShifts).forEach(([date, skeleton]) => {
-                    const dateObj = new Date(date);
-                    const monthKey = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+    // Calculate skeleton OT based on INCLUDED staff
+    Object.entries(skeletonShifts).forEach(([date, skeleton]) => {
+        const dateObj = new Date(date);
+        const monthKey = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
 
-                    // Only calculate for current month
-                    if (monthKey === currentMonthKey) {
-                        staffList.forEach(staff => {
-                            // Check if staff is not excluded
-                            if (!skeleton.excludedStaff?.includes(staff)) {
-                                const dayIndex = dateObj.getDay();
-                                const dayName = shiftData.days[dayIndex];
-                                const shift = shiftData.shifts[dayName][staff];
-
-                                // If staff has a regular shift (not off), add skeleton OT hours
-                                if (shift && !shift.includes('Off') && !shift.includes('Off-operator')) {
-                                    const otHours = parseFloat(skeleton.hours) || 0;
-                                    skeletonOTByStaff[staff] += otHours;
-                                }
-                            }
-                        });
-                    }
-                });
-
-                html += `<h4>Current Month (${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})</h4>`;
-                html += '<div style="overflow-x: auto;">';
-                html += '<table style="min-width: 600px;">';
-                html += '<thead><tr><th>Staff</th><th>Skeleton OT Hours</th><th>OT Amount</th></tr></thead><tbody>';
-
-                let totalHours = 0;
-                let totalAmount = 0;
-
-                staffList.forEach(staff => {
-                    const hours = skeletonOTByStaff[staff] || 0;
-                    const abbrev = staffAbbreviations[staff];
-
-                    // OT amount is always 0
-                    const otAmount = 0;
-
-                    totalHours += hours;
-
-                    html += `
-                                        <tr>
-                                            <td><strong>${abbrev} (${staff})</strong></td>
-                                            <td>${hours.toFixed(1)} hours</td>
-                                            <td>₹${otAmount.toFixed(2)}</td>
-                                        </tr>
-                                    `;
-                });
-
-                html += `<tr style="font-weight: bold; background: #f8f9fa;">
-                                            <td>Total</td>
-                                            <td>${totalHours.toFixed(1)} hours</td>
-                                            <td>₹${totalAmount.toFixed(2)}</td>
-                                        </tr>`;
-                html += '</tbody></table></div>';
-
-                // Add details of skeleton shifts
-                html += '<h4 style="margin-top: 30px;">Skeleton Shift Details</h4>';
-
-                // Get skeleton shifts for current month
-                const currentMonthSkeleton = Object.entries(skeletonShifts)
-                    .filter(([date, skeleton]) => {
-                        const dateObj = new Date(date);
-                        const monthKey = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
-                        return monthKey === currentMonthKey;
-                    })
-                    .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB));
-
-                if (currentMonthSkeleton.length > 0) {
-                    html += '<div style="overflow-x: auto;">';
-                    html += '<table style="min-width: 800px;">';
-                    html += '<thead><tr><th>Date</th><th>Day</th><th>Skeleton Hours</th><th>Excluded Staff</th><th>Reason</th></tr></thead><tbody>';
-
-                    currentMonthSkeleton.forEach(([date, skeleton]) => {
-                        const dateObj = new Date(date);
-                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                        const excludedStaff = skeleton.excludedStaff?.map(staff => staffAbbreviations[staff]).join(', ') || 'None';
-
-                        html += `
-                                            <tr>
-                                                <td>${date}</td>
-                                                <td>${dayName}</td>
-                                                <td><strong>${skeleton.hours} hours</strong></td>
-                                                <td>${excludedStaff}</td>
-                                                <td>${skeleton.reason || 'No reason provided'}</td>
-                                            </tr>
-                                        `;
-                    });
-
-                    html += '</tbody></table></div>';
-                } else {
-                    html += '<p>No skeleton shifts in current month.</p>';
-                }
-
-                // Add note
-                html += `
-                                    <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-                                        <h4>Note:</h4>
-                                        <ul>
-                                            <li>This report shows only skeleton duty overtime</li>
-                                            <li>Excluded staff are not counted for skeleton OT</li>
-                                        </ul>
-                                    </div>
-                                `;
-
-                container.innerHTML = html;
+        // Only calculate for current month
+        if (monthKey === currentMonthKey) {
+            // NEW LOGIC: Use includedStaff instead of excludedStaff
+            const includedStaff = skeleton.includedStaff || [];
+            
+            // If no includedStaff (old data), show warning but don't calculate
+            if (includedStaff.length === 0 && skeleton.excludedStaff) {
+                console.warn(`Skeleton shift on ${date} uses old exclusion logic. Please update.`);
             }
+            
+            staffList.forEach(staff => {
+                // Check if staff IS INCLUDED (new logic)
+                const isIncluded = includedStaff.includes(staff);
+                
+                if (isIncluded) {
+                    const dayIndex = dateObj.getDay();
+                    const dayName = shiftData.days[dayIndex];
+                    const shift = shiftData.shifts[dayName][staff];
+                    
+                    // Add skeleton OT hours for included staff
+                    const otHours = parseFloat(skeleton.hours) || 0;
+                    skeletonOTByStaff[staff] += otHours;
+                }
+            });
+        }
+    });
 
+    html += `<h4>Current Month (${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})</h4>`;
+    html += '<div style="overflow-x: auto;">';
+    html += '<table style="min-width: 600px; border-collapse: collapse;">';
+    
+    // UPDATED: Changed header background to dark color with white text for better visibility
+    html += '<thead><tr style="background: #2c3e50; color: black;">';
+    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Staff</th>';
+    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold;">Skeleton OT Hours</th>';
+    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold;">Status</th>';
+    html += '</tr></thead><tbody>';
+
+    let totalHours = 0;
+
+    staffList.forEach(staff => {
+        const hours = skeletonOTByStaff[staff] || 0;
+        const abbrev = staffAbbreviations[staff];
+        totalHours += hours;
+        
+        let statusIcon = '';
+        let statusColor = '';
+        if (hours > 0) {
+            statusIcon = '✅';
+            statusColor = '#27ae60';
+        } else {
+            statusIcon = '⚪';
+            statusColor = '#95a5a6';
+        }
+
+        html += `
+            <tr style="border-bottom: 1px solid #ecf0f1;">
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">
+                    ${abbrev} (${staff})
+                </td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
+                    ${hours.toFixed(1)} hours
+                </td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: center; color: ${statusColor};">
+                    ${statusIcon} ${hours > 0 ? 'Worked Skeleton' : 'No Skeleton'}
+                </td>
+            </tr>
+        `;
+    });
+
+    // UPDATED: Total row with dark background
+    html += `<tr style="font-weight: bold; background: #34495e; color: white;">
+                <td style="padding: 12px; border: 1px solid #ddd;">Total</td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)} hours</td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: center;"></td>
+             </tr>`;
+    html += '</tbody></table></div>';
+
+    // Add details of skeleton shifts
+    html += '<h4 style="margin-top: 30px;">📋 Skeleton Shift Details</h4>';
+
+    // Get skeleton shifts for current month
+    const currentMonthSkeleton = Object.entries(skeletonShifts)
+        .filter(([date, skeleton]) => {
+            const dateObj = new Date(date);
+            const monthKey = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+            return monthKey === currentMonthKey;
+        })
+        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB));
+
+    if (currentMonthSkeleton.length > 0) {
+        html += '<div style="overflow-x: auto;">';
+        html += '<table style="min-width: 800px; border-collapse: collapse;">';
+        
+        // UPDATED: Dark header for details table as well
+        html += '<thead><tr style="background: #2c3e50; color: black;">';
+        html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Date</th>';
+        html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Day</th>';
+        html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold;">Hours</th>';
+        html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Staff Working</th>';
+        html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Reason</th>';
+        html += '</tr></thead><tbody>';
+
+        currentMonthSkeleton.forEach(([date, skeleton]) => {
+            const dateObj = new Date(date);
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+            
+            // Get included staff names with abbreviations
+            const includedStaff = skeleton.includedStaff || [];
+            const staffNames = includedStaff.map(staff => {
+                const abbrev = staffAbbreviations[staff];
+                return `${abbrev} (${staff})`;
+            }).join(', ');
+            
+            const displayStaff = staffNames || 'None selected';
+
+            html += `
+                <tr style="border-bottom: 1px solid #ecf0f1;">
+                    <td style="padding: 10px; border: 1px solid #ddd;">${date}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${dayName}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><strong>${skeleton.hours} hours</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${displayStaff}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${skeleton.reason || 'No reason provided'}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table></div>';
+    } else {
+        html += '<p>No skeleton shifts in current month.</p>';
+    }
+
+    // Add note about calculation - UPDATED with better visibility
+    html += `
+        <div style="margin-top: 20px; padding: 15px; background: #e8f4fc; border-radius: 8px; border-left: 4px solid #2c3e50;">
+            <h4 style="color: #2c3e50;">📋 Skeleton OT Calculation Rules:</h4>
+            <ul style="margin-left: 20px; color: #2c3e50;">
+                <li><strong style="color: #27ae60;">✓ Staff selected for skeleton duty receive OT hours</strong></li>
+                <li><strong style="color: #e67e22;">⚠️ Off-duty staff can be selected and will receive OT (NO COFF)</strong></li>
+                <li><strong style="color: #3498db;">📊 OT is calculated based on selected staff only</strong></li>
+            </ul>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+                <strong>Note:</strong> This report shows only skeleton duty overtime. 
+                Selected staff are marked as working during skeleton shifts.
+            </p>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
             function exportAllData() {
                 // Hide attendance navigation for export
                 document.getElementById('attendance-nav').style.display = 'none';
@@ -9252,6 +9335,7 @@ if (hasConflict) {
                     selectElement.appendChild(option);
                 });
             }
+            
 
 // Fix the saveOffDutyEntry function
 async function saveOffDutyEntry() {
@@ -11077,86 +11161,248 @@ function initLateEntryApprovalSystem() {
             }
 
             // ============== SKELETON SHIFT FUNCTIONS ==============
-            async function checkExistingSkeleton() {
-                const date = document.getElementById('skeletonDate').value;
-                const infoDiv = document.getElementById('existingSkeletonInfo');
-                const actionBtn = document.getElementById('skeletonActionBtn');
+async function checkExistingSkeleton() {
+    const date = document.getElementById('skeletonDate').value;
+    const infoDiv = document.getElementById('existingSkeletonInfo');
+    const actionBtn = document.getElementById('skeletonActionBtn');
 
-                if (!date) return;
+    if (!date) return;
 
-                const skeleton = skeletonShifts[date];
+    const skeleton = skeletonShifts[date];
 
-                if (skeleton) {
-                    infoDiv.style.display = 'block';
-                    infoDiv.innerHTML = `
-                                                    <strong>Existing Skeleton Shift:</strong><br>
-                                                    <div style="margin-top: 5px;">
-                                                        ${skeleton.hours} hours<br>
-                                                        ${skeleton.reason ? `Reason: ${skeleton.reason}<br>` : ''}
-                                                        <small>Added on: ${new Date(skeleton.addedDate).toLocaleDateString()}</small>
-                                                    </div>
-                                                `;
-                    actionBtn.textContent = 'Remove Skeleton Shift';
-                    actionBtn.className = 'btn-danger';
-                } else {
-                    infoDiv.style.display = 'none';
-                    actionBtn.textContent = 'Add Skeleton Shift';
-                    actionBtn.className = '';
+    if (skeleton) {
+        infoDiv.style.display = 'block';
+        infoDiv.innerHTML = `
+            <strong>Existing Skeleton Shift:</strong><br>
+            <div style="margin-top: 5px;">
+                📅 Date: ${date}<br>
+                ⏰ Hours: ${skeleton.hours} hours<br>
+                ${skeleton.reason ? `📝 Reason: ${skeleton.reason}<br>` : ''}
+                👥 Staff working: ${skeleton.includedStaff ? skeleton.includedStaff.length : 0} member(s)<br>
+                <small>Added on: ${new Date(skeleton.addedDate).toLocaleDateString()}</small>
+            </div>
+        `;
+        actionBtn.textContent = 'Remove Skeleton Shift';
+        actionBtn.className = 'btn-danger';
+    } else {
+        infoDiv.style.display = 'none';
+        actionBtn.textContent = 'Add Skeleton Shift';
+        actionBtn.className = '';
+        
+        // REFRESH THE STAFF INCLUSION LIST FOR THE NEW DATE
+        await refreshSkeletonStaffList(date);
+    }
+}
+
+// NEW FUNCTION: Refresh staff list based on selected date
+async function refreshSkeletonStaffList(date) {
+    if (!date) return;
+    
+    const includeList = document.getElementById('skeletonIncludeList');
+    if (!includeList) return;
+    
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    
+    // Get existing skeleton data if any
+    const skeleton = skeletonShifts[date];
+    const existingIncludedStaff = skeleton ? skeleton.includedStaff || [] : [];
+    
+    includeList.innerHTML = '';
+    
+    staffList.forEach(staff => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        
+        // Get current shift to show if staff is normally off-duty on this specific date
+        const shift = shiftData.shifts[dayName][staff];
+        const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
+        
+        // Check if this staff is already included in existing skeleton
+        const isChecked = existingIncludedStaff.includes(staff);
+        
+        item.innerHTML = `
+            <label class="checkbox-option">
+                <input type="checkbox" id="include_${staff}" value="${staff}" ${isChecked ? 'checked' : ''}>
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label">
+                    <strong>${staffAbbreviations[staff]}</strong> (${staff})
+                    ${isOffDuty ? '<span style="color: #e74c3c; font-size: 0.75em; margin-left: 8px;">(Normally OFF-DUTY)</span>' : '<span style="color: #27ae60; font-size: 0.75em; margin-left: 8px;">(Regular duty)</span>'}
+                </span>
+            </label>
+        `;
+        includeList.appendChild(item);
+    });
+    
+    // Add a summary
+    const summaryDiv = document.createElement('div');
+    summaryDiv.className = 'staff-summary';
+    summaryDiv.style.cssText = 'margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 5px; font-size: 0.85em;';
+    summaryDiv.id = 'staffSummary';
+    summaryDiv.innerHTML = `
+        <strong>📊 Day Info:</strong> ${dayName}<br>
+        <span id="offDutyCount">0</span> staff normally OFF-DUTY<br>
+        <span id="regularCount">0</span> staff on regular duty
+    `;
+    includeList.appendChild(summaryDiv);
+    
+    // Update counts
+    updateStaffCounts();
+}
+
+// Helper function to update staff counts
+function updateStaffCounts() {
+    const date = document.getElementById('skeletonDate').value;
+    if (!date) return;
+    
+    const dateObj = new Date(date);
+    const dayIndex = dateObj.getDay();
+    const dayName = shiftData.days[dayIndex];
+    const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+    
+    let offDutyCount = 0;
+    let regularCount = 0;
+    
+    staffList.forEach(staff => {
+        const shift = shiftData.shifts[dayName][staff];
+        const isOffDuty = shift && (shift.includes('Off') || shift.includes('Off-operator'));
+        if (isOffDuty) {
+            offDutyCount++;
+        } else {
+            regularCount++;
+        }
+    });
+    
+    const offDutySpan = document.getElementById('offDutyCount');
+    const regularSpan = document.getElementById('regularCount');
+    if (offDutySpan) offDutySpan.textContent = offDutyCount;
+    if (regularSpan) regularSpan.textContent = regularCount;
+}
+
+async function saveSkeletonShift() {
+    const date = document.getElementById('skeletonDate').value;
+    const hours = document.getElementById('skeletonHours').value;
+    const reason = document.getElementById('skeletonReason').value.trim();
+
+    if (!date || !hours) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    const existingSkeleton = skeletonShifts[date];
+
+    try {
+        if (existingSkeleton) {
+            // Remove skeleton shift
+            await db.collection('skeletonShifts').doc(date).delete();
+            
+            // Also remove associated OT records
+            await removeSkeletonOTRecords(date);
+            
+            alert('Skeleton shift removed successfully');
+        } else {
+            // Get INCLUDED staff (who will work during skeleton shift)
+            const includedStaff = [];
+            const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
+            
+            staffList.forEach(staff => {
+                const checkbox = document.getElementById(`include_${staff}`);
+                if (checkbox && checkbox.checked) {
+                    includedStaff.push(staff);
                 }
+            });
+            
+            if (includedStaff.length === 0) {
+                alert('Please select at least one staff member for skeleton duty');
+                return;
             }
+            
+            // Add skeleton shift
+            await db.collection('skeletonShifts').doc(date).set({
+                date: date,
+                hours: parseInt(hours),
+                reason: reason,
+                includedStaff: includedStaff,  // Changed from excludedStaff to includedStaff
+                addedBy: currentUser.email,
+                addedDate: new Date().toISOString()
+            });
+            
+            // Create OT entries for included staff
+            await createSkeletonOTEntries(date, hours, includedStaff, reason);
+            
+            alert(`✅ Skeleton shift added successfully!\n\n👥 Staff working: ${includedStaff.length} member(s)\n💰 OT will be calculated for these staff (NO COFF earned)`);
+        }
 
-            async function saveSkeletonShift() {
-                const date = document.getElementById('skeletonDate').value;
-                const hours = document.getElementById('skeletonHours').value;
-                const reason = document.getElementById('skeletonReason').value.trim();
+        closeModal('skeletonModal');
 
-                if (!date || !hours) {
-                    alert('Please fill in all required fields');
-                    return;
-                }
+        // Clear form
+        document.getElementById('skeletonDate').value = '';
+        document.getElementById('skeletonHours').value = '8';
+        document.getElementById('skeletonReason').value = '';
 
-                const existingSkeleton = skeletonShifts[date];
+    } catch (error) {
+        console.error('Error saving skeleton shift:', error);
+        alert('Failed to save skeleton shift. Please try again.');
+    }
+}
+// Create OT entries for skeleton duty (NO COFF)
+async function createSkeletonOTEntries(date, hours, includedStaff, reason) {
+    try {
+        const dateObj = new Date(date);
+        const dayIndex = dateObj.getDay();
+        const dayName = shiftData.days[dayIndex];
+        
+        for (const staff of includedStaff) {
+            const shift = shiftData.shifts[dayName][staff];
+            
+            // Create OT record (this will be used for OT report)
+            const otId = `skeleton_${date}_${staff}`;
+            await db.collection('extraHoursData').doc(otId).set({
+                staff: staff,
+                date: date,
+                hours: parseFloat(hours),
+                reason: `Skeleton duty: ${reason || 'No reason'}`,
+                enteredBy: currentUser.email,
+                entryDate: new Date().toISOString(),
+                type: 'Skeleton Duty OT',
+                regularShift: shift || 'Not specified',
+                isSkeletonOT: true,
+                earnedCOFF: false  // Explicitly mark that NO COFF is earned
+            }, { merge: true });
+            
+            console.log(`✅ Created OT record for ${staff} on ${date}: ${hours} hours (NO COFF)`);
+        }
+        
+    } catch (error) {
+        console.error('Error creating skeleton OT entries:', error);
+    }
+}
 
-                try {
-                    if (existingSkeleton) {
-                        // Remove skeleton shift
-                        await db.collection('skeletonShifts').doc(date).delete();
-                        alert('Skeleton shift removed successfully');
-                    } else {
-                        // Get excluded staff
-                        const excludedStaff = [];
-                        const staffList = ["Sreejith", "Sajeev", "Umesh", "Rajesh", "ANEESH"];
-                        staffList.forEach(staff => {
-                            const checkbox = document.getElementById(`exclude_${staff}`);
-                            if (checkbox && checkbox.checked) {
-                                excludedStaff.push(staff);
-                            }
-                        });
-
-                        // Add skeleton shift
-                        await db.collection('skeletonShifts').doc(date).set({
-                            date: date,
-                            hours: parseInt(hours),
-                            reason: reason,
-                            excludedStaff: excludedStaff,
-                            addedBy: currentUser.email,
-                            addedDate: new Date().toISOString()
-                        });
-                        alert('Skeleton shift added successfully');
-                    }
-
-                    closeModal('skeletonModal');
-
-                    // Clear form
-                    document.getElementById('skeletonDate').value = '';
-                    document.getElementById('skeletonHours').value = '8';
-                    document.getElementById('skeletonReason').value = '';
-
-                } catch (error) {
-                    console.error('Error saving skeleton shift:', error);
-                    alert('Failed to save skeleton shift. Please try again.');
-                }
-            }
+// Remove skeleton OT records when skeleton shift is removed
+async function removeSkeletonOTRecords(date) {
+    try {
+        const snapshot = await db.collection('extraHoursData')
+            .where('date', '==', date)
+            .where('isSkeletonOT', '==', true)
+            .get();
+        
+        const batch = db.batch();
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        if (!snapshot.empty) {
+            await batch.commit();
+            console.log(`✅ Removed ${snapshot.size} skeleton OT records for ${date}`);
+        }
+        
+    } catch (error) {
+        console.error('Error removing skeleton OT records:', error);
+    }
+}
+            
 
             function calculateSkeletonOT() {
                 // Reset OT data
@@ -14495,7 +14741,3 @@ async function cancelPendingLeave(requestId) {
         </script>
 </body>
 </html>
-
-
-
-
